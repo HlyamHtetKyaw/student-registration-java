@@ -1,0 +1,8 @@
+# Line endings for specific scripts
+mvnw text eol=lf
+*.cmd text eol=crlf
+*.sh text eol=lf
+
+# Java source files
+*.java text eol=lf
+
