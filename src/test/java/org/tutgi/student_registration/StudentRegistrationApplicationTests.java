@@ -1,4 +1,4 @@
-package com.tutgi.student_registration;
+package org.tutgi.student_registration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
