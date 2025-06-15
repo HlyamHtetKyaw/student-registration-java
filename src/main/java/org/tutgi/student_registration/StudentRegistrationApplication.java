@@ -1,4 +1,4 @@
-package com.tutgi.student_registration;
+package org.tutgi.student_registration;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
