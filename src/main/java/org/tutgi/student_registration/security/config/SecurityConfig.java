@@ -38,7 +38,8 @@ public class SecurityConfig {
     private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         auth
                 .requestMatchers(
-                        "/productivity-suite/api/v1/auth/**"
+                        "/productivity-suite/api/v1/auth/**",
+                        "/**"//delete at production
                 ).permitAll()
                 .requestMatchers(
                         "/v3/api-docs/**",
