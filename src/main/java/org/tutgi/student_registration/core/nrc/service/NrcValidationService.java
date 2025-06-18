@@ -31,60 +31,59 @@ public class NrcValidationService {
 	}
 
 	public boolean validateNrc(String nrc) {
-		if (nrc == null || nrc.isBlank()) {
+		// Extract only the part before the trailing numbers
+		if(nrc==null) {
 			return false;
 		}
-
-		// Extract part before trailing numbers (if any)
 		String nrcPartToValidate = nrc;
-		int lastParenIndex = nrc.lastIndexOf(')');
+		int lastParenIndex = nrc.lastIndexOf(")");
 
 		if (lastParenIndex != -1 && lastParenIndex + 1 < nrc.length()
 				&& Character.isDigit(nrc.charAt(lastParenIndex + 1))) {
 			nrcPartToValidate = nrc.substring(0, lastParenIndex + 1);
+			System.out.println("Nrc Part to validate is " + nrcPartToValidate);
 		}
-
-		// NRC Pattern: StateNumber/TownshipCode(NRCType)
-		String nrcPattern = "^[\\d\u1040-\u1049]{1,2}/[A-Z\u1000-\u109F]+\\([A-Z\u1000-\u109F]+\\)$";
-		if (!nrcPartToValidate.matches(nrcPattern)) {
+		if (!nrcPartToValidate.matches("^[\\d\u1040-\u1049]{1,2}/[A-Z\u1000-\u109F]+\\([A-Z\u1000-\u109F]+\\)$")) {
 			return false;
 		}
 
-		// Extract parts
 		String[] parts = nrcPartToValidate.split("[/()]");
+		String stateNumber = parts[0];
+		String townshipCodeOrShort = parts[1];
+		String nrcType = parts[2];
 
-		String stateNumber = parts[0].trim();
-		String townshipCode = parts[1].trim();
-		String nrcType = parts[2].trim();
-
-		// 1. Validate NRC Type
+		// 1. Validate NRC Type (e.g., 'N', 'E', 'P', 'T', 'Y', 'S' - in English or
+		// Burmese)
 		boolean isNrcTypeValid = nrcData.nrcTypes().stream().anyMatch(type -> (type.name() != null
-				&& (nrcType.equalsIgnoreCase(type.name().en()) || nrcType.equalsIgnoreCase(type.name().mm()))));
+				&& type.name().en() != null && type.name().en().equalsIgnoreCase(nrcType))
+				|| (type.name() != null && type.name().mm() != null && type.name().mm().equalsIgnoreCase(nrcType)));
 
 		if (!isNrcTypeValid) {
 			return false;
 		}
 
 		// 2. Validate State Number
-		Optional<NrcState> matchedState = nrcData.nrcStates().stream()
-				.filter(state -> state.number() != null
-						&& (stateNumber.equals(state.number().en()) || stateNumber.equals(state.number().mm())))
+		Optional<NrcState> foundState = nrcData.nrcStates().stream()
+				.filter(state -> state.number() != null && (state.number().en() != null || state.number().mm() != null)
+						&& (state.number().en().equals(stateNumber) || state.number().mm().equals(stateNumber)))
 				.findFirst();
 
-		if (matchedState.isEmpty()) {
+		if (foundState.isEmpty()) {
 			return false;
 		}
 
-		// 3. Validate Township Code or Short Name
-		String matchedStateCode = matchedState.get().number().en();
+		// 3. Validate Township Code/Short Name for the found state (in English or
+		// Burmese)
+		String stateCodeForTownship = foundState.get().number().en();
+		boolean isTownshipValid = nrcData.nrcTownships().stream()
+				.filter(township -> township.stateCode() != null && township.stateCode().equals(stateCodeForTownship))
+				.anyMatch(township -> (township.code() != null && township.code().equalsIgnoreCase(townshipCodeOrShort))
+						|| (township.shortName() != null && township.shortName().en() != null
+								&& township.shortName().en().equalsIgnoreCase(townshipCodeOrShort))
+						|| (township.shortName() != null && township.shortName().mm() != null
+								&& township.shortName().mm().equalsIgnoreCase(townshipCodeOrShort)));
 
-		return nrcData.nrcTownships().stream()
-				.filter(township -> township.stateCode() != null && township.stateCode().equals(matchedStateCode))
-				.anyMatch(township -> township.code() != null && township.code().equalsIgnoreCase(townshipCode)
-						|| township.shortName() != null && (township.shortName().en() != null
-								&& township.shortName().en().equalsIgnoreCase(townshipCode)
-								|| township.shortName().mm() != null
-										&& township.shortName().mm().equalsIgnoreCase(townshipCode)));
+		return isTownshipValid;
 	}
 
 }
