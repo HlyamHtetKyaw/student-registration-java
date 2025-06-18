@@ -56,5 +56,12 @@ nbdist/
 ### BlueJ ###
 *.ctxt
 
+# Test coverage / reports
+coverage/
+*.lcov
+
+#Enviroment Variable
+.env
+
 HELP.md
 
