@@ -36,6 +36,7 @@ class NrcValidationServiceTest {
 		assertFalse(nrcValidationService.validateNrc(""));
 		assertFalse(nrcValidationService.validateNrc("၁၃"));
 		assertFalse(nrcValidationService.validateNrc("၁၄/မတန(ဧည့်)"));
+		assertFalse(nrcValidationService.validateNrc("၁၄/hh(ဧည့်)"));
 	}
 
 }
