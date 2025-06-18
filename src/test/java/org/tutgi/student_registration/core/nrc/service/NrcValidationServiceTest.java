@@ -4,18 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestConstructor;
-import org.tutgi.student_registration.core.nrc.service.NrcValidationService;
-
-import lombok.RequiredArgsConstructor;
 
 @SpringBootTest
-@RequiredArgsConstructor
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 class NrcValidationServiceTest {
 	
-	private final NrcValidationService nrcValidationService;
+	@Autowired
+    private NrcValidationService nrcValidationService;
 	@Test
 	void testValidCases() {
 		assertTrue(nrcValidationService.validateNrc("13/MASATA(N)"));
