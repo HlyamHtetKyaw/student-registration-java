@@ -24,10 +24,10 @@ public class NrcValidationService {
 
 	@PostConstruct
 	public void init() throws IOException {
-		log.info("Before nrc data initialize: %s", nrcData);
+		log.info("Before nrc data initialize: {}", nrcData);
 		ObjectMapper objectMapper = new ObjectMapper();
 		this.nrcData = objectMapper.readValue(nrcDataResource.getInputStream(), NRCData.class);
-		log.info("After nrc data initialize: %s", nrcData);
+		log.info("After nrc data initialize: {}", nrcData.hashCode());
 	}
 
 	public boolean validateNrc(String nrc) {
