@@ -1,4 +1,4 @@
-package org.tutgi.student_registration.config.processor.nrc.controller;
+package org.tutgi.student_registration.core.nrc.controller;
 
 import lombok.Getter;
 import lombok.Setter;

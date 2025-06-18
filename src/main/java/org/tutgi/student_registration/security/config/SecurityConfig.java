@@ -1,8 +1,5 @@
 package org.tutgi.student_registration.security.config;
 
-import org.tutgi.student_registration.security.filter.CustomAuthenticationEntryPoint;
-import org.tutgi.student_registration.security.filter.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -12,20 +9,23 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.tutgi.student_registration.security.filter.CustomAuthenticationEntryPoint;
+import org.tutgi.student_registration.security.filter.JwtAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
+	
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
-//                .httpBasic(Customizer.withDefaults())
                 .authorizeHttpRequests(this::configureAuthorization)
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception
@@ -38,8 +38,8 @@ public class SecurityConfig {
     private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
         auth
                 .requestMatchers(
-                        "/productivity-suite/api/v1/auth/**",
-                        "/**"//delete at production
+                        "/tutgi/api/v1/auth/**",
+                        "/validate/**"//delete at production
                 ).permitAll()
                 .requestMatchers(
                         "/v3/api-docs/**",

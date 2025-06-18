@@ -28,15 +28,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private final JwtService jwtService;
-
-    private final List<String> permittedUrls = Arrays.asList(
-            "/productivity-suite/api/v1/auth/**",
+    
+    private List<String> permittedUrls() {
+        return Arrays.asList(
+            "/tutgi/api/v1/auth/**",
+            "/**", // delete at production
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/swagger-resources/**",
             "/webjars/**"
-    );
+        );
+    }
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -80,6 +83,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPermittedPath(String requestPath) {
-        return permittedUrls.stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
+        return permittedUrls().stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
     }
 }
