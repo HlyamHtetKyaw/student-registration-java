@@ -1,6 +1,5 @@
 package org.tutgi.student_registration.security.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,23 +11,19 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import org.tutgi.student_registration.config.command.CommandProcessingResult;
-import org.tutgi.student_registration.config.command.CommandProcessingService;
-import org.tutgi.student_registration.config.command.CommandWrapper;
-import org.tutgi.student_registration.config.command.CommandWrapperBuilder;
-import org.tutgi.student_registration.config.command.JsonCommand;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.security.dto.ChangePasswordRequest;
+import org.tutgi.student_registration.security.dto.LoginRequest;
 import org.tutgi.student_registration.security.dto.RegisterRequest;
 import org.tutgi.student_registration.security.dto.ResetPasswordRequest;
 import org.tutgi.student_registration.security.dto.SetAmountUpdateRequest;
 import org.tutgi.student_registration.security.dto.UpdateUserSettingRequest;
 import org.tutgi.student_registration.security.dto.VerifyOtpRequest;
 import org.tutgi.student_registration.security.service.normal.AuthService;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,13 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "User Module", description = "Endpoints for user authentication, registration, and password management")
 @RestController
-@RequestMapping("/productivity-suite/api/v1/auth")
+@RequestMapping("/${api.base.path}/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
 
     private final AuthService authService;
-    private final CommandProcessingService commandProcessingService;
 
     @PostMapping("/login")
     @Operation(
@@ -61,30 +55,13 @@ public class AuthController {
             }
     )
     public ResponseEntity<ApiResponse> login(
-            @RequestBody final String jsonBody,
+            @RequestBody final LoginRequest loginRequest,
             final HttpServletRequest request
-    ) throws JsonProcessingException {
-
+    ){
+    	log.info("Received login attempt for email: {}", loginRequest.getEmail());
+    	
         final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-
-        final CommandWrapper wrapper = new CommandWrapperBuilder()
-                .login()
-                .withJson(jsonBody)
-                .build();
-
-        final JsonCommand command = JsonCommand.from(wrapper);
-
-        final CommandProcessingResult result = this.commandProcessingService.process(command);
-
-        final boolean isSuccess = result.isSuccess();
-        final int statusCode = isSuccess ? HttpStatus.OK.value() : HttpStatus.UNAUTHORIZED.value();
-
-        final ApiResponse response = ApiResponse.builder()
-                .success(isSuccess ? 1 : 0)
-                .code(statusCode)
-                .message(result.getMessage())
-                .data(result.getData())
-                .build();
+        final ApiResponse response =  authService.authenticateUser(loginRequest);
 
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }

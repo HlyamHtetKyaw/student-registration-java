@@ -1,4 +1,4 @@
-package org.tutgi.student_registration.config.processor.nrc.service;
+package org.tutgi.student_registration.core.nrc.service;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
+import org.tutgi.student_registration.core.nrc.service.NrcValidationService;
 
 import lombok.RequiredArgsConstructor;
 
