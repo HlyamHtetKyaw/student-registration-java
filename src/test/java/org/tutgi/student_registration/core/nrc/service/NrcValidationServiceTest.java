@@ -6,8 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class NrcValidationServiceTest {
 	
 	@Autowired
@@ -36,6 +38,7 @@ class NrcValidationServiceTest {
 		assertFalse(nrcValidationService.validateNrc(""));
 		assertFalse(nrcValidationService.validateNrc("၁၃"));
 		assertFalse(nrcValidationService.validateNrc("၁၄/မတန(ဧည့်)"));
+		assertFalse(nrcValidationService.validateNrc("၁၄/hh(ဧည့်)"));
 	}
 
 }
