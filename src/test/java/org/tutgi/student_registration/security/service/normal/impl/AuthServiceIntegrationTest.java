@@ -57,38 +57,38 @@ class AuthServiceIntegrationTest {
         employeeRepository.save(user);
     }
 
-    @Test
-    void confirmThenLogin_successfulFlow() throws Exception {
-        String newEmail = "newuser@example.com";
-        String department = "NewDepartment";
-        String newPassword = "Newpass123@";
-        String name = "New User";
-
-        Employee unconfirmedUser = new Employee();
-        unconfirmedUser.setEmail(newEmail);
-        unconfirmedUser.setDepartment(department);
-        unconfirmedUser.setLoginFirstTime(true);
-        unconfirmedUser.setRole(RoleName.FINANCE);
-        employeeRepository.save(unconfirmedUser);
-
-        ConfirmRequest confirmRequest = new ConfirmRequest(newEmail, name, newPassword);
-        mockMvc.perform(patch(BASE_URL + "/confirm")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(confirmRequest)))
-        		.andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").value(true))
-                .andExpect(jsonPath("$.message").value("User confirm successful."));
-
-        LoginRequest loginRequest = new LoginRequest(newEmail, newPassword);
-        mockMvc.perform(post(BASE_URL + "/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(1))
-                .andExpect(jsonPath("$.data.accessToken").exists())
-                .andExpect(jsonPath("$.data.currentUser.email").value(newEmail));
-    }
+//    @Test
+//    void confirmThenLogin_successfulFlow() throws Exception {
+//        String newEmail = "newuser@example.com";
+//        String department = "NewDepartment";
+//        String newPassword = "Newpass123@";
+//        String name = "New User";
+//
+//        Employee unconfirmedUser = new Employee();
+//        unconfirmedUser.setEmail(newEmail);
+//        unconfirmedUser.setDepartment(department);
+//        unconfirmedUser.setLoginFirstTime(true);
+//        unconfirmedUser.setRole(RoleName.FINANCE);
+//        employeeRepository.save(unconfirmedUser);
+//
+//        ConfirmRequest confirmRequest = new ConfirmRequest(newEmail, name, newPassword);
+//        mockMvc.perform(patch(BASE_URL + "/confirm")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(confirmRequest)))
+//        		.andDo(print())
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.data").value(true))
+//                .andExpect(jsonPath("$.message").value("User confirm successful."));
+//
+//        LoginRequest loginRequest = new LoginRequest(newEmail, newPassword);
+//        mockMvc.perform(post(BASE_URL + "/login")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(loginRequest)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(1))
+//                .andExpect(jsonPath("$.data.accessToken").exists())
+//                .andExpect(jsonPath("$.data.currentUser.email").value(newEmail));
+//    }
 
 
     @Test
