@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,10 +71,11 @@ class AuthServiceIntegrationTest {
         unconfirmedUser.setRole(RoleName.FINANCE);
         employeeRepository.save(unconfirmedUser);
 
-        ConfirmRequest confirmRequest = new ConfirmRequest(newEmail, name, newPassword );
+        ConfirmRequest confirmRequest = new ConfirmRequest(newEmail, name, newPassword);
         mockMvc.perform(patch(BASE_URL + "/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(confirmRequest)))
+        		.andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value(true))
                 .andExpect(jsonPath("$.message").value("User confirm successful."));
