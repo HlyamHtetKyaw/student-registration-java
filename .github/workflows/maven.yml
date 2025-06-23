@@ -8,9 +8,11 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,4 +25,12 @@ jobs:
           cache: maven
 
       - name: Build and test
-        run: mvn clean package
+        run: mvn clean verify
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: target/surefire-reports/
+
