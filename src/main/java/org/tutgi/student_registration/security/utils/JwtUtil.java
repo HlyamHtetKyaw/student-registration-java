@@ -20,13 +20,11 @@ public class JwtUtil {
 
     static {
         assert SECRET != null;
-//        byte[] decodedKey = Base64.getDecoder().decode(SECRET);
-//        SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
         byte[] decodedKey = Base64.getDecoder().decode(SECRET);
         SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
     }
 
-    private static final String ISSUER = "1P1M";
+    private static final String ISSUER = "tutgi";
 
     public static String generateToken(final Map<String, Object> claims, final String subject, final long expirationMillis) {
         return Jwts.builder()
