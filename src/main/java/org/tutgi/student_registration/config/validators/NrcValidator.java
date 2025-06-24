@@ -46,7 +46,6 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 		    return buildViolation(context, "NRC format is incomplete.");
 		}
 
-		
 		// 1. Validate NRC Type (e.g., 'N', 'E', 'P', 'T', 'Y', 'S' - in English or
 		// Burmese)
 		boolean isNrcTypeValid = nrcData.getNrcData().nrcTypes().stream().anyMatch(type -> (type.name() != null

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,9 +24,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
@@ -51,10 +54,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain)
             throws ServletException, IOException {
+    	log.info("Incoming request: {}", request.getRequestURI());
 
-        String requestPath = request.getRequestURI();
+    	String requestPath = request.getRequestURI();
 
-        if (getPermittedUrls().stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath))) {
+        if (isPermitted(requestPath)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -93,4 +97,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
         }
     }
+    
+    private boolean isPermitted(String requestPath) {
+        return getPermittedUrls().stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
+    }
+
 }
