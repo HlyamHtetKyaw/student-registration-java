@@ -9,5 +9,5 @@ import org.tutgi.student_registration.data.models.Students;
 
 @Repository
 public interface StudentsRepository extends JpaRepository<Students, Long> {
-	Optional<Employee> findByRollNo(String rollNo);
+	Optional<Students> findByRollNo(String rollNo);
 }
