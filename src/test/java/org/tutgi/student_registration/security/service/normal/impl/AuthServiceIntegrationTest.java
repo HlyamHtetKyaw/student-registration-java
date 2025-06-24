@@ -75,7 +75,6 @@ class AuthServiceIntegrationTest {
         mockMvc.perform(patch(BASE_URL + "/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(confirmRequest)))
-        		.andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value(true))
                 .andExpect(jsonPath("$.message").value("User confirm successful."));
