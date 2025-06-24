@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.tutgi.student_registration.data.enums.UserType;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -35,7 +36,7 @@ class StudentRegisterRequestValidationTest {
                 "6/MATANA(T)"
         );
         validNrcs.stream().forEach(validNrc->{
-        	StudentRegisterRequest req = new StudentRegisterRequest("STUDENT", "1001", validNrc);
+        	StudentRegisterRequest req = new StudentRegisterRequest(UserType.STUDENT, "1001", validNrc);
             Set<ConstraintViolation<StudentRegisterRequest>> violations = validator.validate(req);
             assertTrue(violations.isEmpty(), "Expected no violations for: " + validNrc);
         });
@@ -57,7 +58,7 @@ class StudentRegisterRequestValidationTest {
     		);
 
     	invalidNrcs.stream().forEach(invalidNrc->{
-    		 StudentRegisterRequest req = new StudentRegisterRequest("STUDENT", "1001", invalidNrc);
+    		 StudentRegisterRequest req = new StudentRegisterRequest(UserType.STUDENT, "1001", invalidNrc);
     	        Set<ConstraintViolation<StudentRegisterRequest>> violations = validator.validate(req);
     	        assertFalse(violations.isEmpty(), "Expected violations for NRC: " + invalidNrc);
     	        boolean nrcViolation = violations.stream()
@@ -68,7 +69,7 @@ class StudentRegisterRequestValidationTest {
 
     @Test
     void emptyRollNo_shouldFailValidation() {
-        StudentRegisterRequest req = new StudentRegisterRequest("STUDENT", "", "13/MASATA(N)");
+        StudentRegisterRequest req = new StudentRegisterRequest(UserType.STUDENT, "", "13/MASATA(N)");
         Set<ConstraintViolation<StudentRegisterRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("rollNo")));
@@ -76,7 +77,7 @@ class StudentRegisterRequestValidationTest {
     
     @Test
     void nullRollNo_shouldFailValidation() {
-        StudentRegisterRequest req = new StudentRegisterRequest("STUDENT", null, "13/MASATA(N)");
+        StudentRegisterRequest req = new StudentRegisterRequest(UserType.STUDENT, null, "13/MASATA(N)");
         Set<ConstraintViolation<StudentRegisterRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("rollNo")));
@@ -84,7 +85,7 @@ class StudentRegisterRequestValidationTest {
     
     @Test
     void nullNrc_shouldFailValidation() {
-        StudentRegisterRequest req = new StudentRegisterRequest("STUDENT", "1001", null);
+        StudentRegisterRequest req = new StudentRegisterRequest(UserType.STUDENT, "1001", null);
         Set<ConstraintViolation<StudentRegisterRequest>> violations = validator.validate(req);
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("nrc")));

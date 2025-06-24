@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.data.enums.RoleName;
+import org.tutgi.student_registration.data.enums.UserType;
 import org.tutgi.student_registration.data.models.Employee;
 import org.tutgi.student_registration.data.models.Students;
 import org.tutgi.student_registration.features.employee.admin.dto.EmployeeRegisterRequest;
@@ -42,7 +43,7 @@ class AdminServiceTest {
 	@Test
 	void registerEmployee_success() {
 		EmployeeRegisterRequest request = new EmployeeRegisterRequest(
-				"EMPLOYEE", 
+				UserType.EMPLOYEE, 
 				"Student Affair", 
 				"test@gmail.com",
 				RoleName.FINANCE);
@@ -61,7 +62,7 @@ class AdminServiceTest {
 	@Test
 	void registerEmployee_conflict_emailExists() {
 		EmployeeRegisterRequest request = new EmployeeRegisterRequest(
-				"EMPLOYEE", 
+				UserType.EMPLOYEE, 
 				"Student Affair", 
 				"test@gmail.com",
 				RoleName.FINANCE);
@@ -78,7 +79,7 @@ class AdminServiceTest {
 
 	@Test
 	void registerStudent_success() {
-		StudentRegisterRequest request = new StudentRegisterRequest("STUDENT","5IT-5","13/MASATA(N)000000");
+		StudentRegisterRequest request = new StudentRegisterRequest(UserType.STUDENT,"5IT-5","13/MASATA(N)000000");
 		when(studentsRepository.findByRollNo(request.rollNo())).thenReturn(Optional.empty());
 		when(passwordEncoder.encode(request.nrc())).thenReturn("encodedNrc");
 
@@ -94,8 +95,8 @@ class AdminServiceTest {
 
 	@Test
 	void registerStudent_conflict_rollNoExists() {
-		StudentRegisterRequest request = new StudentRegisterRequest("STUDENT","5IT-5","13/MASATA(N)000000");
-		when(studentsRepository.findByRollNo(request.rollNo())).thenReturn(Optional.of(new Employee()));
+		StudentRegisterRequest request = new StudentRegisterRequest(UserType.STUDENT,"5IT-5","13/MASATA(N)000000");
+		when(studentsRepository.findByRollNo(request.rollNo())).thenReturn(Optional.of(new Students()));
 																										
 		ApiResponse response = adminService.registerStudent(request);
 

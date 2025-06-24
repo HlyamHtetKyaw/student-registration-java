@@ -4,7 +4,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.tutgi.student_registration.config.request.RequestUtils;
@@ -29,15 +28,22 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class AdminController {
-	AdminService adminService;
-	 @Operation(
-	            summary = "Register a new user",
-	            description = "Register a new user with the provided registration details.",
-	            responses = {
-	                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User registered successfully",
-	                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-	            }
-	    )
+	private final AdminService adminService;
+	 
+	@Operation(summary = "Register a user (Student or Employee)",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody (
+		        description = "Polymorphic request body for user registration. " +
+		                      "The 'userType' field determines the schema used.",
+		        required = true,
+		        content = @Content(
+		            schema = @Schema(implementation = RegisterRequest.class)
+		        )
+		    ),
+		    responses = {
+		    		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User registered successfully",
+		            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+		    }
+		)
 	@PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@Validated @RequestBody final RegisterRequest registerRequest,
             final HttpServletRequest request) {
