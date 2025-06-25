@@ -1,9 +1,10 @@
 package org.tutgi.student_registration.security.utils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.tutgi.student_registration.data.models.Employee;
+import org.tutgi.student_registration.security.service.normal.Authenticatable;
 
 public class ClaimsProvider {
 
@@ -11,11 +12,16 @@ public class ClaimsProvider {
         throw new IllegalStateException("Utility class");
     }
 
-    public static Map<String, Object> generateClaims(final Employee user) {
-        final Map<String, Object> claims = new HashMap<>();
+    public static Map<String, Object> generateClaims(Authenticatable user) {
+        Map<String, Object> claims = new HashMap<>();
         claims.put("id", user.getId());
-        claims.put("email", user.getEmail());
-        claims.put("role", user.getRole());
+        claims.put("identifier", user.getIdentifier());
+
+        List<String> roles = user.getAuthorities().stream()
+                                 .toList();
+        claims.put("userType", user.getUserType());
+        claims.put("authorities", roles);
         return claims;
     }
+
 }

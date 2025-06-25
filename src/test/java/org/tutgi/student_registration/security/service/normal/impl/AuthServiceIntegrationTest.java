@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,10 +18,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.tutgi.student_registration.data.enums.RoleName;
 import org.tutgi.student_registration.data.models.Employee;
+import org.tutgi.student_registration.data.models.Students;
 import org.tutgi.student_registration.features.employee.shared.repository.EmployeeRepository;
+import org.tutgi.student_registration.features.students.repository.StudentsRepository;
 import org.tutgi.student_registration.security.dto.CheckRequest;
 import org.tutgi.student_registration.security.dto.ConfirmRequest;
-import org.tutgi.student_registration.security.dto.LoginRequest;
+import org.tutgi.student_registration.security.dto.EmployeeLoginRequest;
+import org.tutgi.student_registration.security.dto.StudentLoginRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,6 +37,7 @@ class AuthServiceIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private EmployeeRepository employeeRepository;
+    @Autowired private StudentsRepository studentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     private final String BASE_URL = "/tutgi/api/v1/auth";
@@ -58,7 +61,7 @@ class AuthServiceIntegrationTest {
     }
 
     @Test
-    void confirmThenLogin_successfulFlow() throws Exception {
+    void confirmEmployeeThenLogin_successfulFlow() throws Exception {
         String newEmail = "newuser@example.com";
         String department = "NewDepartment";
         String newPassword = "Newpass123@";
@@ -79,8 +82,8 @@ class AuthServiceIntegrationTest {
                 .andExpect(jsonPath("$.data").value(true))
                 .andExpect(jsonPath("$.message").value("User confirm successful."));
 
-        LoginRequest loginRequest = new LoginRequest(newEmail, newPassword);
-        mockMvc.perform(post(BASE_URL + "/login")
+        EmployeeLoginRequest loginRequest = new EmployeeLoginRequest(newEmail, newPassword);
+        mockMvc.perform(post(BASE_URL + "/employee/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
@@ -89,7 +92,24 @@ class AuthServiceIntegrationTest {
                 .andExpect(jsonPath("$.data.currentUser.email").value(newEmail));
     }
 
+    @Test
+    void studentLogin_successfulFlow() throws Exception {
+        String rollNo = "1Test-1";
+        String nrc = "13/MASATA(N)000000";
+        Students student = new Students();
+        student.setRollNo(rollNo);
+        student.setNrc(passwordEncoder.encode(nrc));
 
+        studentRepository.save(student);
+        StudentLoginRequest loginRequest = new StudentLoginRequest(rollNo, nrc);
+        mockMvc.perform(post(BASE_URL + "/students/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(1))
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.currentUser.rollNo").value(rollNo));
+    }
     @Test
     void checkUser_returnsLoginFirstTimeStatus() throws Exception {
         CheckRequest checkRequest = new CheckRequest(testEmail);
