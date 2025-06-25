@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
+import org.tutgi.student_registration.data.enums.UserType;
+import org.tutgi.student_registration.security.dto.CustomUserPrincipal;
 import org.tutgi.student_registration.security.service.normal.JwtService;
 
 import io.jsonwebtoken.Claims;
@@ -31,75 +34,75 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-    private final JwtService jwtService;
+	private static final String AUTHORIZATION_HEADER = "Authorization";
+	private static final String BEARER_PREFIX = "Bearer ";
+	private final JwtService jwtService;
 
-    private List<String> getPermittedUrls() {
-        return Arrays.asList(
-                "/tutgi/api/v1/auth/**",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/swagger-resources/**",
-                "/webjars/**",
-                "/api/v1/public/**",
-                "/api/v1/users/change-password",
-                "/api/v1/users"
-        );
-    }
+	private List<String> getPermittedUrls() {
+		return Arrays.asList(
+				"/tutgi/api/v1/auth/students/**",
+				"/tutgi/api/v1/auth/employee/**",
+				"/v3/api-docs/**",
+				"/swagger-ui/**",
+				"/swagger-ui.html",
+				"/swagger-resources/**",
+				"/webjars/**", 
+				"/api/v1/public/**", 
+				"/api/v1/users/change-password",
+				"/api/v1/users");
+	}
 
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain)
-            throws ServletException, IOException {
-    	log.info("Incoming request: {}", request.getRequestURI());
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response,
+			@NotNull FilterChain filterChain) throws ServletException, IOException {
+		log.info("Incoming request: {}", request.getRequestURI());
 
-    	String requestPath = request.getRequestURI();
+		String requestPath = request.getRequestURI();
 
-        if (isPermitted(requestPath)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+		if (isPermitted(requestPath)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
-        final String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
+		final String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
-            return;
-        }
+		if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
+			return;
+		}
 
-        final String token = authorizationHeader.substring(BEARER_PREFIX.length());
+		final String token = authorizationHeader.substring(BEARER_PREFIX.length());
 
-        try {
-            final Claims claims = jwtService.validateToken(token);
+		try {
+			final Claims claims = jwtService.validateToken(token);
+			Long userId = claims.get("id", Long.class);
+			String identifier = claims.getSubject();
+			UserType userType = claims.get("userType", UserType.class);
 
-            String username = claims.getSubject();
-            String role = claims.get("role", String.class);
+			List<?> rawRoles = claims.get("authorities", List.class);
+			List<String> roles = (rawRoles == null) ? List.of()
+					: rawRoles.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
+			Collection<GrantedAuthority> authorities = roles.stream()
+					.map(role -> new SimpleGrantedAuthority("ROLE_" + role)).collect(Collectors.toList());
+			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+					new CustomUserPrincipal(userId, identifier, userType), null, authorities);
+			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			System.out.println("++++++++++++++++++++"+authentication.getPrincipal());
+			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            Collection<? extends GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority("ROLE_" + role));
+			filterChain.doFilter(request, response);
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    username,
-                    null,
-                    authorities
-            );
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+		} catch (UnauthorizedException e) {
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+		} catch (Exception e) {
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
+		}
+	}
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            filterChain.doFilter(request, response);
-
-        } catch (UnauthorizedException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
-        }
-    }
-    
-    private boolean isPermitted(String requestPath) {
-        return getPermittedUrls().stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
-    }
+	private boolean isPermitted(String requestPath) {
+		return getPermittedUrls().stream().anyMatch(pattern -> pathMatcher.match(pattern, requestPath));
+	}
 
 }

@@ -12,11 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeDto {
-    private String name;
-    
-    private String email;
-    
-    private String department;
-
-    private RoleName roleName;
+	private String name;
+	private String email;
+	private String department;
+	private RoleName roleName;
 }

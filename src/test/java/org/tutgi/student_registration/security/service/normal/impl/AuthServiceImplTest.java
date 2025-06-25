@@ -21,17 +21,13 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.service.EmailService;
 import org.tutgi.student_registration.data.enums.RoleName;
 import org.tutgi.student_registration.data.models.Employee;
-import org.tutgi.student_registration.features.employee.admin.dto.EmployeeRegisterRequest;
-import org.tutgi.student_registration.features.employee.admin.dto.RegisterRequest;
-import org.tutgi.student_registration.features.employee.admin.service.impl.AdminServiceImpl;
 import org.tutgi.student_registration.features.employee.shared.dto.EmployeeDto;
 import org.tutgi.student_registration.features.employee.shared.repository.EmployeeRepository;
 import org.tutgi.student_registration.features.students.repository.StudentsRepository;
-import org.tutgi.student_registration.features.users.dto.response.UserDto;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
 import org.tutgi.student_registration.security.dto.CheckRequest;
 import org.tutgi.student_registration.security.dto.ConfirmRequest;
-import org.tutgi.student_registration.security.dto.LoginRequest;
+import org.tutgi.student_registration.security.dto.EmployeeLoginRequest;
 import org.tutgi.student_registration.security.utils.AuthUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +53,7 @@ class AuthServiceImplTest {
 
 	@Test
 	void employee_authenticateUser_successful() {
-		LoginRequest request = new LoginRequest("test@example.com", "password123");
+		EmployeeLoginRequest request = new EmployeeLoginRequest("test@example.com", "password123");
 		Employee employee = Employee.builder().email("test@example.com").password("encoded").role(RoleName.ADMIN)
 				.build();
 
@@ -66,7 +62,7 @@ class AuthServiceImplTest {
 		when(authUtil.generateTokens(any())).thenReturn(Map.of("accessToken", "token"));
 		when(modelMapper.map(any(), eq(EmployeeDto.class))).thenReturn(new EmployeeDto());
 
-		ApiResponse response = authService.authenticateUser(request);
+		ApiResponse response = authService.authenticateEmployee(request);
 
 		assertEquals(1, response.getSuccess());
 		assertEquals("You are successfully logged in!", response.getMessage());
@@ -74,13 +70,13 @@ class AuthServiceImplTest {
 
 	@Test
 	void authenticateUser_invalidPassword() {
-		LoginRequest request = new LoginRequest("test@example.com", "wrongpass");
+		EmployeeLoginRequest request = new EmployeeLoginRequest("test@example.com", "wrongpass");
 		Employee employee = Employee.builder().email("test@example.com").password("encoded").build();
 
 		when(employeeRepository.findByEmail("test@example.com")).thenReturn(Optional.of(employee));
 		when(passwordEncoder.matches("wrongpass", "encoded")).thenReturn(false);
 
-		ApiResponse response = authService.authenticateUser(request);
+		ApiResponse response = authService.authenticateEmployee(request);
 		assertEquals(0, response.getSuccess());
 		assertEquals("Invalid email or password", response.getMessage());
 	}
