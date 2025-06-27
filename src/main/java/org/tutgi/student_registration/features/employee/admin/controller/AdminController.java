@@ -16,6 +16,7 @@ import org.tutgi.student_registration.features.employee.admin.service.AdminServi
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,18 +31,47 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminController {
 	private final AdminService adminService;
 	 
-	@Operation(summary = "Register a user (Student or Employee)",
-		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody (
-		        description = "Polymorphic request body for user registration. " +
-		                      "The 'userType' field determines the schema used.",
+	@Operation(
+		    summary = "Register a user (Student or Employee)",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+		        description = "Polymorphic request body for user registration. The 'userType' field determines the schema used.",
 		        required = true,
 		        content = @Content(
-		            schema = @Schema(implementation = RegisterRequest.class)
+		            schema = @Schema(
+		                oneOf = {EmployeeRegisterRequest.class, StudentRegisterRequest.class},
+		                discriminatorProperty = "userType"
+		            ),
+		            examples = {
+		                @ExampleObject(
+		                    name = "Student Example",
+		                    value = """
+		                            {
+		                              "userType": "Student",
+		                              "rollNo": "S123456",
+		                              "nrc": "12/THA(N)123456"
+		                            }
+		                            """
+		                ),
+		                @ExampleObject(
+		                    name = "Employee Example",
+		                    value = """
+		                            {
+		                              "userType": "Employee",
+		                              "department": "IT",
+		                              "email": "john.doe@university.edu",
+		                              "role": "Admin"
+		                            }
+		                            """
+		                )
+		            }
 		        )
 		    ),
 		    responses = {
-		    		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User registered successfully",
-		            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "User registered successfully",
+		            content = @Content(schema = @Schema(implementation = ApiResponse.class))
+		        )
 		    }
 		)
 	@PostMapping("/register")

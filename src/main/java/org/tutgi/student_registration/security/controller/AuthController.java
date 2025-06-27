@@ -15,7 +15,8 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.security.dto.CheckRequest;
 import org.tutgi.student_registration.security.dto.ConfirmRequest;
-import org.tutgi.student_registration.security.dto.LoginRequest;
+import org.tutgi.student_registration.security.dto.EmployeeLoginRequest;
+import org.tutgi.student_registration.security.dto.StudentLoginRequest;
 import org.tutgi.student_registration.security.service.normal.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,24 +36,46 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/login")
+    @PostMapping("/employee/login")
     @Operation(
-            summary = "Login a user",
-            description = "Authenticates a user using email and password, and returns authentication tokens.",
+            summary = "Login an employee",
+            description = "Authenticates an employee using email and password, and returns authentication tokens.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200", description = "Login successful",
                             content = @Content(schema = @Schema(implementation = ApiResponse.class)))
             }
     )
-    public ResponseEntity<ApiResponse> login(
-            @RequestBody final LoginRequest loginRequest,
+    public ResponseEntity<ApiResponse> employeeLogin(
+            @RequestBody final EmployeeLoginRequest loginRequest,
             final HttpServletRequest request
     ){
     	log.info("Received login attempt for name: {}", loginRequest.email());
     	
         final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-        final ApiResponse response =  authService.authenticateUser(loginRequest);
+        final ApiResponse response =  authService.authenticateEmployee(loginRequest);
+
+        return ResponseUtils.buildResponse(request, response, requestStartTime);
+    }
+    
+    @PostMapping("/students/login")
+    @Operation(
+            summary = "Login a student",
+            description = "Authenticates a student using roll number and nrc, and returns authentication tokens.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200", description = "Login successful",
+                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    public ResponseEntity<ApiResponse> studentsLogin(
+            @RequestBody final StudentLoginRequest loginRequest,
+            final HttpServletRequest request
+    ){
+    	log.info("Received login attempt for roll number: {}", loginRequest.rollNo());
+    	
+        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+        final ApiResponse response =  authService.authenticateStudent(loginRequest);
 
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }
@@ -152,7 +175,7 @@ public class AuthController {
     )
     @GetMapping("/me")
     public ResponseEntity<ApiResponse> getCurrentUser(
-            @RequestHeader("Authorization") final String authHeader,
+    		@RequestHeader("Authorization") final String authHeader,
             @RequestParam(required = false) final String routeName,
             @RequestParam(required = false) final String browserName,
             @RequestParam(required = false) final String pageName,
@@ -160,7 +183,7 @@ public class AuthController {
         log.info("Fetching current authenticated user");
 
         final double requestStartTime = System.currentTimeMillis();
-        final ApiResponse response = this.authService.getCurrentUser(authHeader, routeName, browserName, pageName);
+        final ApiResponse response = this.authService.getCurrentUser(authHeader,routeName, browserName, pageName);
 
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }

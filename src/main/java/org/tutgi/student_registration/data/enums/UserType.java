@@ -25,9 +25,9 @@ public enum UserType {
 
     @JsonCreator
     public static UserType fromDisplayName(String value) {
-        for (UserType role : UserType.values()) {
-            if (role.displayName.equalsIgnoreCase(value.trim())) {
-                return role;
+        for (UserType type : UserType.values()) {
+            if (type.displayName.equalsIgnoreCase(value.trim())) {
+                return type;
             }
         }
         throw new IllegalArgumentException("Unknown role: " + value);
