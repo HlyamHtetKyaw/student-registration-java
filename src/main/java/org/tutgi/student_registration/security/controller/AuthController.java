@@ -175,6 +175,7 @@ public class AuthController {
     )
     @GetMapping("/me")
     public ResponseEntity<ApiResponse> getCurrentUser(
+    		@RequestHeader("Authorization") final String authHeader,
             @RequestParam(required = false) final String routeName,
             @RequestParam(required = false) final String browserName,
             @RequestParam(required = false) final String pageName,
@@ -182,7 +183,7 @@ public class AuthController {
         log.info("Fetching current authenticated user");
 
         final double requestStartTime = System.currentTimeMillis();
-        final ApiResponse response = this.authService.getCurrentUser(routeName, browserName, pageName);
+        final ApiResponse response = this.authService.getCurrentUser(authHeader,routeName, browserName, pageName);
 
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }

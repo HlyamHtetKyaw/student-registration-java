@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
 		log.info("User authenticated successfully: {}", loginRequest.email());
 
 		final EmployeeDto employeeDto = DtoUtil.map(employee, EmployeeDto.class, modelMapper);
-		employeeDto.setRoleName(employee.getRole());
+		employeeDto.setRole(employee.getRole());
 
 		AuthenticatedUser authUser = AuthUserUtility.fromEmployee(employee);
 		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
@@ -157,9 +157,9 @@ public class AuthServiceImpl implements AuthService {
 //    }
 
 	@Override
-	public ApiResponse getCurrentUser(final String routeName, final String browserName,
+	public ApiResponse getCurrentUser(String authHeader,final String routeName, final String browserName,
 			final String pageName) {
-		final Object userDto = userUtil.getCurrentUserInternal();
+		final Object userDto = userUtil.getCurrentUserDto(authHeader);
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(Map.of("user", userDto))
 				.message("User retrieved successfully").build();
 	}

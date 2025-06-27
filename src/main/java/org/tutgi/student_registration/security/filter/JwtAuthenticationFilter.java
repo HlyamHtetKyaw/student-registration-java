@@ -40,8 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private List<String> getPermittedUrls() {
 		return Arrays.asList(
-				"/tutgi/api/v1/auth/students/**",
-				"/tutgi/api/v1/auth/employee/**",
+				"/tutgi/api/v1/auth/**",
 				"/v3/api-docs/**",
 				"/swagger-ui/**",
 				"/swagger-ui.html",
@@ -79,8 +78,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			final Claims claims = jwtService.validateToken(token);
 			Long userId = claims.get("id", Long.class);
 			String identifier = claims.getSubject();
-			UserType userType = claims.get("userType", UserType.class);
-
+			String userTypeStr = claims.get("userType", String.class);
+			log.info("User Type as string: {}",userTypeStr);
+			UserType userType = UserType.fromDisplayName(userTypeStr);
+			log.info("User Type as UserType: {}",userType);
+			
 			List<?> rawRoles = claims.get("authorities", List.class);
 			List<String> roles = (rawRoles == null) ? List.of()
 					: rawRoles.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
@@ -89,7 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 					new CustomUserPrincipal(userId, identifier, userType), null, authorities);
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-			System.out.println("++++++++++++++++++++"+authentication.getPrincipal());
+			log.info("Authenticated principal: {}", authentication.getPrincipal());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
 			filterChain.doFilter(request, response);
@@ -97,8 +99,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		} catch (UnauthorizedException e) {
 			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
 		} catch (Exception e) {
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
+		    log.error("JWT authentication error", e);
+		    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token.");
 		}
+
 	}
 
 	private boolean isPermitted(String requestPath) {

@@ -9,8 +9,10 @@ import org.tutgi.student_registration.core.nrc.service.NrcDataLoadingService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
+@Slf4j
 public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 	private final NrcDataLoadingService nrcData;
 	
@@ -28,7 +30,7 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 		if (lastParenIndex != -1 && lastParenIndex + 1 < nrc.length()
 				&& Character.isDigit(nrc.charAt(lastParenIndex + 1))) {
 			nrcPartToValidate = nrc.substring(0, lastParenIndex + 1);
-			System.out.println("Nrc Part to validate is " + nrcPartToValidate);
+			log.info("Nrc Part to validate is {}: ",nrcPartToValidate);
 		}
 		if (!nrcPartToValidate.matches("^[\\d\u1040-\u1049]{1,2}/[A-Z\u1000-\u109F]+\\([A-Z\u1000-\u109F]+\\)$")) {
 			return buildViolation(context,"Nrc format is invalid.");
