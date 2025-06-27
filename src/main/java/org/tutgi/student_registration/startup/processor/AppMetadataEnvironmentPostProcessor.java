@@ -1,12 +1,12 @@
-package org.tutgi.student_registration.config.processor;
+package org.tutgi.student_registration.startup.processor;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Component
 public class AppMetadataEnvironmentPostProcessor implements EnvironmentPostProcessor {
@@ -17,3 +17,5 @@ public class AppMetadataEnvironmentPostProcessor implements EnvironmentPostProce
         environment.getSystemProperties().put("app.boot.time", bootTime);
     }
 }
+
+
