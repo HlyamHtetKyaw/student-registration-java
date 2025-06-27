@@ -59,7 +59,7 @@ public class AdminController {
 		                              "userType": "Employee",
 		                              "department": "IT",
 		                              "email": "john.doe@university.edu",
-		                              "role": "Admin"
+		                              "role": "Student Affair"
 		                            }
 		                            """
 		                )

@@ -7,8 +7,7 @@ public enum RoleName {
     ADMIN("Admin"),
     STUDENT_AFFAIR("Student Affair"),
     FINANCE("Finance"),
-    DEAN("Dean"),
-    STUDENT("Student");
+    DEAN("Dean");
 
     private final String displayName;
 

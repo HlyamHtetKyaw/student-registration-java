@@ -3,6 +3,7 @@ package org.tutgi.student_registration.config.validators;
 import java.util.Optional;
 
 import org.tutgi.student_registration.config.annotations.ValidNrc;
+import org.tutgi.student_registration.config.utils.ValidationUtils;
 import org.tutgi.student_registration.core.nrc.models.NrcState;
 import org.tutgi.student_registration.core.nrc.service.NrcDataLoadingService;
 
@@ -19,10 +20,10 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 	@Override
 	public boolean isValid(String nrc,ConstraintValidatorContext context) {
 		if (nrcData.getNrcData() == null) {
-		    return buildViolation(context, "NRC data is not loaded.");
+		    return ValidationUtils.buildViolation(context, "NRC data is not loaded.");
 		}
 		if(nrc==null) {
-			return buildViolation(context,"Nrc cannot be null.");
+			return ValidationUtils.buildViolation(context,"Nrc cannot be null.");
 		}
 		String nrcPartToValidate = nrc;
 		int lastParenIndex = nrc.lastIndexOf(")");
@@ -33,19 +34,19 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 			log.info("Nrc Part to validate is {}: ",nrcPartToValidate);
 		}
 		if (!nrcPartToValidate.matches("^[\\d\u1040-\u1049]{1,2}/[A-Z\u1000-\u109F]+\\([A-Z\u1000-\u109F]+\\)$")) {
-			return buildViolation(context,"Nrc format is invalid.");
+			return ValidationUtils.buildViolation(context,"Nrc format is invalid.");
 		}
 		
 		String[] parts = nrcPartToValidate.split("[/()]");
 		if (parts.length != 3) {
-		    return buildViolation(context, "NRC format is incomplete.");
+		    return ValidationUtils.buildViolation(context, "NRC format is incomplete.");
 		}
 		String stateNumber = parts[0];
 		String townshipCodeOrShort = parts[1];
 		String nrcType = parts[2];
 		
 		if (parts.length != 3) {
-		    return buildViolation(context, "NRC format is incomplete.");
+		    return ValidationUtils.buildViolation(context, "NRC format is incomplete.");
 		}
 
 		// 1. Validate NRC Type (e.g., 'N', 'E', 'P', 'T', 'Y', 'S' - in English or
@@ -55,7 +56,7 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 				|| (type.name() != null && type.name().mm() != null && type.name().mm().equalsIgnoreCase(nrcType)));
 
 		if (!isNrcTypeValid) {
-			return buildViolation(context,"Nrc type is invalid.");
+			return ValidationUtils.buildViolation(context,"Nrc type is invalid.");
 		}
 
 		// 2. Validate State Number
@@ -65,7 +66,7 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 				.findFirst();
 
 		if (foundState.isEmpty()) {
-			return buildViolation(context,"State cannot be empty.");
+			return ValidationUtils.buildViolation(context,"State cannot be empty.");
 		}
 
 		// 3. Validate Township Code/Short Name for the found state (in English or
@@ -81,10 +82,4 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 
 		return isTownshipValid;
 	}
-	private boolean buildViolation(ConstraintValidatorContext context, String message) {
-        context.disableDefaultConstraintViolation();
-        context.buildConstraintViolationWithTemplate(message)
-               .addConstraintViolation();
-        return false;
-    }
 }

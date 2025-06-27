@@ -5,8 +5,6 @@ import org.tutgi.student_registration.data.enums.UserType;
 
 import jakarta.validation.constraints.NotBlank;
 
-//@JsonTypeName("Student")
-//@Schema(name = "Student", description = "Registration details for a student.")
 public record StudentRegisterRequest(
 	    UserType userType, // must be "Student"
 	    @NotBlank(message = "roll number is required.")
