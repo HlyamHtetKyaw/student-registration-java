@@ -35,8 +35,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                        		"/tutgi/api/v1/auth/students/**",
-                				"/tutgi/api/v1/auth/employee/**",
+                        		"/tutgi/api/v1/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -46,7 +45,6 @@ public class SecurityConfig {
                                 "/api/v1/users/change-password",
                                 "/api/v1/users"
                         ).permitAll()
-                        .requestMatchers("/api/v1/auth/me").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasRole(RoleName.ADMIN.name())
                         .requestMatchers("/api/v1/courses/**").hasRole(Authority.STUDENT.name())
                         .anyRequest().authenticated()

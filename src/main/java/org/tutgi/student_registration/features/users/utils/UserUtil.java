@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
+import org.tutgi.student_registration.data.enums.UserType;
 import org.tutgi.student_registration.data.models.Employee;
 import org.tutgi.student_registration.data.models.Students;
 import org.tutgi.student_registration.features.employee.shared.dto.EmployeeDto;
@@ -29,28 +30,34 @@ public class UserUtil {
 	private final StudentsRepository studentsRepository;
 	private final ModelMapper modelMapper;
 
-	public UserDto getCurrentUserDto(final String authHeader) {
-		final String email = this.extractEmailFromToken(authHeader);
-		final Employee user = this.findUserByEmail(email);
-		return this.modelMapper.map(user, UserDto.class);
+	public Object getCurrentUserDto(final String authHeader) {
+		final Claims claims = this.extractClaimsFromToken(authHeader);
+		UserType userType = UserType.fromDisplayName((String) claims.get("userType"));
+		switch(userType) {
+		case STUDENT: {
+			Students student = studentsRepository.findByRollNo(claims.getSubject())
+					.orElseThrow(() -> new UnauthorizedException("Student not found"));
+			return modelMapper.map(student, StudentDto.class);
+		}
+		case EMPLOYEE: {
+			Employee employee = employeeRepository.findByEmail(claims.getSubject())
+					.orElseThrow(() -> new UnauthorizedException("Employee not found"));
+			return modelMapper.map(employee, EmployeeDto.class);
+		}
+		default:
+			throw new UnauthorizedException("Unknown user type");
+		
+		}
 	}
 
-	public String extractEmailFromToken(final String authHeader) {
+	public Claims extractClaimsFromToken(final String authHeader) {
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 			log.warn("Invalid Authorization header received");
 			throw new UnauthorizedException("Unauthorized: Missing or invalid token");
 		}
 
 		final String token = authHeader.substring(7);
-		final Claims claims = this.jwtService.validateToken(token);
-		return claims.getSubject();
-	}
-
-	public Employee findUserByEmail(final String email) {
-		return this.employeeRepository.findByEmail(email).orElseThrow(() -> {
-			log.warn("User not found for email: {}", email);
-			return new UnauthorizedException("User not found");
-		});
+		return this.jwtService.validateToken(token);
 	}
 
 	public Object getCurrentUserInternal() {
@@ -60,7 +67,6 @@ public class UserUtil {
 			throw new UnauthorizedException("User is not authenticated");
 		}
 		if (!(authentication.getPrincipal() instanceof CustomUserPrincipal principal)) {
-			System.out.println("**************************"+authentication.getPrincipal());
 			throw new UnauthorizedException("Invalid authentication principal");
 		}
 		String identifier = principal.identifier();

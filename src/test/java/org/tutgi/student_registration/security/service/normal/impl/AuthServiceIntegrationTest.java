@@ -1,30 +1,45 @@
 package org.tutgi.student_registration.security.service.normal.impl;
 
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.tutgi.student_registration.config.response.dto.ApiResponse;
+import org.tutgi.student_registration.config.utils.DtoUtil;
 import org.tutgi.student_registration.data.enums.RoleName;
 import org.tutgi.student_registration.data.models.Employee;
 import org.tutgi.student_registration.data.models.Students;
 import org.tutgi.student_registration.features.employee.shared.repository.EmployeeRepository;
+import org.tutgi.student_registration.features.students.dto.response.StudentDto;
 import org.tutgi.student_registration.features.students.repository.StudentsRepository;
+import org.tutgi.student_registration.features.users.utils.UserUtil;
 import org.tutgi.student_registration.security.dto.CheckRequest;
 import org.tutgi.student_registration.security.dto.ConfirmRequest;
 import org.tutgi.student_registration.security.dto.EmployeeLoginRequest;
 import org.tutgi.student_registration.security.dto.StudentLoginRequest;
+import org.tutgi.student_registration.security.service.normal.AuthService;
+import org.tutgi.student_registration.security.utils.AuthUserUtility;
+import org.tutgi.student_registration.security.utils.AuthUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,7 +54,11 @@ class AuthServiceIntegrationTest {
     @Autowired private EmployeeRepository employeeRepository;
     @Autowired private StudentsRepository studentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
-
+    @Autowired private AuthService authService;
+    @Autowired private AuthUtil authUtil;
+    @Autowired private UserUtil userUtil;
+    @Autowired private ModelMapper modelMapper;
+    
     private final String BASE_URL = "/tutgi/api/v1/auth";
 
     private String testEmail = "testuser@example.com";
@@ -151,6 +170,29 @@ class AuthServiceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(confirmRequest)))
                 .andExpect(status().isBadRequest());
+    }
+    
+    @Test
+    void shouldReturnCurrentUserSuccessfully() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/me")
+                        .header("Authorization","Bearer "+getToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(1))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("User retrieved successfully"));
+    }
+    
+    String getToken(){
+    	String rollNo = "1Test-2";
+        String nrc = "13/MASATA(N)000000";
+        Students student = Students.builder().rollNo(rollNo).nrc(passwordEncoder.encode(nrc)).build();
+        studentRepository.save(student);
+        AuthenticatedUser authUser = AuthUserUtility.fromStudent(student);
+
+        Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+        String accessToken = (String) tokenData.get("accessToken");
+    	return accessToken;
     }
 }
 
