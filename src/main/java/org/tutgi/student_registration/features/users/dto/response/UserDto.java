@@ -12,11 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDto {
-    private Long id;
     private String name;
     private String email;
-    private boolean status;
-    private Integer genderId;
+    private String rollNo;
     private String genderName;
     private String dateFormat;
     private String currencyCode;

@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy; // Import this
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.tutgi.student_registration.data.enums.Authority;
 import org.tutgi.student_registration.data.enums.RoleName; // Assuming RoleName is an enum like "ADMIN", "DEAN"
 import org.tutgi.student_registration.security.filter.CustomAuthenticationEntryPoint;
 import org.tutgi.student_registration.security.filter.JwtAuthenticationFilter;
@@ -34,7 +35,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/tutgi/api/v1/auth/**",
+                        		"/tutgi/api/v1/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -45,7 +46,7 @@ public class SecurityConfig {
                                 "/api/v1/users"
                         ).permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole(RoleName.ADMIN.name())
-                        .requestMatchers("/api/v1/courses/**").hasRole(RoleName.DEAN.name())
+                        .requestMatchers("/api/v1/courses/**").hasRole(Authority.STUDENT.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
