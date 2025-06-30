@@ -79,7 +79,29 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 								&& township.shortName().en().equalsIgnoreCase(townshipCodeOrShort))
 						|| (township.shortName() != null && township.shortName().mm() != null
 								&& township.shortName().mm().equalsIgnoreCase(townshipCodeOrShort)));
-
+		if (!isTownshipValid) {
+		    return ValidationUtils.buildViolation(context,"Township is invalid.");
+		}
+		String numberPart = nrc.substring(nrcPartToValidate.length()).trim();
+		if (!numberPart.matches("^[\\d\u1040-\u1049]{1,6}$")) {
+		    return ValidationUtils.buildViolation(context, "NRC number must be 1 to 6 digits (English or Burmese).");
+		}
+		String normalizedNumber = convertBurmeseDigitsToEnglish(numberPart);
+		if (normalizedNumber.chars().distinct().count() == 1) {
+		    return ValidationUtils.buildViolation(context, "NRC number cannot have all identical digits.");
+		}
 		return isTownshipValid;
+	}
+	
+	private String convertBurmeseDigitsToEnglish(String input) {
+	    StringBuilder result = new StringBuilder();
+	    for (char ch : input.toCharArray()) {
+	        if (ch >= '\u1040' && ch <= '\u1049') {
+	            result.append((char) ('0' + (ch - '\u1040')));
+	        } else {
+	            result.append(ch);
+	        }
+	    }
+	    return result.toString();
 	}
 }
