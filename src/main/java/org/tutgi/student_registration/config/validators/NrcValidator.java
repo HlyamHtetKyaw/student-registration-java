@@ -44,10 +44,6 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 		String stateNumber = parts[0];
 		String townshipCodeOrShort = parts[1];
 		String nrcType = parts[2];
-		
-		if (parts.length != 3) {
-		    return ValidationUtils.buildViolation(context, "NRC format is incomplete.");
-		}
 
 		// 1. Validate NRC Type (e.g., 'N', 'E', 'P', 'T', 'Y', 'S' - in English or
 		// Burmese)
