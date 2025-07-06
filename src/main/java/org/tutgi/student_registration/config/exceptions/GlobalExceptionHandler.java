@@ -189,55 +189,55 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), "An unexpected error occurred.", request);
     }
     
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse> handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request", ex.getLocalizedMessage(), request);
-    }
-    
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "HTTP method not allowed", ex.getMessage(), request);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), "Access is denied", request);
-    }
-    
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<ApiResponse> handleMissingParams(MissingServletRequestParameterException ex, HttpServletRequest request) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "Required request parameter is missing", request);
-    }
-    
-    @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ApiResponse> handleDataAccessException(DataAccessException ex, HttpServletRequest request) {
-        return buildErrorResponse(
-            HttpStatus.SERVICE_UNAVAILABLE,
-            "Database access error",
-            "Could not access the database. Please try again later.",
-            request
-        );
-    }
-
-    @ExceptionHandler(TransactionSystemException.class)
-    public ResponseEntity<ApiResponse> handleTransactionSystemException(TransactionSystemException ex, HttpServletRequest request) {
-        return buildErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "Transaction failed",
-            "Database transaction could not be completed.",
-            request
-        );
-    }
-
-    @ExceptionHandler(PersistenceException.class)
-    public ResponseEntity<ApiResponse> handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
-        return buildErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "Persistence error",
-            "An unexpected database error occurred.",
-            request
-        );
-    }
+//    @ExceptionHandler(HttpMessageNotReadableException.class)
+//    public ResponseEntity<ApiResponse> handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request", ex.getLocalizedMessage(), request);
+//    }
+//    
+//    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+//    public ResponseEntity<ApiResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "HTTP method not allowed", ex.getMessage(), request);
+//    }
+//
+//    @ExceptionHandler(AccessDeniedException.class)
+//    public ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), "Access is denied", request);
+//    }
+//    
+//    @ExceptionHandler(MissingServletRequestParameterException.class)
+//    public ResponseEntity<ApiResponse> handleMissingParams(MissingServletRequestParameterException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "Required request parameter is missing", request);
+//    }
+//    
+//    @ExceptionHandler(DataAccessException.class)
+//    public ResponseEntity<ApiResponse> handleDataAccessException(DataAccessException ex, HttpServletRequest request) {
+//        return buildErrorResponse(
+//            HttpStatus.SERVICE_UNAVAILABLE,
+//            "Database access error",
+//            "Could not access the database. Please try again later.",
+//            request
+//        );
+//    }
+//
+//    @ExceptionHandler(TransactionSystemException.class)
+//    public ResponseEntity<ApiResponse> handleTransactionSystemException(TransactionSystemException ex, HttpServletRequest request) {
+//        return buildErrorResponse(
+//            HttpStatus.INTERNAL_SERVER_ERROR,
+//            "Transaction failed",
+//            "Database transaction could not be completed.",
+//            request
+//        );
+//    }
+//
+//    @ExceptionHandler(PersistenceException.class)
+//    public ResponseEntity<ApiResponse> handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
+//        return buildErrorResponse(
+//            HttpStatus.INTERNAL_SERVER_ERROR,
+//            "Persistence error",
+//            "An unexpected database error occurred.",
+//            request
+//        );
+//    }
 
     /**
      * Utility method to construct a standardized error response.
