@@ -103,17 +103,17 @@ public class AuthServiceImpl implements AuthService {
 			return new UnauthorizedException("Invalid email or password");
 		});
 
-		if (!this.passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+		if(!this.passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
 			log.warn("Invalid password for user: {}", loginRequest.email());
 			return ApiResponse.builder().success(0).code(HttpStatus.UNAUTHORIZED.value())
 					.message("Invalid email or password").build();
 		}
 
 		log.info("User authenticated successfully: {}", email);
-
 		final UserLoginResponse loginResponse = new UserLoginResponse();
 		AuthenticatedUser authUser = AuthUserUtility.fromUser(user);
 		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+		
 		loginResponse.setEmail(email);
 		loginResponse.setRole(user.getRole().getName());
 		loginResponse.setAccessToken(tokenData.get("accessToken"));
