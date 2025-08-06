@@ -111,9 +111,11 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("User authenticated successfully: {}", email);
 
-		final UserLoginResponse loginResponse = DtoUtil.map(user, UserLoginResponse.class, modelMapper);
+		final UserLoginResponse loginResponse = new UserLoginResponse();
 		AuthenticatedUser authUser = AuthUserUtility.fromUser(user);
 		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+		loginResponse.setEmail(email);
+		loginResponse.setRole(user.getRole().getName());
 		loginResponse.setAccessToken(tokenData.get("accessToken"));
 		loginResponse.setRefreshToken(tokenData.get("refreshToken"));
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
