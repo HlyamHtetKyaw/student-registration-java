@@ -1,41 +1,28 @@
 package org.tutgi.student_registration.data.models;
 
-import java.time.LocalDateTime;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.tutgi.student_registration.data.enums.RoleName;
+import org.tutgi.student_registration.data.models.entity.MasterData;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @Entity
-@Builder
-@AllArgsConstructor
-@RequiredArgsConstructor
-@Table(name = "Roles")
-public class Role {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name="roles")
+public class Role extends MasterData {
+	@Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private RoleName name;
 
-    @Column(nullable = true)
-    private String name;
-    
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    public Role(final RoleName name) {
+        this.name = name;
+    }
 }
