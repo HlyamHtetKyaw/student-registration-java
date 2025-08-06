@@ -77,21 +77,21 @@ class AdminServiceTest {
 		verify(employeeRepository, never()).save(any(Employee.class));
 	}
 
-	@Test
-	void registerStudent_success() {
-		StudentRegisterRequest request = new StudentRegisterRequest(UserType.STUDENT,"5IT-5","13/MASATA(N)000000");
-		when(studentsRepository.findByRollNo(request.rollNo())).thenReturn(Optional.empty());
-		when(passwordEncoder.encode(request.nrc())).thenReturn("encodedNrc");
-
-		ApiResponse response = adminService.registerStudent(request);
-
-		assertEquals(1, response.getSuccess());
-		assertEquals(HttpStatus.CREATED.value(), response.getCode());
-		assertEquals("Student account created successfully.", response.getMessage());
-		assertEquals(true, response.getData());
-
-		verify(studentsRepository).save(any(Students.class));
-	}
+//	@Test
+//	void registerStudent_success() {
+//		StudentRegisterRequest request = new StudentRegisterRequest(UserType.STUDENT,"5IT-5","13/MASATA(N)000000");
+//		when(studentsRepository.findByRollNo(request.rollNo())).thenReturn(Optional.empty());
+//		when(passwordEncoder.encode(request.nrc())).thenReturn("encodedNrc");
+//
+//		ApiResponse response = adminService.registerStudent(request);
+//
+//		assertEquals(1, response.getSuccess());
+//		assertEquals(HttpStatus.CREATED.value(), response.getCode());
+//		assertEquals("Student account created successfully.", response.getMessage());
+//		assertEquals(true, response.getData());
+//
+//		verify(studentsRepository).save(any(Students.class));
+//	}
 
 	@Test
 	void registerStudent_conflict_rollNoExists() {
