@@ -38,7 +38,7 @@ public class AuthController {
             description = "Authenticates a user using email and password, and returns authentication tokens.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                            responseCode = "200", description = "Login successful",
+                            responseCode = "200", description = "You are successfully logged in!",
                             content = @Content(schema = @Schema(implementation = UserLoginResponse.class)))
             }
     )
