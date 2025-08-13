@@ -9,15 +9,21 @@ import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.service.EmailService;
-import org.tutgi.student_registration.config.utils.DtoUtil;
+import org.tutgi.student_registration.data.models.Token;
 import org.tutgi.student_registration.data.models.User;
+import org.tutgi.student_registration.data.repositories.TokenRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
+import org.tutgi.student_registration.security.dto.request.AccessTokenRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
+import org.tutgi.student_registration.security.dto.response.TokenResponse;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
+import org.tutgi.student_registration.security.service.normal.JwtService;
 import org.tutgi.student_registration.security.utils.AuthUserUtility;
 import org.tutgi.student_registration.security.utils.AuthUtil;
 
+import io.jsonwebtoken.Claims;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +35,9 @@ public class AuthServiceImpl implements AuthService {
 //	private final EmployeeRepository employeeRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final TokenRepository tokenRepository;
 	private final ModelMapper modelMapper;
+	private final JwtService jwtService;
 //	private final UserUtil userUtil;
 	private final AuthUtil authUtil;
 	private final EmailService emailService;
@@ -93,6 +101,7 @@ public class AuthServiceImpl implements AuthService {
 //				.data(Map.of("currentUser", studentDto, "accessToken", tokenData.get("accessToken")))
 //				.message("You are successfully logged in!").build();
 //	}
+	@Transactional
 	@Override
 	public ApiResponse authenticateUser(final UserLoginRequest loginRequest) {
 		final String email = loginRequest.email();
@@ -113,16 +122,35 @@ public class AuthServiceImpl implements AuthService {
 		final UserLoginResponse loginResponse = new UserLoginResponse();
 		AuthenticatedUser authUser = AuthUserUtility.fromUser(user);
 		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+		Token refreshToken = new Token();
+		refreshToken.setRefreshtoken((String)tokenData.get("refreshToken"));
+		refreshToken.assignUser(user);
+		tokenRepository.save(refreshToken);
 		
 		loginResponse.setEmail(email);
 		loginResponse.setRole(user.getRole().getName());
-		loginResponse.setAccessToken(tokenData.get("accessToken"));
-		loginResponse.setRefreshToken(tokenData.get("refreshToken"));
+		loginResponse.setToken(new TokenResponse(tokenData.get("accessToken"),tokenData.get("refreshToken")));
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
 				.data(loginResponse)
 				.message("You are successfully logged in!").build();
 	}
 	
+	@Override
+	public ApiResponse generateAccessToken(final AccessTokenRequest request) {
+		final Claims claims = jwtService.validateToken(request.refreshToken());
+		Long userId = claims.get("id", Long.class);
+		Token token = tokenRepository.findByRefreshtoken(request.refreshToken())
+				.orElseThrow(()->{return new UnauthorizedException("Refresh token does not exist.");});
+		if(!token.getUser().getId().equals(userId))throw new UnauthorizedException("User mismatch.");
+		AuthenticatedUser authUser = AuthUserUtility.fromUser(token.getUser());
+		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+		token.setRefreshtoken((String)tokenData.get("refreshToken"));
+		tokenRepository.save(token);
+		TokenResponse response = new TokenResponse(tokenData.get("accessToken"),tokenData.get("refreshToken"));
+		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
+				.data(response)
+				.message("Token generated successfully.").build();
+	}
 //	@Override
 //	public ApiResponse checkUser(final CheckRequest checkRequest) {
 //		final String email = checkRequest.email();

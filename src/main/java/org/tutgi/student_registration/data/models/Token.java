@@ -26,12 +26,8 @@ public class Token extends MasterData{
     @Column(nullable = false, unique = true, columnDefinition = "TEXT")
     private String refreshtoken;
 
-    @Column(nullable = false)
-    private Instant expiredAt;
-    
     public Token(String refreshtoken,Instant expiredAt) {
     	this.refreshtoken = refreshtoken;
-    	this.expiredAt = expiredAt;
     }
     
     public void assignUser(User user) {
