@@ -1,0 +1,52 @@
+services:
+  mysql-db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: student_registration_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 1223
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    container_name: student_registration_system
+    image: hlyamhtet/student-registration-system:latest
+    environment:
+      DB_HOST: mysql-db
+      DB_PORT: 3306
+      DB_NAME: student_registration_db
+      DB_USER: root
+      DB_PASSWORD: root
+      ADMIN_EMAIL: tu@tgi.com
+      JWT_SECRET_KEY: V7UpnwbHds52Jj1rGmY5UFzRFnYt2QczC3v/3VmOe1I=
+      SPRING_PROFILES_ACTIVE: uat
+    ports:
+      - "8080:8080"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - mysql-db
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql-db
+      PMA_USER: admin
+      PMA_PASSWORD: 1223
+
+volumes:
+  db_data:
+
