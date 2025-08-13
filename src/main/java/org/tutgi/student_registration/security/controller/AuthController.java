@@ -1,16 +1,14 @@
 package org.tutgi.student_registration.security.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
+import org.tutgi.student_registration.security.dto.request.AccessTokenRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
@@ -20,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,8 +41,8 @@ public class AuthController {
                             content = @Content(schema = @Schema(implementation = UserLoginResponse.class)))
             }
     )
-    public ResponseEntity<ApiResponse> studentsLogin(
-            @RequestBody final UserLoginRequest loginRequest,
+    public ResponseEntity<ApiResponse> userLogin(
+            @Valid @RequestBody final UserLoginRequest loginRequest,
             final HttpServletRequest request
     ){
         final double requestStartTime = RequestUtils.extractRequestStartTime(request);
@@ -51,6 +50,24 @@ public class AuthController {
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }
     
+    @PostMapping("/users/refresh")
+    @Operation(
+            summary = "Taking access token for a user",
+            description = "Retrieving new access token with refresh token.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200", description = "Token generated successfully.",
+                            content = @Content(schema = @Schema(implementation = AccessTokenRequest.class)))
+            }
+    )
+    public ResponseEntity<ApiResponse> refresh(
+            @Valid @RequestBody final AccessTokenRequest accessTokenReq,
+            final HttpServletRequest request
+    ){
+        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+        final ApiResponse response =  authService.generateAccessToken(accessTokenReq);
+        return ResponseUtils.buildResponse(request, response, requestStartTime);
+    }
 //    @Operation(
 //            summary = "Logout a user",
 //            description = "Logs out the current user by invalidating their session and tokens.",

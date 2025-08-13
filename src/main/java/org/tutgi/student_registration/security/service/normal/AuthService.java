@@ -3,6 +3,7 @@ package org.tutgi.student_registration.security.service.normal;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.security.dto.CheckRequest;
 import org.tutgi.student_registration.security.dto.ConfirmRequest;
+import org.tutgi.student_registration.security.dto.request.AccessTokenRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
 
 public interface AuthService {
@@ -10,8 +11,9 @@ public interface AuthService {
 //    
 //    ApiResponse authenticateStudent(final StudentLoginRequest loginRequest);
     
-	ApiResponse authenticateUser(final UserLoginRequest loginRequest);
+	ApiResponse authenticateUser(final UserLoginRequest request);
 	
+	ApiResponse generateAccessToken(final AccessTokenRequest request);
 //    ApiResponse checkUser(final CheckRequest checkRequest);
 //    
 //    ApiResponse confirmUser(final ConfirmRequest confirmRequest);
