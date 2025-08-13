@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   mysql-db:
     image: mysql:8
@@ -20,16 +22,14 @@ services:
     depends_on:
       mysql-db:
         condition: service_healthy
-      redis:
-        condition: service_started
     container_name: student_registration_system
     image: hlyamhtet/student-registration-system:latest
     environment:
       DB_HOST: mysql-db
       DB_PORT: 3306
       DB_NAME: student_registration_db
-      DB_USER: root
-      DB_PASSWORD: root
+      DB_USER: admin           
+      DB_PASSWORD: 1223        
       ADMIN_EMAIL: tu@tgi.com
       JWT_SECRET_KEY: V7UpnwbHds52Jj1rGmY5UFzRFnYt2QczC3v/3VmOe1I=
       SPRING_PROFILES_ACTIVE: uat
