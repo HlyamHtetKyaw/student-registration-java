@@ -31,7 +31,7 @@ public class AdminAccountInitializer implements CommandLineRunner {
                     .orElseThrow(() -> new RuntimeException("Admin role not found"));
 			User user = new User();
 			user.setEmail(emailAddr);
-			user.setPassword(passwordEncoder.encode("1223"));
+			user.setPassword(passwordEncoder.encode("Admin8080@"));
 			user.setRole(adminRole);
 			userRepository.save(user);
 			log.info("Admin account created successfully.");
