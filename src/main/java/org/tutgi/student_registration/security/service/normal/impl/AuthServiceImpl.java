@@ -122,9 +122,15 @@ public class AuthServiceImpl implements AuthService {
 		final UserLoginResponse loginResponse = new UserLoginResponse();
 		AuthenticatedUser authUser = AuthUserUtility.fromUser(user);
 		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
-		Token refreshToken = new Token();
-		refreshToken.setRefreshtoken((String)tokenData.get("refreshToken"));
-		refreshToken.assignUser(user);
+		Token refreshToken;
+
+		if (user.getToken() != null) {
+		    refreshToken = user.getToken();
+		} else {
+		    refreshToken = new Token();
+		    refreshToken.assignUser(user);
+		}
+		refreshToken.setRefreshtoken((String) tokenData.get("refreshToken"));
 		tokenRepository.save(refreshToken);
 		
 		loginResponse.setEmail(email);
