@@ -23,6 +23,7 @@ import org.tutgi.student_registration.security.utils.AuthUserUtility;
 import org.tutgi.student_registration.security.utils.AuthUtil;
 
 import io.jsonwebtoken.Claims;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
 //				.data(Map.of("currentUser", employeeDto, "accessToken", tokenData.get("accessToken")))
 //				.message("You are successfully logged in!").build();
 //	}
-	
+
 //	@Override
 //	public ApiResponse authenticateStudent(final StudentLoginRequest loginRequest) {
 //		final String rollNo = loginRequest.rollNo();
@@ -112,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
 			return new UnauthorizedException("Invalid email or password");
 		});
 
-		if(!this.passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+		if (!this.passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
 			log.warn("Invalid password for user: {}", loginRequest.email());
 			return ApiResponse.builder().success(0).code(HttpStatus.UNAUTHORIZED.value())
 					.message("Invalid email or password").build();
@@ -125,38 +126,39 @@ public class AuthServiceImpl implements AuthService {
 		Token refreshToken;
 
 		if (user.getToken() != null) {
-		    refreshToken = user.getToken();
+			refreshToken = user.getToken();
 		} else {
-		    refreshToken = new Token();
-		    refreshToken.assignUser(user);
+			refreshToken = new Token();
+			refreshToken.assignUser(user);
 		}
 		refreshToken.setRefreshtoken((String) tokenData.get("refreshToken"));
 		tokenRepository.save(refreshToken);
-		
+
 		loginResponse.setEmail(email);
 		loginResponse.setRole(user.getRole().getName());
-		loginResponse.setToken(new TokenResponse(tokenData.get("accessToken"),tokenData.get("refreshToken")));
-		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
-				.data(loginResponse)
+		loginResponse.setToken(new TokenResponse(tokenData.get("accessToken"), tokenData.get("refreshToken")));
+		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(loginResponse)
 				.message("You are successfully logged in!").build();
 	}
-	
+
 	@Override
 	public ApiResponse generateAccessToken(final AccessTokenRequest request) {
 		final Claims claims = jwtService.validateToken(request.refreshToken());
 		Long userId = claims.get("id", Long.class);
-		Token token = tokenRepository.findByRefreshtoken(request.refreshToken())
-				.orElseThrow(()->{return new UnauthorizedException("Refresh token does not exist.");});
-		if(!token.getUser().getId().equals(userId))throw new UnauthorizedException("User mismatch.");
+		Token token = tokenRepository.findByRefreshtoken(request.refreshToken()).orElseThrow(() -> {
+			return new UnauthorizedException("Refresh token does not exist.");
+		});
+		if (!token.getUser().getId().equals(userId))
+			throw new UnauthorizedException("User mismatch.");
 		AuthenticatedUser authUser = AuthUserUtility.fromUser(token.getUser());
 		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
-		token.setRefreshtoken((String)tokenData.get("refreshToken"));
+		token.setRefreshtoken((String) tokenData.get("refreshToken"));
 		tokenRepository.save(token);
-		TokenResponse response = new TokenResponse(tokenData.get("accessToken"),tokenData.get("refreshToken"));
-		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
-				.data(response)
+		TokenResponse response = new TokenResponse(tokenData.get("accessToken"), tokenData.get("refreshToken"));
+		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(response)
 				.message("Token generated successfully.").build();
 	}
+
 //	@Override
 //	public ApiResponse checkUser(final CheckRequest checkRequest) {
 //		final String email = checkRequest.email();
@@ -191,23 +193,26 @@ public class AuthServiceImpl implements AuthService {
 //		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(true)
 //				.message("User confirm successful.").build();
 //	}
-////    @Override
-////    public void logout(final String accessToken) {
-////        if (accessToken != null && accessToken.startsWith("Bearer ")) {
-////            final String token = accessToken.substring(7);
-////            final Claims claims = this.jwtService.validateToken(token);
-////            final String userEmail = claims.getSubject();
-////
-////            final User user = employeeRepository.findByEmail(userEmail)
-////                    .orElseThrow(() -> new UnauthorizedException(
-////                            "User not found. Cannot proceed with logout."));
-////
-////            log.debug("Revoking access token for user: {}", user.getEmail());
-////            this.jwtService.revokeToken(token);
-////        }
-////
-////        log.info("User successfully logged out.");
-////    }
+	@Override
+	public void logout(final String accessToken) {
+		if (accessToken != null && accessToken.startsWith("Bearer ")) {
+			final String token = accessToken.substring(7);
+			final Claims claims = this.jwtService.validateToken(token);
+			final String userEmail = claims.getSubject();
+
+			final User user = userRepository.findByEmail(userEmail)
+					.orElseThrow(() -> new UnauthorizedException("User not found. Cannot proceed with logout."));
+			Token storedToken = user.getToken();
+			if (storedToken != null) {
+				tokenRepository.deleteById(storedToken.getId());
+			} else {
+				throw new EntityNotFoundException("Refresh token not found.");
+			}
+			log.debug("Revoking access token for user: {}", user.getEmail());
+			this.jwtService.revokeToken(token);
+		}
+		log.info("User successfully logged out.");
+	}
 //
 //	@Override
 //	public ApiResponse getCurrentUser(String authHeader,final String routeName, final String browserName,

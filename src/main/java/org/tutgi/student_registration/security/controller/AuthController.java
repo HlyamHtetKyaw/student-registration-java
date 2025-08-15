@@ -3,8 +3,10 @@ package org.tutgi.student_registration.security.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
@@ -68,49 +70,49 @@ public class AuthController {
         final ApiResponse response =  authService.generateAccessToken(accessTokenReq);
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }
-//    @Operation(
-//            summary = "Logout a user",
-//            description = "Logs out the current user by invalidating their session and tokens.",
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Logout successful",
-//                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-//            }
-//    )
-//    @PostMapping("/logout")
-//    public ResponseEntity<ApiResponse> logout(
-//            @RequestHeader(value = "Authorization", required = false) final String accessToken,
-//            final HttpServletRequest request
-//    ) {
-//        log.info("Received logout request");
-//
-//        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-//
-//        if ((accessToken == null || !accessToken.startsWith("Bearer "))) {
-//
-//            log.warn("Invalid or missing tokens in logout request");
-//            throw new UnauthorizedException("Invalid or missing authorization tokens.");
-//        }
-//
-//        try {
-//            this.authService.logout(accessToken);
-//            final ApiResponse response = ApiResponse.builder()
-//                    .success(1)
-//                    .code(200)
-//                    .data(true)
-//                    .message("Logout successful")
-//                    .build();
-//
-//            log.info("User logged out successfully");
-//
-//            return ResponseUtils.buildResponse(request, response, requestStartTime);
-//        } catch (UnauthorizedException ex) {
-//            log.warn("Logout failed due to security reasons: {}", ex.getMessage());
-//            throw ex;
-//        } catch (Exception ex) {
-//            log.error("Unexpected error during logout", ex);
-//            throw new RuntimeException("An error occurred during logout.");
-//        }
-//    }
+    
+    @Operation(
+            summary = "Logout a user",
+            description = "Logs out the current user by invalidating their session and tokens.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Logout successful",
+                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(
+            @RequestHeader(value = "Authorization", required = false) final String accessToken,
+            final HttpServletRequest request
+    ) {
+        log.info("Received logout request");
+
+        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+
+        if ((accessToken == null || !accessToken.startsWith("Bearer "))) {
+            log.warn("Invalid or missing tokens in logout request");
+            throw new UnauthorizedException("Invalid or missing authorization tokens.");
+        }
+
+        try {
+            this.authService.logout(accessToken);
+            final ApiResponse response = ApiResponse.builder()
+                    .success(1)
+                    .code(200)
+                    .data(true)
+                    .message("Logout successful")
+                    .build();
+
+            log.info("User logged out successfully");
+
+            return ResponseUtils.buildResponse(request, response, requestStartTime);
+        } catch (UnauthorizedException ex) {
+            log.warn("Logout failed due to security reasons: {}", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Unexpected error during logout", ex);
+            throw new RuntimeException("An error occurred during logout.");
+        }
+    }
 
    
     
