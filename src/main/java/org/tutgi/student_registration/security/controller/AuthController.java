@@ -12,6 +12,7 @@ import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
+import org.tutgi.student_registration.features.users.dto.response.UserDto;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
@@ -85,7 +86,6 @@ public class AuthController {
             final HttpServletRequest request
     ) {
         log.info("Received logout request");
-
         final double requestStartTime = RequestUtils.extractRequestStartTime(request);
 
         if ((accessToken == null || !accessToken.startsWith("Bearer "))) {
@@ -121,18 +121,17 @@ public class AuthController {
             description = "Fetches the current authenticated user's details.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Current user details",
-                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+                            content = @Content(schema = @Schema(implementation = UserDto.class)))
             }
     )
     @GetMapping("/me")
     public ResponseEntity<ApiResponse> getCurrentUser(
-    		@RequestHeader("Authorization") final String authHeader,
+    		@RequestHeader(value = "Authorization",required = false) final String authHeader,
             @RequestParam(required = false) final String routeName,
             @RequestParam(required = false) final String browserName,
             @RequestParam(required = false) final String pageName,
             HttpServletRequest request) {
         log.info("Fetching current authenticated user");
-
         final double requestStartTime = System.currentTimeMillis();
         final ApiResponse response = this.authService.getCurrentUser(authHeader,routeName, browserName, pageName);
 
