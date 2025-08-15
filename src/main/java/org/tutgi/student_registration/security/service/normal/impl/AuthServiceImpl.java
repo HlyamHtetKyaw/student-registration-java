@@ -14,6 +14,7 @@ import org.tutgi.student_registration.data.models.Token;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.repositories.TokenRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
+import org.tutgi.student_registration.features.users.utils.UserUtil;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
 import org.tutgi.student_registration.security.dto.response.TokenResponse;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
@@ -42,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
 	private final TokenRepository tokenRepository;
 	private final ModelMapper modelMapper;
 	private final JwtService jwtService;
-//	private final UserUtil userUtil;
+	private final UserUtil userUtil;
 	private final AuthUtil authUtil;
 	private final EmailService emailService;
 	@Value("${app.cookie.secure}")
@@ -263,14 +264,13 @@ public class AuthServiceImpl implements AuthService {
 	    response.addHeader("Set-Cookie", cookieBuilder.toString());
 	}
 
-//
-//	@Override
-//	public ApiResponse getCurrentUser(String authHeader,final String routeName, final String browserName,
-//			final String pageName) {
-//		final Object userDto = userUtil.getCurrentUserDto(authHeader);
-//		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(Map.of("user", userDto))
-//				.message("User retrieved successfully").build();
-//	}
+	@Override
+	public ApiResponse getCurrentUser(String authHeader,final String routeName, final String browserName,
+			final String pageName) {
+		final Object userDto = userUtil.getCurrentUserDto(authHeader);
+		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(userDto)
+				.message("User retrieved successfully").build();
+	}
 //
 ////    @Override
 ////    public ApiResponse changePassword(String email) {
