@@ -1,16 +1,17 @@
 package org.tutgi.student_registration.security.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
-import org.tutgi.student_registration.security.dto.request.AccessTokenRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +38,7 @@ public class AuthController {
     @PostMapping("/users/login")
     @Operation(
             summary = "Login a user",
-            description = "Authenticates a user using email and password, and returns authentication tokens.",
+            description = "Authenticates a user using email and password, and returns access token.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
                             responseCode = "200", description = "You are successfully logged in!",
@@ -45,30 +47,28 @@ public class AuthController {
     )
     public ResponseEntity<ApiResponse> userLogin(
             @Valid @RequestBody final UserLoginRequest loginRequest,
-            final HttpServletRequest request
+            final HttpServletRequest request, final HttpServletResponse response
     ){
         final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-        final ApiResponse response =  authService.authenticateUser(loginRequest);
-        return ResponseUtils.buildResponse(request, response, requestStartTime);
+        final ApiResponse returnedResponse =  authService.authenticateUser(loginRequest,response);
+        return ResponseUtils.buildResponse(request, returnedResponse, requestStartTime);
     }
     
     @PostMapping("/users/refresh")
     @Operation(
             summary = "Taking access token for a user",
-            description = "Retrieving new access token with refresh token.",
+            description = "Retrieving new access token with cookie refresh token.",
             responses = {
                     @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                            responseCode = "200", description = "Token generated successfully.",
-                            content = @Content(schema = @Schema(implementation = AccessTokenRequest.class)))
+                            responseCode = "200", description = "Token generated successfully.")
             }
     )
     public ResponseEntity<ApiResponse> refresh(
-            @Valid @RequestBody final AccessTokenRequest accessTokenReq,
-            final HttpServletRequest request
+            final HttpServletRequest request,final HttpServletResponse response
     ){
         final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-        final ApiResponse response =  authService.generateAccessToken(accessTokenReq);
-        return ResponseUtils.buildResponse(request, response, requestStartTime);
+        final ApiResponse returnedResponse =  authService.generateAccessToken(request,response);
+        return ResponseUtils.buildResponse(request, returnedResponse, requestStartTime);
     }
     
     @Operation(
@@ -116,28 +116,28 @@ public class AuthController {
 
    
     
-//    @Operation(
-//            summary = "Get the current authenticated user",
-//            description = "Fetches the current authenticated user's details.",
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Current user details",
-//                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-//            }
-//    )
-//    @GetMapping("/me")
-//    public ResponseEntity<ApiResponse> getCurrentUser(
-//    		@RequestHeader("Authorization") final String authHeader,
-//            @RequestParam(required = false) final String routeName,
-//            @RequestParam(required = false) final String browserName,
-//            @RequestParam(required = false) final String pageName,
-//            HttpServletRequest request) {
-//        log.info("Fetching current authenticated user");
-//
-//        final double requestStartTime = System.currentTimeMillis();
-//        final ApiResponse response = this.authService.getCurrentUser(authHeader,routeName, browserName, pageName);
-//
-//        return ResponseUtils.buildResponse(request, response, requestStartTime);
-//    }
+    @Operation(
+            summary = "Get the current authenticated user",
+            description = "Fetches the current authenticated user's details.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Current user details",
+                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse> getCurrentUser(
+    		@RequestHeader("Authorization") final String authHeader,
+            @RequestParam(required = false) final String routeName,
+            @RequestParam(required = false) final String browserName,
+            @RequestParam(required = false) final String pageName,
+            HttpServletRequest request) {
+        log.info("Fetching current authenticated user");
+
+        final double requestStartTime = System.currentTimeMillis();
+        final ApiResponse response = this.authService.getCurrentUser(authHeader,routeName, browserName, pageName);
+
+        return ResponseUtils.buildResponse(request, response, requestStartTime);
+    }
 
 //    @Operation(
 //            summary = "Change password for a user",
