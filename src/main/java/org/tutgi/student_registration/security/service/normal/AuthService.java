@@ -17,7 +17,7 @@ public interface AuthService {
 //    ApiResponse checkUser(final CheckRequest checkRequest);
 //    
 //    ApiResponse confirmUser(final ConfirmRequest confirmRequest);
-////    void logout(final String accessToken);
+    void logout(final String accessToken);
 ////
 //    ApiResponse getCurrentUser(final String authHeader,final String routeName, final String browserName, final String pageName);
 ////
