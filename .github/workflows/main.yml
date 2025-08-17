@@ -24,4 +24,6 @@ jobs:
         github.ref == 'refs/heads/staging'
       )
     uses: ./.github/workflows/publish.yml
-
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
