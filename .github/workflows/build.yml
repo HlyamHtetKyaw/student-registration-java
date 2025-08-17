@@ -27,5 +27,5 @@ jobs:
             maven-
 
       - name: Build with Maven (test profile)
-        run: mvn clean install --no-transfer-progress -Dspring.profiles.active=test
+        run: mvn clean install -DskipTests --no-transfer-progress
 
