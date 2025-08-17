@@ -1,0 +1,22 @@
+name: Java CI/CD with Maven and Docker
+
+on:
+  push:
+    branches: [ "main", "develop", "staging" ]
+  pull_request:
+    branches: [ "main", "develop", "staging" ]
+  workflow_dispatch:
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yaml
+
+  publish:
+    needs: build
+    if: (github.event_name == 'pull_request' && github.base_ref == 'main') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+    uses: ./.github/workflows/publish.yaml
