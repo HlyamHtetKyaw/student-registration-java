@@ -36,7 +36,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/users/login")
+    @PostMapping("/login")
     @Operation(
             summary = "Login a user",
             description = "Authenticates a user using email and password, and returns access token.",
@@ -55,7 +55,7 @@ public class AuthController {
         return ResponseUtils.buildResponse(request, returnedResponse, requestStartTime);
     }
     
-    @PostMapping("/users/refresh")
+    @PostMapping("/refresh")
     @Operation(
             summary = "Taking access token for a user",
             description = "Retrieving new access token with cookie refresh token.",
@@ -82,7 +82,7 @@ public class AuthController {
     )
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(
-            @RequestHeader(value = "Authorization", required = false) final String accessToken,
+            @RequestHeader(value = "Authorization") final String accessToken,
             final HttpServletRequest request
     ) {
         log.info("Received logout request");
