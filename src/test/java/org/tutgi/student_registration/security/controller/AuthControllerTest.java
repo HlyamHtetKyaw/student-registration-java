@@ -26,22 +26,29 @@ public class AuthControllerTest {
     
     private final String BASE_URL = "/tutgi/api/v1/auth";
     
-    @Test
-    public void testLogin() throws Exception {
-        String jsonRequest = """
-            {
-                "email": "tu@tgi.com",
-                "password": "Admin8080@"
-            }
-        """;
+    @Value("${test.auth.email}")
+private String email;
 
-        mockMvc.perform(post(BASE_URL + "/users/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(cookie().exists("refreshToken"))
-                .andExpect(jsonPath("$.success").value(1))
-                .andExpect(jsonPath("$.message").value("You are successfully logged in!"));
-    }
+@Value("${test.auth.password}")
+private String password;
+
+@Test
+public void testLogin() throws Exception {
+    String jsonRequest = String.format("""
+        {
+            "email": "%s",
+            "password": "%s"
+        }
+    """, email, password);
+
+    mockMvc.perform(post(BASE_URL + "/users/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonRequest))
+            .andExpect(status().isOk())
+            .andExpect(cookie().exists("refreshToken"))
+            .andExpect(jsonPath("$.success").value(1))
+            .andExpect(jsonPath("$.message").value("You are successfully logged in!"));
+}
+
 }
 
