@@ -1,64 +1,42 @@
 package org.tutgi.student_registration.data.models;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.tutgi.student_registration.data.models.entity.MasterData;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @Entity
-@Builder
-@AllArgsConstructor
-@RequiredArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private String username;
-
+public class User extends MasterData{
     @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
     private String password;
-
-    @Column(nullable = false)
-    private boolean emailVerified;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean status = true;
-
-    @Column(nullable = false)
-    private Integer gender;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean loginFirstTime = true;
-
-    private String dateFormat;
     
-    @Builder.Default
-    @Column(nullable = false, columnDefinition = "varchar(255) default 'MMK'")
-    private String currencyCode="MMK";
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
     
-    @Column(name = "set_amount", scale = 6, precision = 19, nullable = true)
-    private BigDecimal setAmount;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private Token token;
     
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-
-    private LocalDateTime deletedAt;
+    public User(String email, String password, Role role) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
 }

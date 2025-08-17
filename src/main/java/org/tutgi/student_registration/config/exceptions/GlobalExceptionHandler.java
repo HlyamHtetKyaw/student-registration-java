@@ -2,27 +2,35 @@ package org.tutgi.student_registration.config.exceptions;/*
  * @Author : Hlyam Htet Kyaw
  */
 
-import org.tutgi.student_registration.config.response.dto.ApiResponse;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.tutgi.student_registration.config.response.dto.ApiResponse;
+
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import jakarta.persistence.PersistenceException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Global exception handler for centralized exception management across the application.
@@ -180,6 +188,56 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiResponse> handleGlobalException(Exception ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), "An unexpected error occurred.", request);
     }
+    
+//    @ExceptionHandler(HttpMessageNotReadableException.class)
+//    public ResponseEntity<ApiResponse> handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Malformed JSON request", ex.getLocalizedMessage(), request);
+//    }
+//    
+//    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+//    public ResponseEntity<ApiResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "HTTP method not allowed", ex.getMessage(), request);
+//    }
+//
+//    @ExceptionHandler(AccessDeniedException.class)
+//    public ResponseEntity<ApiResponse> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), "Access is denied", request);
+//    }
+//    
+//    @ExceptionHandler(MissingServletRequestParameterException.class)
+//    public ResponseEntity<ApiResponse> handleMissingParams(MissingServletRequestParameterException ex, HttpServletRequest request) {
+//        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "Required request parameter is missing", request);
+//    }
+//    
+//    @ExceptionHandler(DataAccessException.class)
+//    public ResponseEntity<ApiResponse> handleDataAccessException(DataAccessException ex, HttpServletRequest request) {
+//        return buildErrorResponse(
+//            HttpStatus.SERVICE_UNAVAILABLE,
+//            "Database access error",
+//            "Could not access the database. Please try again later.",
+//            request
+//        );
+//    }
+//
+//    @ExceptionHandler(TransactionSystemException.class)
+//    public ResponseEntity<ApiResponse> handleTransactionSystemException(TransactionSystemException ex, HttpServletRequest request) {
+//        return buildErrorResponse(
+//            HttpStatus.INTERNAL_SERVER_ERROR,
+//            "Transaction failed",
+//            "Database transaction could not be completed.",
+//            request
+//        );
+//    }
+//
+//    @ExceptionHandler(PersistenceException.class)
+//    public ResponseEntity<ApiResponse> handlePersistenceException(PersistenceException ex, HttpServletRequest request) {
+//        return buildErrorResponse(
+//            HttpStatus.INTERNAL_SERVER_ERROR,
+//            "Persistence error",
+//            "An unexpected database error occurred.",
+//            request
+//        );
+//    }
 
     /**
      * Utility method to construct a standardized error response.
