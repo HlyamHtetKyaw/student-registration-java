@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yaml
+    uses: ./.github/workflows/build.yml
 
   publish:
     needs: build
@@ -23,5 +23,5 @@ jobs:
         github.ref == 'refs/heads/develop' ||
         github.ref == 'refs/heads/staging'
       )
-    uses: ./.github/workflows/publish.yaml
+    uses: ./.github/workflows/publish.yml
 
