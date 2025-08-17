@@ -4,10 +4,10 @@ services:
   mysql-db:
     image: mysql:8
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: student_registration_db
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: 1223
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     healthcheck:
@@ -25,14 +25,14 @@ services:
     container_name: student_registration_system
     image: hlyamhtet/student-registration-system:latest
     environment:
-      DB_HOST: mysql-db
-      DB_PORT: 3306
-      DB_NAME: student_registration_db
-      DB_USER: admin           
-      DB_PASSWORD: 1223        
-      ADMIN_EMAIL: tu@tgi.com
-      JWT_SECRET_KEY: V7UpnwbHds52Jj1rGmY5UFzRFnYt2QczC3v/3VmOe1I=
-      SPRING_PROFILES_ACTIVE: uat
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
     ports:
       - "8080:8080"
 
@@ -43,9 +43,9 @@ services:
     ports:
       - "8081:80"
     environment:
-      PMA_HOST: mysql-db
-      PMA_USER: admin
-      PMA_PASSWORD: 1223
+      PMA_HOST: ${PMA_HOST}
+      PMA_USER: ${PMA_USER}
+      PMA_PASSWORD: ${PMA_PASSWORD}
 
 volumes:
   db_data:
