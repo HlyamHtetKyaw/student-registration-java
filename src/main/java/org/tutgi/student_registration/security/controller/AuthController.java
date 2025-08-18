@@ -14,8 +14,10 @@ import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.features.users.dto.response.UserDto;
-import org.tutgi.student_registration.security.dto.ChangePasswordRequest;
+import org.tutgi.student_registration.security.dto.request.ChangePasswordRequest;
+import org.tutgi.student_registration.security.dto.request.ResetPasswordRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
+import org.tutgi.student_registration.security.dto.request.VerifyOtpRequest;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
 
@@ -155,47 +157,47 @@ public class AuthController {
         log.info("Received change password request");
         final double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
 
-        final ApiResponse response = this.authService.changePassword(changePasswordRequest.getEmail());
+        final ApiResponse response = this.authService.changePassword(changePasswordRequest.email());
         return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
     }
 
-//    @Operation(
-//            summary = "Verify OTP for user",
-//            description = "Verifies the OTP (One-Time Password) provided for a user.",
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP verification successful",
-//                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-//            }
-//    )
-//    @PostMapping("/verify-otp")
-//    public ResponseEntity<ApiResponse> verifyOtp(
-//            @Validated @RequestBody final VerifyOtpRequest verifyOtpRequest,
-//            HttpServletRequest httpRequest) {
-//        log.info("Received OTP verification request");
-//        double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
-//
-//        final ApiResponse response = this.authService.verifyOtp(verifyOtpRequest.getOtp());
-//        return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
-//    }
-//
-//    @Operation(
-//            summary = "Reset password for a user",
-//            description = "Resets the password for the user based on the provided details.",
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password reset successful",
-//                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-//            }
-//    )
-//    @PostMapping("/reset-password")
-//    public ResponseEntity<ApiResponse> resetPassword(
-//            @Validated @RequestBody final ResetPasswordRequest resetPasswordRequest,
-//            final HttpServletRequest httpRequest) {
-//        log.info("Received password reset request");
-//        final double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
-//
-//        final ApiResponse response = this.authService.resetPassword(resetPasswordRequest);
-//        return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
-//    }
+    @Operation(
+            summary = "Verify OTP for user",
+            description = "Verifies the OTP (One-Time Password) provided for a user.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OTP verification successful",
+                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse> verifyOtp(
+            @Validated @RequestBody final VerifyOtpRequest verifyOtpRequest,
+            HttpServletRequest httpRequest) {
+        log.info("Received OTP verification request");
+        double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
+
+        final ApiResponse response = this.authService.verifyOtp(verifyOtpRequest);
+        return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
+    }
+    
+    @Operation(
+            summary = "Reset password for a user",
+            description = "Resets the password for the user based on the provided details.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password reset successful",
+                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(
+            @Validated @RequestBody final ResetPasswordRequest resetPasswordRequest,
+            final HttpServletRequest httpRequest) {
+        log.info("Received password reset request");
+        final double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
+
+        final ApiResponse response = this.authService.resetPassword(resetPasswordRequest);
+        return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
+    }
 //
 //    @Operation(
 //            summary = "Update user settings",

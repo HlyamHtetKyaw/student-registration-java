@@ -3,6 +3,7 @@ package org.tutgi.student_registration.config.listener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -33,6 +34,7 @@ public class EmailEventListener {
             helper.setTo(event.getToEmail());
             helper.setSubject(event.getSubject());
             helper.setText(event.getBody(), true);
+            helper.addInline("logoImage", new ClassPathResource("templates/logo/tu_tgi.png"));
 
             mailSender.send(mimeMessage);
             log.info("MIME Email sent successfully to {}", event.getToEmail());
