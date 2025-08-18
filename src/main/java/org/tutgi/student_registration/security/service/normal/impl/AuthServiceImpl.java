@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,7 @@ import org.tutgi.student_registration.security.service.normal.AuthService;
 import org.tutgi.student_registration.security.service.normal.JwtService;
 import org.tutgi.student_registration.security.utils.AuthUserUtility;
 import org.tutgi.student_registration.security.utils.AuthUtil;
-import org.tutgi.student_registration.security.utils.OtpUtils;
+import org.tutgi.student_registration.security.utils.ServerUtil;
 
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityNotFoundException;
@@ -49,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
 	private final UserUtil userUtil;
 	private final AuthUtil authUtil;
 	private final EmailService emailService;
-	
+	private final ServerUtil serverUtil;
 	
 	@Value("${app.cookie.secure}")
 	private boolean cookieSecure;
@@ -286,11 +285,7 @@ public class AuthServiceImpl implements AuthService {
                     log.warn("No user found with email: {}", email);
                     return new UnauthorizedException("No user found with this email");
                 });
-
-        final String otp = OtpUtils.generateOtp();
-        redisTemplate.opsForValue().set(OTP_PREFIX+user.getEmail(), otp, 30, TimeUnit.MINUTES);
-//        redisTemplate.put(otp, new OtpUtils.OtpData(email, Instant.now().plus(30, ChronoUnit.MINUTES)));
-
+        serverUtil.sendCodeToEmail(user.getEmail(),30,"OtpTemplate");
         try {
             return ApiResponse.builder()
                     .success(1)

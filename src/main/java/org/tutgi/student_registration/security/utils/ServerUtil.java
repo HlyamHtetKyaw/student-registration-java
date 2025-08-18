@@ -24,7 +24,6 @@ public class ServerUtil{
 
 	private final RedisTemplate<String, String> redisTemplate;
 	private static final String OTP_PREFIX = "otp:user:";
-	private final JavaMailSender javaMailSender;
 	private final EmailService emailService;
 	
     public static String generateOtp() {
@@ -47,13 +46,6 @@ public class ServerUtil{
         String htmlContent =htmlTemplate
                 .replace("{{username}}" , userName)
                 .replace("{{code}}" , resetCode);
-
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message , true , "UTF-8");
-
-        helper.setText(htmlContent , true);
-        helper.addInline("logoImage", new ClassPathResource("templates/logo/logo.png"));
-
         this.emailService.sendEmail(email, "Please Verify Your Email", htmlContent);
     }
     
