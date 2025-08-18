@@ -1,6 +1,7 @@
 package org.tutgi.student_registration.security.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.features.users.dto.response.UserDto;
+import org.tutgi.student_registration.security.dto.ChangePasswordRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
 import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
@@ -138,25 +140,25 @@ public class AuthController {
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }
 
-//    @Operation(
-//            summary = "Change password for a user",
-//            description = "Changes the password for the user based on the provided email.",
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password change successful",
-//                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-//            }
-//    )
-//    @PostMapping("/change-password")
-//    public ResponseEntity<ApiResponse> forgotPassword(
-//            @Validated @RequestBody final ChangePasswordRequest changePasswordRequest,
-//            HttpServletRequest httpRequest) {
-//        log.info("Received change password request");
-//        final double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
-//
-//        final ApiResponse response = this.authService.changePassword(changePasswordRequest.getEmail());
-//        return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
-//    }
-//
+    @Operation(
+            summary = "Change password for a user",
+            description = "Changes the password for the user based on the provided email.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password change successful",
+                            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+            }
+    )
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse> forgotPassword(
+            @Validated @RequestBody final ChangePasswordRequest changePasswordRequest,
+            HttpServletRequest httpRequest) {
+        log.info("Received change password request");
+        final double requestStartTime = RequestUtils.extractRequestStartTime(httpRequest);
+
+        final ApiResponse response = this.authService.changePassword(changePasswordRequest.getEmail());
+        return ResponseUtils.buildResponse(httpRequest, response, requestStartTime);
+    }
+
 //    @Operation(
 //            summary = "Verify OTP for user",
 //            description = "Verifies the OTP (One-Time Password) provided for a user.",

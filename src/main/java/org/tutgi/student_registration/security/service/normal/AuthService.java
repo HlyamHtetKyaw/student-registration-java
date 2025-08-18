@@ -15,7 +15,7 @@ public interface AuthService {
 //    ApiResponse confirmUser(final ConfirmRequest confirmRequest);
     void logout(final String accessToken);
     ApiResponse getCurrentUser(final String authHeader,final String routeName, final String browserName, final String pageName);
-////    ApiResponse changePassword(final String email);
+    ApiResponse changePassword(final String email);
 ////    ApiResponse verifyOtp(final String otp);
 ////    ApiResponse resetPassword(final ResetPasswordRequest resetPasswordRequest);
 }

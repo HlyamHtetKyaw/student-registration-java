@@ -1,9 +1,11 @@
 package org.tutgi.student_registration.security.service.normal.impl;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import org.tutgi.student_registration.security.service.normal.AuthService;
 import org.tutgi.student_registration.security.service.normal.JwtService;
 import org.tutgi.student_registration.security.utils.AuthUserUtility;
 import org.tutgi.student_registration.security.utils.AuthUtil;
+import org.tutgi.student_registration.security.utils.OtpUtils;
 
 import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityNotFoundException;
@@ -46,6 +49,8 @@ public class AuthServiceImpl implements AuthService {
 	private final UserUtil userUtil;
 	private final AuthUtil authUtil;
 	private final EmailService emailService;
+	
+	
 	@Value("${app.cookie.secure}")
 	private boolean cookieSecure;
 
@@ -271,34 +276,33 @@ public class AuthServiceImpl implements AuthService {
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(userDto)
 				.message("User retrieved successfully").build();
 	}
-//
-////    @Override
-////    public ApiResponse changePassword(String email) {
-////        log.info("Initiating password reset for email: {}", email);
-////
-////        final User user = employeeRepository.findByEmail(email)
-////                .orElseThrow(() -> {
-////                    log.warn("No user found with email: {}", email);
-////                    return new UnauthorizedException("No user found with this email");
-////                });
-////
-////        final String otp = OtpUtils.generateOtp();
-////        otpStore.put(otp, new OtpUtils.OtpData(email, Instant.now().plus(30, ChronoUnit.MINUTES)));
-////
-////        try {
-////            return ApiResponse.builder()
-////                    .success(1)
-////                    .code(HttpStatus.OK.value())
-////                    .data(Map.of(
-////                            "otp", otp)
-////                    )
-////                    .message("OTP has been sent to your email")
-////                    .build();
-////        } catch (Exception e) {
-////            log.error("Failed to send OTP email: {}", e.getMessage());
-////            throw new RuntimeException("Failed to send OTP");
-////        }
-////    }
+
+    @Override
+    public ApiResponse changePassword(String email) {
+        log.info("Initiating password reset for email: {}", email);
+
+        final User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("No user found with email: {}", email);
+                    return new UnauthorizedException("No user found with this email");
+                });
+
+        final String otp = OtpUtils.generateOtp();
+        redisTemplate.opsForValue().set(OTP_PREFIX+user.getEmail(), otp, 30, TimeUnit.MINUTES);
+//        redisTemplate.put(otp, new OtpUtils.OtpData(email, Instant.now().plus(30, ChronoUnit.MINUTES)));
+
+        try {
+            return ApiResponse.builder()
+                    .success(1)
+                    .code(HttpStatus.OK.value())
+                    .data(null)
+                    .message("OTP has been sent to your email")
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to send OTP email: {}", e.getMessage());
+            throw new RuntimeException("Failed to send OTP");
+        }
+    }
 ////
 ////    @Override
 ////    public ApiResponse verifyOtp(final String otp) {
