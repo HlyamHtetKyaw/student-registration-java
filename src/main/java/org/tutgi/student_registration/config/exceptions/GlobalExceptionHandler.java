@@ -8,17 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.transaction.TransactionSystemException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -27,7 +21,6 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
@@ -176,7 +169,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiResponse> handleEntityDeletionException(EntityDeletionException ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), "Entity Deletion", request);
     }
-
+    
+    /**
+     * Handles otp exceptions
+     *
+     * @param ex      the Exception encountered.
+     * @param request the current HTTP request.
+     * @return a ResponseEntity containing the standardized ApiResponse.
+     */
+    @ExceptionHandler(ExpiredException.class)
+    public ResponseEntity<ApiResponse> handleExpiredException(ExpiredException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.GONE, ex.getMessage(), "Not Found", request);
+    }
+    
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<ApiResponse> handleInvalidOtpException(InvalidOtpException ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), "Invalid", request);
+    }
+    
     /**
      * Handles all uncaught exceptions, providing a generic error response.
      *
