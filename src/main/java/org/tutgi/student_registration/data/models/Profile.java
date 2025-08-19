@@ -29,7 +29,7 @@ public class Profile extends MasterData{
     @Column(nullable = false)
     private String nrc;
     
-    @Column(nullable = false, name="photo_url")
+    @Column(name="photo_url")
     private String photoUrl;
     
     @OneToOne
