@@ -78,10 +78,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			final Claims claims = jwtService.validateToken(token);
 			Long userId = claims.get("id", Long.class);
 			String identifier = claims.getSubject();
-			String userTypeStr = claims.get("userType", String.class);
-			log.info("User Type as string: {}",userTypeStr);
-			UserType userType = UserType.fromDisplayName(userTypeStr);
-			log.info("User Type as UserType: {}",userType);
 			
 			List<?> rawRoles = claims.get("authorities", List.class);
 			List<String> roles = (rawRoles == null) ? List.of()
@@ -89,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			Collection<GrantedAuthority> authorities = roles.stream()
 					.map(role -> new SimpleGrantedAuthority("ROLE_" + role)).collect(Collectors.toList());
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-					new CustomUserPrincipal(userId, identifier, userType), null, authorities);
+					new CustomUserPrincipal(userId, identifier), null, authorities);
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			log.info("Authenticated principal: {}", authentication.getPrincipal());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
