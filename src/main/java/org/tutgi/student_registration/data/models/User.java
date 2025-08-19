@@ -34,6 +34,9 @@ public class User extends MasterData{
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Token token;
     
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private Profile profile;
+    
     public User(String email, String password, Role role) {
         this.email = email;
         this.password = password;
