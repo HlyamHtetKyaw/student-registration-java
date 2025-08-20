@@ -1,6 +1,7 @@
 package org.tutgi.student_registration.security.dto.response;
 
-import org.tutgi.student_registration.data.enums.RoleName;
+import org.tutgi.student_registration.features.profile.dto.response.ProfileResponse;
+import org.tutgi.student_registration.features.users.dto.response.UserDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,8 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserLoginResponse {
-	private String name;
-	private String email;
-	private RoleName role;
+	private UserDto user;
 	private TokenResponse token;
+	private ProfileResponse profile;
 }
