@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
-import org.tutgi.student_registration.features.admin.dto.RegisterRequest;
+import org.tutgi.student_registration.features.admin.dto.request.RegisterRequest;
+import org.tutgi.student_registration.features.admin.dto.request.ResendRequest;
 import org.tutgi.student_registration.features.admin.service.AdminService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +44,6 @@ public class AdminController {
 		                    value = """
 		                        {
 		                          "email": "john.doe@university.edu",
-		                          "password": "example_password",
 		                          "role": "Student Affair or Finance or Dean or Student"
 		                        }
 		                        """
@@ -68,5 +68,41 @@ public class AdminController {
         final ApiResponse response = adminService.registerUser(registerRequest);
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }
-
+	
+	@Operation(
+		    summary = "Create account for students and staff.",
+		    description = "Resending new password.",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+		        description = "This API endpoint allows admin to resend password.",
+		        required = true,
+		        content = @Content(
+		            schema = @Schema(implementation = RegisterRequest.class),
+		            examples = {
+		                @ExampleObject(
+		                    value = """
+		                        {
+		                          "email": "john.doe@university.edu",
+		                        }
+		                        """
+		                )
+		            }
+		        )
+		    ),
+		    responses = {
+		    		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Password resend successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+	@PostMapping("/resendPassword")
+    public ResponseEntity<ApiResponse> resendPassword(@Validated @RequestBody final ResendRequest resendRequest,
+            final HttpServletRequest request) {
+        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+        final ApiResponse response = adminService.resendPassword(resendRequest);
+        return ResponseUtils.buildResponse(request, response, requestStartTime);
+    }
 }
