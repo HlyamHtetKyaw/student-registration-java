@@ -1,4 +1,4 @@
-package org.tutgi.student_registration.features.admin.dto;
+package org.tutgi.student_registration.features.admin.dto.request;
 
 import org.tutgi.student_registration.config.annotations.ValidRole;
 import org.tutgi.student_registration.data.enums.RoleName;
