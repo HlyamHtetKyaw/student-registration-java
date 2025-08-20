@@ -10,6 +10,7 @@ import org.tutgi.student_registration.data.repositories.RoleRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.admin.dto.RegisterRequest;
 import org.tutgi.student_registration.features.admin.service.AdminService;
+import org.tutgi.student_registration.security.utils.ServerUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class AdminServiceImpl implements AdminService{
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final RoleRepository roleRepository;
+	private final ServerUtil serverUtil;
 	@Override
     @Transactional
     public ApiResponse registerUser(final RegisterRequest registerRequest) {
@@ -40,10 +42,11 @@ public class AdminServiceImpl implements AdminService{
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 		User user = new User();
 		user.setEmail(registerRequest.email());
-		user.setPassword(this.passwordEncoder.encode(registerRequest.password()));
+		String password = ServerUtil.generatePassword();
+		user.setPassword(this.passwordEncoder.encode(password));
 		user.setRole(role);
 		this.userRepository.save(user);
-		
+		this.serverUtil.sendPasswordToEmail(registerRequest.email(), "PasswordTemplate", password);
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.CREATED.value())

@@ -2,18 +2,19 @@ package org.tutgi.student_registration.security.service.normal.impl;
 
 import java.util.Map;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
-import org.tutgi.student_registration.config.service.EmailService;
+import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Token;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.repositories.TokenRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
+import org.tutgi.student_registration.features.profile.dto.response.ProfileResponse;
+import org.tutgi.student_registration.features.users.dto.response.UserDto;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
 import org.tutgi.student_registration.security.dto.request.ResetPasswordRequest;
 import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
@@ -88,12 +89,30 @@ public class AuthServiceImpl implements AuthService {
 		}
 		refreshToken.setRefreshtoken((String) tokenData.get("refreshToken"));
 		setCookieForRefreshToken((String) tokenData.get("refreshToken"), response);
-
+		
 		tokenRepository.save(refreshToken);
+		
+		Profile profile = user.getProfile();
 
-		loginResponse.setEmail(email);
-		loginResponse.setRole(user.getRole().getName());
-		loginResponse.setToken(new TokenResponse(tokenData.get("accessToken")));
+		UserDto userDto = UserDto.builder()
+		    .email(user.getEmail())
+		    .role(user.getRole().getName())
+		    .createdAt(user.getCreatedAt())
+		    .updatedAt(user.getUpdatedAt())
+		    .build();
+
+		ProfileResponse profileDto = (profile != null) ? ProfileResponse.builder()
+		    .mmName(profile.getMmName())
+		    .engName(profile.getEngName())
+		    .nrc(profile.getNrc())
+		    .build() : null;
+
+		TokenResponse tokenResponse = new TokenResponse(tokenData.get("accessToken"));
+
+		loginResponse.setUser(userDto);
+		loginResponse.setToken(tokenResponse);
+		loginResponse.setProfile(profileDto);
+		
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(loginResponse)
 				.message("You are successfully logged in!").build();
 	}
