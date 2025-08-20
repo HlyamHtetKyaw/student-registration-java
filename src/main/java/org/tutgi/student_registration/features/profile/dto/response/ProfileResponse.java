@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProfileDto {
+public class ProfileResponse {
     String mmName;
     String engName;
     String nrc;
