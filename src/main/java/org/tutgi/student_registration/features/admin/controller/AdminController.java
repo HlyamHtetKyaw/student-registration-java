@@ -83,7 +83,7 @@ public class AdminController {
     }
 	
 	@Operation(
-		    summary = "Create account for students and staff.",
+		    summary = "Resending new generated password to students and staff.",
 		    description = "Resending new password.",
 		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 		        description = "This API endpoint allows admin to resend password.",
