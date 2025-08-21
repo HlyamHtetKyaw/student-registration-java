@@ -7,7 +7,9 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +21,8 @@ import org.springframework.util.FileCopyUtils;
 import org.tutgi.student_registration.config.exceptions.ExpiredException;
 import org.tutgi.student_registration.config.exceptions.InvalidOtpException;
 import org.tutgi.student_registration.config.service.EmailService;
+import org.tutgi.student_registration.data.email.AbstractEmailSender;
+import org.tutgi.student_registration.data.email.factory.EmailSenderFactory;
 import org.tutgi.student_registration.data.redis.RedisKeys;
 
 import jakarta.mail.MessagingException;
@@ -29,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class ServerUtil{
 
 	private final RedisTemplate<String, String> redisTemplate;
+	private final EmailSenderFactory emailSenderFactory;
 	
 	@Value("${otp.expiration.minutes}")
 	private long otpExpirationMinutes;
@@ -70,23 +75,23 @@ public class ServerUtil{
         return sb.toString();
     }
     
-    public void sendCodeToEmail(final String email, final String templateName,final String expTime) {
-        String otp = generateOtp();
-        redisTemplate.opsForValue().set(RedisKeys.OTP_PREFIX  + email, otp, otpExpirationMinutes, TimeUnit.MINUTES);
-        try {
-        	sendOtpEmail(email , otp , templateName,expTime);
-        } catch (MessagingException | IOException e){
-            e.printStackTrace();
-        }
-    }
-    
-    public void sendPasswordToEmail(final String email, final String templateName,final String password) {
-        try {
-            sendPasswordEmail(email, password, templateName);
-        } catch (MessagingException | IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void sendCodeToEmail(final String email, final String templateName,final String expTime) {
+//        String otp = generateOtp();
+//        redisTemplate.opsForValue().set(RedisKeys.OTP_PREFIX  + email, otp, otpExpirationMinutes, TimeUnit.MINUTES);
+//        try {
+//        	sendOtpEmail(email , otp , templateName,expTime);
+//        } catch (MessagingException | IOException e){
+//            e.printStackTrace();
+//        }
+//    }
+//    
+//    public void sendPasswordToEmail(final String email, final String templateName,final String password) {
+//        try {
+//            sendPasswordEmail(email, password, templateName);
+//        } catch (MessagingException | IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     
     public long verifyOtp(final String email,final String submittedOtp) {
@@ -114,26 +119,51 @@ public class ServerUtil{
     }
     
     
-    private void sendOtpEmail(String email, String resetCode , String templateName,String expTime) throws MessagingException , IOException{
-        String userName = email.split("@")[0];
-        String htmlTemplate = loadTemplate("templates/mailTemplates/"+ templateName +".html");
-        String htmlContent =htmlTemplate
-                .replace("{{username}}" , userName)
-                .replace("{{code}}" , resetCode)
-                .replace("{{expTime}}", expTime);
-        this.emailService.sendEmail(email, "Please Verify Your Email", htmlContent);
+//    private void sendOtpEmail(String email, String resetCode , String templateName,String expTime) throws MessagingException , IOException{
+//        String userName = email.split("@")[0];
+//        String htmlTemplate = loadTemplate("templates/mailTemplates/"+ templateName +".html");
+//        String htmlContent =htmlTemplate
+//                .replace("{{username}}" , userName)
+//                .replace("{{code}}" , resetCode)
+//                .replace("{{expTime}}", expTime);
+//        this.emailService.sendEmail(email, "Please Verify Your Email", htmlContent);
+//    }
+    
+//    private void sendPasswordEmail(String email, String password, String templateName) throws MessagingException, IOException {
+//        String userName = email.split("@")[0];
+//        String htmlTemplate = loadTemplate("templates/mailTemplates/" + templateName + ".html");
+//        String htmlContent = htmlTemplate
+//            .replace("{{username}}", userName)
+//            .replace("{{email}}", email)
+//            .replace("{{password}}", password)
+//            .replace("{{frontendUrl}}", frontendUrl);
+//        this.emailService.sendEmail(email, "Your Account Is Created", htmlContent);
+//    }
+    public void sendOtpEmail(String email,String resetCode,String templateName,String expTime) {
+    	try {
+            Map<String, String> params = new HashMap<>();
+            params.put("templateName", templateName);
+            params.put("resetCode", resetCode);
+            params.put("expTime", expTime);
+            AbstractEmailSender sender = emailSenderFactory.getSender("OtpEmailSender");
+            sender.send(email, params);
+        } catch (MessagingException | IOException e) {
+            e.printStackTrace();
+        }
     }
     
-    private void sendPasswordEmail(String email, String password, String templateName) throws MessagingException, IOException {
-        String userName = email.split("@")[0];
-        String htmlTemplate = loadTemplate("templates/mailTemplates/" + templateName + ".html");
-        String htmlContent = htmlTemplate
-            .replace("{{username}}", userName)
-            .replace("{{email}}", email)
-            .replace("{{password}}", password)
-            .replace("{{frontendUrl}}", frontendUrl);
-        this.emailService.sendEmail(email, "Your Account Is Created", htmlContent);
+    public void sendPasswordEmail(String email, String templateName, String password) {
+        try {
+            Map<String, String> params = new HashMap<>();
+            params.put("templateName", templateName);
+            params.put("password", password);
+            AbstractEmailSender sender = emailSenderFactory.getSender("PasswordEmailSender");
+            sender.send(email, params);
+        } catch (MessagingException | IOException e) {
+            e.printStackTrace();
+        }
     }
+
     public String loadTemplate(String path) throws IOException {
         ClassPathResource resource = new ClassPathResource(path);
         InputStream inputStream = resource.getInputStream();
