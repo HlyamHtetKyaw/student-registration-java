@@ -6,17 +6,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.tutgi.student_registration.config.validators.RoleValidator;
+import org.tutgi.student_registration.config.validators.SortFieldValidator;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 @Documented
-@Constraint(validatedBy = RoleValidator.class)
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Constraint(validatedBy = SortFieldValidator.class)
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidRole {
-    String message() default "Role is not valid.";
+public @interface ValidSortField {
+    String message() default "Invalid sort field";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
+    String[] allowedFields() default {"email", "createdAt", "updatedAt"};
 }
+
