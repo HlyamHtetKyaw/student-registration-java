@@ -1,12 +1,14 @@
 package org.tutgi.student_registration.config.response.utils;
 
-import org.tutgi.student_registration.config.response.dto.ApiResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
 import java.time.Instant;
 import java.util.HashMap;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.tutgi.student_registration.config.response.dto.ApiResponse;
+import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public class ResponseUtils {
 
@@ -23,5 +25,19 @@ public class ResponseUtils {
 
         response.setDuration(Instant.now().getEpochSecond() - requestTime);
         return new ResponseEntity<>(response, status);
+    }
+    
+    public static <T> ResponseEntity<PaginatedApiResponse<T>> buildPaginatedResponse(
+            final HttpServletRequest request,
+            PaginatedApiResponse<T> paginatedResponse) {
+
+        final HttpStatus status = HttpStatus.valueOf(paginatedResponse.getCode());
+        if (paginatedResponse.getMeta().getMethod() == null && paginatedResponse.getMeta().getEndpoint() == null) {
+            final String method = request.getMethod();
+            final String endpoint = request.getRequestURI();
+            paginatedResponse.getMeta().setMethod(method);
+            paginatedResponse.getMeta().setEndpoint(endpoint);
+        }
+        return new ResponseEntity<>(paginatedResponse, status);
     }
 }
