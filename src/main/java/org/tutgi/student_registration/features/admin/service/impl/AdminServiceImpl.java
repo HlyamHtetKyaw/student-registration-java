@@ -42,8 +42,11 @@ public class AdminServiceImpl implements AdminService{
     public ApiResponse registerUser(final RegisterRequest registerRequest) {
         log.info("Registering new user with email: {}", registerRequest.email());
         
-        this.userRepository.findByEmail(registerRequest.email()).orElseThrow(() -> new DuplicateEntityException("Email already exists"));
-        
+        userRepository.findByEmail(registerRequest.email())
+        .ifPresent(user -> {
+            throw new DuplicateEntityException("Email already exists");
+        });
+
         Role role = this.roleRepository.findByName(registerRequest.role())
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
 		User user = new User();
@@ -52,7 +55,7 @@ public class AdminServiceImpl implements AdminService{
 		user.setPassword(this.passwordEncoder.encode(password));
 		user.setRole(role);
 		this.userRepository.save(user);
-		this.serverUtil.sendPasswordToEmail(registerRequest.email(), "PasswordTemplate", password);
+		this.serverUtil.sendPasswordEmail(registerRequest.email(), "PasswordTemplate", password);
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.CREATED.value())
@@ -72,7 +75,7 @@ public class AdminServiceImpl implements AdminService{
 		String password = ServerUtil.generatePassword();
 		user.setPassword(this.passwordEncoder.encode(password));
 		this.userRepository.save(user);
-		this.serverUtil.sendPasswordToEmail(resendRequest.email(), "PasswordTemplate", password);
+		this.serverUtil.sendPasswordEmail(resendRequest.email(), "PasswordTemplate", password);
 		return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.OK.value())
