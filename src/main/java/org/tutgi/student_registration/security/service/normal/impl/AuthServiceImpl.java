@@ -210,7 +210,9 @@ public class AuthServiceImpl implements AuthService {
                     log.warn("No user found with email: {}", email);
                     return new UnauthorizedException("No user found with this email");
                 });
-        this.serverUtil.sendCodeToEmail(user.getEmail(),"OtpTemplate",otpExpirationMinutes);
+        String otp = ServerUtil.generateOtp();
+        this.serverUtil.sendOtpEmail(user.getEmail(), otp, "OtpTemplate", otpExpirationMinutes);
+//        this.serverUtil.send (user.getEmail(),"OtpTemplate",otpExpirationMinutes);
         try {
             return ApiResponse.builder()
                     .success(1)
