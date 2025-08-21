@@ -3,6 +3,7 @@ package org.tutgi.student_registration.security.service.normal.impl;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -161,8 +162,6 @@ public class AuthServiceImpl implements AuthService {
 			Token storedToken = user.getToken();
 			if (storedToken != null) {
 				tokenRepository.deleteTokenData(storedToken.getId());
-			} else {
-				throw new EntityNotFoundException("Refresh token not found.");
 			}
 			log.debug("Revoking access token for user: {}", user.getEmail());
 			this.jwtService.revokeToken(token);
@@ -238,6 +237,7 @@ public class AuthServiceImpl implements AuthService {
     }
     
     @Override
+    @CacheEvict(value = "usersCache", allEntries = true)
     public ApiResponse resetPassword(final ResetPasswordRequest resetPasswordRequest) {
     	String email = resetPasswordRequest.email();
         if (!this.serverUtil.isVerified(email)) {
@@ -252,6 +252,9 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
         user.setPassword(this.passwordEncoder.encode(resetPasswordRequest.newPassword()));
+        
+        if(user.getToken()!=null)tokenRepository.deleteTokenData(user.getToken().getId());;
+        
         this.userRepository.save(user);
         this.serverUtil.deleteVerify(email);
         return ApiResponse.builder()
