@@ -39,6 +39,7 @@ public class AdminServiceImpl implements AdminService{
 	private final ServerUtil serverUtil;
 	@Override
     @Transactional
+	@CacheEvict(value = "usersCache", allEntries = true)
     public ApiResponse registerUser(final RegisterRequest registerRequest) {
         log.info("Registering new user with email: {}", registerRequest.email());
         
