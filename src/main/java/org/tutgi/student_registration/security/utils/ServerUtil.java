@@ -140,7 +140,8 @@ public class ServerUtil{
 //        this.emailService.sendEmail(email, "Your Account Is Created", htmlContent);
 //    }
     public void sendOtpEmail(String email,String resetCode,String templateName,String expTime) {
-    	try {
+    	redisTemplate.opsForValue().set(RedisKeys.OTP_PREFIX  + email, resetCode, otpExpirationMinutes, TimeUnit.MINUTES);
+		try {
             Map<String, String> params = new HashMap<>();
             params.put("templateName", templateName);
             params.put("resetCode", resetCode);
@@ -153,7 +154,7 @@ public class ServerUtil{
     }
     
     public void sendPasswordEmail(String email, String templateName, String password) {
-        try {
+		try {
             Map<String, String> params = new HashMap<>();
             params.put("templateName", templateName);
             params.put("password", password);
