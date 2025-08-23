@@ -89,15 +89,14 @@ public class ProfileServiceImpl implements ProfileService {
     	Long userId = userUtil.getCurrentUserInternal().userId();
 	    final Profile profile = this.profileRepository.findByUserId(userId)
 	            .orElseThrow(() -> new EntityNotFoundException("Profile not found."));
-	
-	    final String filename = storageService.store(
-	    		profileRequest.file(),StorageDirectory.PROFILE_PICTURES,
-	    		profile.getEngName(),profile.getId());
-	
+	    String filename;
+	    if(profile.getPhotoUrl()!=null) {
+	    	filename = storageService.update(profileRequest.file(), profile.getPhotoUrl(), StorageDirectory.PROFILE_PICTURES);
+	    }else {
+	    	filename = storageService.store(profileRequest.file(),StorageDirectory.PROFILE_PICTURES);
+	    }
 	    profile.setPhotoUrl(filename);
-	    
 	    this.profileRepository.save(profile);
-	
 	    return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.OK.value())

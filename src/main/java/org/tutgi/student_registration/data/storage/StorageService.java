@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface StorageService {
     void init();
-    String store(MultipartFile file,final StorageDirectory storageDirecotry,final String username,final Long userId);
+    String store(MultipartFile file,final StorageDirectory storageDirecotry);
     List<Path> loadAll();
-    Path load(final String folderName,final String filename);
-    Resource loadAsResource(final String folderName,final String filename);
-    void delete(final String folderName,final String filename);
+    Path load(final String filepath);
+    Resource loadAsResource(final String filepath);
+    void delete(final String filepath);
     void deleteAll();
-    String update(MultipartFile newFile, String publicId, String folderName);
+    String update(final MultipartFile newFile,final String existingFilepath,final StorageDirectory storageDirecotry);
 }

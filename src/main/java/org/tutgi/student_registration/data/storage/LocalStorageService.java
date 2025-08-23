@@ -43,13 +43,13 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String store(final MultipartFile file, final StorageDirectory storageDirecotry,final String username,final Long userId) {
+    public String store(final MultipartFile file, final StorageDirectory storageDirecotry) {
         try {
-        	String safeUsername = username.replaceAll("[^a-zA-Z0-9]", "_");
+//        	String safeUsername = username.replaceAll("[^a-zA-Z0-9]", "_");
             String originalFilename = file.getOriginalFilename();
             String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
             
-            String filename = userId + "_" + safeUsername + "." + extension;
+            String filename = System.currentTimeMillis() + "_" + UUID.randomUUID() + "." + extension;
 
             final Path directoryPath = this.rootLocation.resolve(storageDirecotry.getDirectoryName());
 
@@ -80,33 +80,33 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public Path load(final String folderName,final String filename) {
-        return this.rootLocation.resolve(folderName).resolve(filename).normalize();
+    public Path load(final String filepath) {
+        return this.rootLocation.resolve(filepath).normalize();
     }
 
     @Override
-    public Resource loadAsResource(final String folderName,final String filename) {
+    public Resource loadAsResource(final String filepath) {
         try {
-            final Path file = load(folderName,filename);
+            final Path file = load(filepath);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("Could not read file: " + filename);
+                throw new RuntimeException("Could not read file: " + filepath);
             }
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Could not read file: " + filename, e);
+            throw new RuntimeException("Could not read file: " + filepath, e);
         }
     }
 
     @Override
-    public void delete(final String folderName,final String filename) {
+    public void delete(final String filepath) {
         try {
-            final Path file = load(folderName,filename);
+            final Path file = load(filepath);
             Files.deleteIfExists(file);
-            log.info("Deleted file locally: {}", filename);
+            log.info("Deleted file locally: {}", filepath);
         } catch (IOException e) {
-            throw new RuntimeException("Could not delete file: " + filename, e);
+            throw new RuntimeException("Could not delete file: " + filepath, e);
         }
     }
 
@@ -117,7 +117,8 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String update(MultipartFile newFile, String publicId, String folderName) {
-        return "";
+    public String update(final MultipartFile newFile,final String existingFilepath,final StorageDirectory storageDirectory) {
+    	delete(existingFilepath);
+    	return store(newFile,storageDirectory);
     }
 }

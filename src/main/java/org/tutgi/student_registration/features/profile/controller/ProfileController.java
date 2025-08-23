@@ -102,7 +102,6 @@ public class ProfileController {
     	final ApiResponse response = this.profileService.uploadProfilePicture(profileRequest);
     	return ResponseUtils.buildResponse(request, response, requestStartTime);
 	}
-    
 //    @GetMapping("/files/{folderName}/{filename:.+}")
 //    public ResponseEntity<Resource> serveFile(
 //            @PathVariable String folderName,
