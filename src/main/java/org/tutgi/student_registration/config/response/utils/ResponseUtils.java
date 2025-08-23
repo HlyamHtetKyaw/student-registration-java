@@ -1,9 +1,16 @@
 package org.tutgi.student_registration.config.response.utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
@@ -40,4 +47,34 @@ public class ResponseUtils {
         }
         return new ResponseEntity<>(paginatedResponse, status);
     }
+    
+    public static ResponseEntity<Resource> buildFileResponse(Resource resource, boolean asAttachment, double requestStartTime) {
+        try {
+            Path filePath = Path.of(resource.getURI());
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+
+            String dispositionType = asAttachment ? "attachment" : "inline";
+            headers.setContentDisposition(ContentDisposition
+                    .builder(dispositionType)
+                    .filename(resource.getFilename())
+                    .build());
+
+            long duration = Instant.now().getEpochSecond() - (long) requestStartTime;
+            headers.add("X-Response-Duration", duration + "s");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(resource);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to build file response for: " + resource.getFilename(), e);
+        }
+    }
+
 }
