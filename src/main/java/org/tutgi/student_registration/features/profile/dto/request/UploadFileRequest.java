@@ -5,7 +5,7 @@ import org.tutgi.student_registration.config.annotations.ValidFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public record UploadProfilePictureRequest(
+public record UploadFileRequest(
     @ValidFile
     @Schema(type = "string", format = "binary", description = "The image file to upload")
     MultipartFile file

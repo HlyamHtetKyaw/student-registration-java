@@ -32,6 +32,9 @@ public class Profile extends MasterData{
     @Column(name="photo_url")
     private String photoUrl;
     
+    @Column(name="signature_url")
+    private String signatureUrl;
+    
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
