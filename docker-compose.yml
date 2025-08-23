@@ -31,6 +31,9 @@ services:
         condition: service_started
     container_name: student_registration_system
     image: hlyamhtet/student-registration-system:latest
+    volumes:
+      - app_upload_data:/app/upload
+      
     environment:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
@@ -60,4 +63,5 @@ services:
 
 volumes:
   db_data:
+  app_upload_data:
 
