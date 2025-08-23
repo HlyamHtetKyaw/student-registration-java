@@ -63,5 +63,8 @@ coverage/
 #Enviroment Variable
 .env
 
+#Files upload folder
+upload/
+
 HELP.md
 
