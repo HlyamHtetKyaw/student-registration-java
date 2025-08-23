@@ -1,13 +1,5 @@
 package org.tutgi.student_registration.data.storage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -20,10 +12,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
+import org.springframework.web.multipart.MultipartFile;
+import org.tutgi.student_registration.data.enums.StorageDirectory;
+
+import lombok.extern.slf4j.Slf4j;
+
 @Service("localStorageService")
+@Slf4j
 public class LocalStorageService implements StorageService {
 
-    private static final Logger log = LoggerFactory.getLogger(LocalStorageService.class);
     private final Path rootLocation;
 
     public LocalStorageService() {
@@ -42,18 +43,24 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String store(final MultipartFile file, final String folderName) {
+    public String store(final MultipartFile file, final StorageDirectory storageDirecotry,final String username,final Long userId) {
         try {
-            if (file.isEmpty()) {
-                throw new IllegalArgumentException("Failed to store empty file.");
-            }
-            final String newFilename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            final Path destinationFile = this.rootLocation.resolve(Paths.get(newFilename)).normalize().toAbsolutePath();
+        	String safeUsername = username.replaceAll("[^a-zA-Z0-9]", "_");
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
+            
+            String filename = userId + "_" + safeUsername + "." + extension;
+
+            final Path directoryPath = this.rootLocation.resolve(storageDirecotry.getDirectoryName());
+
+            Files.createDirectories(directoryPath);
+            
+            final Path destinationFile = directoryPath.resolve(filename).normalize().toAbsolutePath();
 
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
-                log.info("Stored file locally: {}", newFilename);
-                return folderName + "/" + newFilename;
+                log.info("Stored file locally: {}", filename);
+                return storageDirecotry.getDirectoryName() + "/" + filename;
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
