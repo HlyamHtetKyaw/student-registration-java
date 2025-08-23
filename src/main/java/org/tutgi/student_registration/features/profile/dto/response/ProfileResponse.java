@@ -13,4 +13,6 @@ public class ProfileResponse {
     String mmName;
     String engName;
     String nrc;
+    String photoUrl;
+    String signatureUrl;
 }   

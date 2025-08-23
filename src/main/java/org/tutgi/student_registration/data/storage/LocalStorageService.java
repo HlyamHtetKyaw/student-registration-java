@@ -1,13 +1,5 @@
 package org.tutgi.student_registration.data.storage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.util.FileSystemUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -20,10 +12,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
+import org.springframework.web.multipart.MultipartFile;
+import org.tutgi.student_registration.data.enums.StorageDirectory;
+
+import lombok.extern.slf4j.Slf4j;
+
 @Service("localStorageService")
+@Slf4j
 public class LocalStorageService implements StorageService {
 
-    private static final Logger log = LoggerFactory.getLogger(LocalStorageService.class);
     private final Path rootLocation;
 
     public LocalStorageService() {
@@ -42,18 +43,24 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String store(final MultipartFile file, final String folderName) {
+    public String store(final MultipartFile file, final StorageDirectory storageDirecotry) {
         try {
-            if (file.isEmpty()) {
-                throw new IllegalArgumentException("Failed to store empty file.");
-            }
-            final String newFilename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            final Path destinationFile = this.rootLocation.resolve(Paths.get(newFilename)).normalize().toAbsolutePath();
+//        	String safeUsername = username.replaceAll("[^a-zA-Z0-9]", "_");
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
+            
+            String filename = System.currentTimeMillis() + "_" + UUID.randomUUID() + "." + extension;
+
+            final Path directoryPath = this.rootLocation.resolve(storageDirecotry.getDirectoryName());
+
+            Files.createDirectories(directoryPath);
+            
+            final Path destinationFile = directoryPath.resolve(filename).normalize().toAbsolutePath();
 
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
-                log.info("Stored file locally: {}", newFilename);
-                return folderName + "/" + newFilename;
+                log.info("Stored file locally: {}", filename);
+                return storageDirecotry.getDirectoryName() + "/" + filename;
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
@@ -73,33 +80,33 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public Path load(final String folderName,final String filename) {
-        return this.rootLocation.resolve(folderName).resolve(filename).normalize();
+    public Path load(final String filepath) {
+        return this.rootLocation.resolve(filepath).normalize();
     }
 
     @Override
-    public Resource loadAsResource(final String folderName,final String filename) {
+    public Resource loadAsResource(final String filepath) {
         try {
-            final Path file = load(folderName,filename);
+            final Path file = load(filepath);
             Resource resource = new UrlResource(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("Could not read file: " + filename);
+                throw new RuntimeException("Could not read file: " + filepath);
             }
         } catch (MalformedURLException e) {
-            throw new RuntimeException("Could not read file: " + filename, e);
+            throw new RuntimeException("Could not read file: " + filepath, e);
         }
     }
 
     @Override
-    public void delete(final String folderName,final String filename) {
+    public void delete(final String filepath) {
         try {
-            final Path file = load(folderName,filename);
+            final Path file = load(filepath);
             Files.deleteIfExists(file);
-            log.info("Deleted file locally: {}", filename);
+            log.info("Deleted file locally: {}", filepath);
         } catch (IOException e) {
-            throw new RuntimeException("Could not delete file: " + filename, e);
+            throw new RuntimeException("Could not delete file: " + filepath, e);
         }
     }
 
@@ -110,7 +117,8 @@ public class LocalStorageService implements StorageService {
     }
 
     @Override
-    public String update(MultipartFile newFile, String publicId, String folderName) {
-        return "";
+    public String update(final MultipartFile newFile,final String existingFilepath,final StorageDirectory storageDirectory) {
+    	delete(existingFilepath);
+    	return store(newFile,storageDirectory);
     }
 }

@@ -71,11 +71,14 @@ public class AdminServiceImpl implements AdminService{
 	public ApiResponse resendPassword(final ResendRequest resendRequest) {
 		log.info("Resending new password to email: {}", resendRequest.email());
 		
-		User user = this.userRepository.findByEmail(resendRequest.email()).orElseThrow(() -> new EntityNotFoundException("Email not found"));
-		
+		if (!userRepository.existsByEmail(resendRequest.email())) {
+		    throw new EntityNotFoundException("Email not found");
+		}
+
+
 		String password = ServerUtil.generatePassword();
-		user.setPassword(this.passwordEncoder.encode(password));
-		this.userRepository.save(user);
+		String encodedPassword = passwordEncoder.encode(password);
+		this.userRepository.updatePasswordByEmail(resendRequest.email(), encodedPassword);
 		this.serverUtil.sendPasswordEmail(resendRequest.email(), "PasswordTemplate", password);
 		return ApiResponse.builder()
                 .success(1)

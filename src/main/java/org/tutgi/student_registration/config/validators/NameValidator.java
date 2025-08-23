@@ -11,7 +11,7 @@ public class NameValidator implements ConstraintValidator<ValidName, String> {
     @Override
     public boolean isValid(final String name, final ConstraintValidatorContext context) {
         if (name == null || name.trim().isEmpty()) {
-            return ValidationUtils.buildViolation(context, "Name is required.");
+        	return true;
         }
 
         if (name.length() < 3 || name.length() > 50) {

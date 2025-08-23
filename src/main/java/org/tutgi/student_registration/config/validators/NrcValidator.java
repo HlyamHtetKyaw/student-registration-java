@@ -23,7 +23,7 @@ public class  NrcValidator implements ConstraintValidator<ValidNrc, String> {
 		    return ValidationUtils.buildViolation(context, "NRC data is not loaded.");
 		}
 		if(nrc==null) {
-			return ValidationUtils.buildViolation(context,"Nrc cannot be null.");
+			return true;
 		}
 		String nrcPartToValidate = nrc;
 		int lastParenIndex = nrc.lastIndexOf(")");

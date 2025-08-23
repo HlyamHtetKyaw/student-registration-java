@@ -252,10 +252,14 @@ public class AuthServiceImpl implements AuthService {
 
         final User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
-
+        
+        if (passwordEncoder.matches(resetPasswordRequest.newPassword(), user.getPassword())) {
+            throw new UnauthorizedException("New password must be different from the old password");
+        }
+        
         user.setPassword(this.passwordEncoder.encode(resetPasswordRequest.newPassword()));
         
-        if(user.getToken()!=null)tokenRepository.deleteTokenData(user.getToken().getId());;
+        if(user.getToken()!=null)tokenRepository.deleteTokenData(user.getToken().getId());
         
         this.userRepository.save(user);
         this.serverUtil.deleteVerify(email);
