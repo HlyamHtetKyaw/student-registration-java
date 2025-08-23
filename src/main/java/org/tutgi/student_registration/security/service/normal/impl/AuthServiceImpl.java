@@ -106,6 +106,8 @@ public class AuthServiceImpl implements AuthService {
 		    .mmName(profile.getMmName())
 		    .engName(profile.getEngName())
 		    .nrc(profile.getNrc())
+		    .photoUrl(profile.getPhotoUrl())
+		    .signatureUrl(profile.getSignatureUrl())
 		    .build() : null;
 
 		TokenResponse tokenResponse = new TokenResponse(tokenData.get("accessToken"));
