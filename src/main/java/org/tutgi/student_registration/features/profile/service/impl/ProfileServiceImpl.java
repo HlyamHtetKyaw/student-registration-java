@@ -102,6 +102,8 @@ public class ProfileServiceImpl implements ProfileService {
             .mmName(profile.getMmName())
             .engName(profile.getEngName())
             .nrc(profile.getNrc())
+            .photoUrl(profile.getPhotoUrl())
+            .signatureUrl(profile.getSignatureUrl())
             .build();
 
         return ApiResponse.builder()
