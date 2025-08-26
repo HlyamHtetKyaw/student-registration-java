@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.entity.MasterData;
+import org.tutgi.student_registration.data.repositories.AddressRepository;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -14,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -62,6 +65,9 @@ public class Student extends MasterData{
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Parent> parents = new ArrayList<>();
     
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Photo> photos = new ArrayList<>();
+    
     public Student(String mmName, String engName,String nickname, String nrc,String ethnicity,String religion,String pob,LocalDate dob,User user) {
         this.mmName = mmName;
         this.engName = engName;
@@ -95,5 +101,21 @@ public class Student extends MasterData{
         if (parent.getStudent() != this) {
             parent.setStudent(this);
         }
+    }
+    
+    public void addPhoto(Photo photo) {
+        if (photo == null) return;
+
+        if (!photos.contains(photo)) {
+            photos.add(photo);
+        }
+
+        if (photo.getStudent() != this) {
+            photo.setStudent(this);
+        }
+    }
+    @Transient
+    public List<Address> getAddresses(AddressRepository addressRepository) {
+        return addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT, this.getId());
     }
 }
