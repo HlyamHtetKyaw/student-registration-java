@@ -1,8 +1,11 @@
 package org.tutgi.student_registration.data.models;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.entity.MasterData;
+import org.tutgi.student_registration.data.repositories.AddressRepository;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +13,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -73,5 +77,9 @@ public class Parent extends MasterData{
             student.getParents().add(this);
         }
     }
-
+    
+    @Transient
+    public List<Address> getAddresses(AddressRepository addressRepository) {
+        return addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS, this.getId());
+    }
 }
