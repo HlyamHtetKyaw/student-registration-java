@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.entity.MasterData;
+import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.repositories.AddressRepository;
 
 import jakarta.persistence.CascadeType;
@@ -67,6 +68,9 @@ public class Student extends MasterData{
     
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Photo> photos = new ArrayList<>();
+    
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private EntranceForm entranceForm;
     
     public Student(String mmName, String engName,String nickname, String nrc,String ethnicity,String religion,String pob,LocalDate dob,User user) {
         this.mmName = mmName;
