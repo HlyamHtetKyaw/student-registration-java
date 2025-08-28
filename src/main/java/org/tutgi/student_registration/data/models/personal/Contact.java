@@ -1,12 +1,12 @@
-package org.tutgi.student_registration.data.models;
+package org.tutgi.student_registration.data.models.personal;
 
 import org.tutgi.student_registration.data.enums.EntityType;
+import org.tutgi.student_registration.data.enums.converter.EntityTypeConverter;
 import org.tutgi.student_registration.data.models.entity.MasterData;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -26,7 +26,7 @@ public class Contact extends MasterData {
     private String contactNumber;
 
     @Column(name = "entity_type", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = EntityTypeConverter.class)
     private EntityType entityType;
 
     @Column(name = "entity_id", nullable = false)

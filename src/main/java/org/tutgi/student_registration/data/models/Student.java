@@ -2,11 +2,22 @@ package org.tutgi.student_registration.data.models;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.tutgi.student_registration.data.enums.EntityType;
+import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
+import org.tutgi.student_registration.data.models.education.SubjectChoice;
 import org.tutgi.student_registration.data.models.entity.MasterData;
+import org.tutgi.student_registration.data.models.form.Acknowledgement;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
+import org.tutgi.student_registration.data.models.form.RegistrationForm;
+import org.tutgi.student_registration.data.models.lookup.Major;
+import org.tutgi.student_registration.data.models.personal.Address;
+import org.tutgi.student_registration.data.models.personal.Parent;
+import org.tutgi.student_registration.data.models.personal.Photo;
+import org.tutgi.student_registration.data.models.personal.Sibling;
 import org.tutgi.student_registration.data.repositories.AddressRepository;
 
 import jakarta.persistence.CascadeType;
@@ -21,12 +32,14 @@ import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @Table(name = "students")
+@ToString(exclude = {"siblings", "parents", "photos", "entranceForm", "registrationForm", "acknowledgement", "subjectChoice","matriculationExamDetail"})
 public class Student extends MasterData{
     @Column(nullable = false, name="name_mm")
     private String mmName;
@@ -61,16 +74,28 @@ public class Student extends MasterData{
     private Major major;
     
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Sibling> siblings = new ArrayList<>();
+    private Set<Sibling> siblings = new HashSet<>();
     
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Parent> parents = new ArrayList<>();
+    private Set<Parent> parents = new HashSet<>();
     
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Photo> photos = new ArrayList<>();
+    private Set<Photo> photos = new HashSet<>();
     
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private EntranceForm entranceForm;
+    
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private RegistrationForm registrationForm;
+    
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private Acknowledgement acknowledgement;
+    
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private SubjectChoice subjectChoice;
+    
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private MatriculationExamDetail matriculationExamDetail;
     
     public Student(String mmName, String engName,String nickname, String nrc,String ethnicity,String religion,String pob,LocalDate dob,User user) {
         this.mmName = mmName;
@@ -85,39 +110,23 @@ public class Student extends MasterData{
     }
     
     public void addSibling(Sibling sibling) {
-    	if (sibling == null) return;
-    	
-        if (!siblings.contains(sibling)) {
-            siblings.add(sibling);
-        }
-        if (sibling.getStudent() != this) {
-            sibling.setStudent(this);
-        }
+        if (sibling == null) return;
+        siblings.add(sibling);
+        sibling.setStudent(this);
     }
     
     public void addParent(Parent parent) {
         if (parent == null) return;
-
-        if (!parents.contains(parent)) {
-            parents.add(parent);
-        }
-
-        if (parent.getStudent() != this) {
-            parent.setStudent(this);
-        }
+        parents.add(parent);
+        parent.setStudent(this);
     }
     
     public void addPhoto(Photo photo) {
         if (photo == null) return;
-
-        if (!photos.contains(photo)) {
-            photos.add(photo);
-        }
-
-        if (photo.getStudent() != this) {
-            photo.setStudent(this);
-        }
+        photos.add(photo);
+        photo.setStudent(this);
     }
+
     @Transient
     public List<Address> getAddresses(AddressRepository addressRepository) {
         return addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT, this.getId());

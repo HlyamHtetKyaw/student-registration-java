@@ -1,5 +1,6 @@
-package org.tutgi.student_registration.data.models;
+package org.tutgi.student_registration.data.models.personal;
 
+import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.entity.MasterData;
 
 import jakarta.persistence.Column;
