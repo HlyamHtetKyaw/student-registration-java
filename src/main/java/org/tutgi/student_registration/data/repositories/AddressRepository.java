@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.tutgi.student_registration.data.enums.EntityType;
-import org.tutgi.student_registration.data.models.Address;
+import org.tutgi.student_registration.data.models.personal.Address;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {
 

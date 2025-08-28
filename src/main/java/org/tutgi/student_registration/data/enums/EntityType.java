@@ -5,15 +5,21 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public enum EntityType implements BaseEnum<String> {
-    STUDENT("Student"),
-    SIBLING("Sibling"),
-    PARENTS("Parents");
-    
-    private final String label;
+public enum EntityType implements BaseEnum<String, String> {
+    STUDENT("STUDENT", "Student"),
+    SIBLING("SIBLING", "Sibling"),
+    PARENTS("PARENTS", "Parents");
+
+    private final String value;
+    private final String label; 
+
+    @Override
+    public String getValue() {
+        return value;
+    }
 
     @Override
     public String getLabel() {
-        return this.label;
+        return label;
     }
 }

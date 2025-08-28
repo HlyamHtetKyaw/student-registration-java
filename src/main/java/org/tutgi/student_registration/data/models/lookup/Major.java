@@ -1,4 +1,4 @@
-package org.tutgi.student_registration.data.models;
+package org.tutgi.student_registration.data.models.lookup;
 
 import org.tutgi.student_registration.data.models.entity.MasterData;
 

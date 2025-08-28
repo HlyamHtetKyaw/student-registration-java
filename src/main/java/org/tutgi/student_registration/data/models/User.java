@@ -1,6 +1,7 @@
 package org.tutgi.student_registration.data.models;
 
 import org.tutgi.student_registration.data.models.entity.MasterData;
+import org.tutgi.student_registration.data.models.lookup.Role;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

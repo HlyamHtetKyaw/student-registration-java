@@ -1,8 +1,9 @@
-package org.tutgi.student_registration.data.models;
+package org.tutgi.student_registration.data.models.personal;
 
 import java.util.List;
 
 import org.tutgi.student_registration.data.enums.EntityType;
+import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.entity.MasterData;
 import org.tutgi.student_registration.data.repositories.AddressRepository;
 
