@@ -27,6 +27,7 @@ import org.tutgi.student_registration.features.students.dto.request.EntranceForm
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 import org.tutgi.student_registration.features.students.dto.request.OptionalDob;
 import org.tutgi.student_registration.features.students.dto.request.OptionalNrc;
+import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
 import org.tutgi.student_registration.features.students.service.factory.ContactFactory;
@@ -34,6 +35,7 @@ import org.tutgi.student_registration.features.students.service.factory.Entrance
 import org.tutgi.student_registration.features.students.service.factory.JobFactory;
 import org.tutgi.student_registration.features.students.service.factory.MEDFactory;
 import org.tutgi.student_registration.features.students.service.factory.ParentFactory;
+import org.tutgi.student_registration.features.students.service.utility.ParentResolver;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
 
 import jakarta.transaction.Transactional;
@@ -110,12 +112,35 @@ public class StudentServiceImpl implements StudentService{
         medRepository.save(medForm);
         
         studentRepository.save(student);
-
+        
+        EntranceFormResponse response = EntranceFormResponse.builder()
+	    	    .studentNameMm(student.getMmName())
+	    	    .studentNameEng(student.getEngName())
+	    	    .studentNrc(student.getNrc())
+	    	    .ethnicity(student.getEthnicity())
+	    	    .religion(student.getReligion())
+	    	    .dob(student.getDob())
+	    	    .matriculationPassedYear(medForm.getYear())
+	    	    .department(medForm.getDepartment())
+	    	    .fatherNameMm(father.getMmName())
+	    	    .fatherNameEng(father.getEngName())
+	    	    .fatherNrc(father.getNrc())
+	    	    .fatherJob(fatherJob.getName())
+	    	    .motherNameMm(mother.getMmName())
+	    	    .motherNameEng(mother.getEngName())
+	    	    .motherNrc(mother.getNrc())
+	    	    .motherJob(motherJob.getName())
+	    	    .address(studentAddr.getAddress())
+	    	    .phoneNumber(studentContact.getContactNumber())
+	    	    .permanentAddress(entranceForm.getPermanentAddress())
+	    	    .permanentPhoneNumber(entranceForm.getPermanentContactNumber())
+	    	    .build();
+        
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.CREATED.value())
                 .message("Entrance Form registered successfully.")
-                .data(true)
+                .data(response)
                 .build();
     }
 	
@@ -137,32 +162,32 @@ public class StudentServiceImpl implements StudentService{
         request.dob().map(OptionalDob::getValue).ifPresent(student::setDob);
 	    
 	    EntranceForm form = student.getEntranceForm();
-	    entranceFormFactory.updateFromPatch(form, request);
+	    entranceFormFactory.updateFromPatch(form,request);
 	    
 	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
-	    medFactory.updateFromPatch(medForm, request);
+	    medFactory.updateFromPatch(medForm,request);
 	    
-	    Parent father = parentRepository.findByStudentIdAndParentType_Name(student.getId(), ParentName.FATHER)
+	    Parent father = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.FATHER)
 	        .orElseThrow(() -> new EntityNotFoundException("Father entity not found"));
-	    parentFactory.updateParent(father, ParentName.FATHER, request);
-	    Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(), ParentName.MOTHER)
+	    parentFactory.updateParent(father, ParentName.FATHER,request);
+	    Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.MOTHER)
 	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
-	    parentFactory.updateParent(mother, ParentName.MOTHER, request);
+	    parentFactory.updateParent(mother,ParentName.MOTHER,request);
 	    
 	    Job fatherJob = jobRepository.findByEntityId(father.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
-	    jobFactory.updateJob(fatherJob, ParentName.FATHER, request);
+	    jobFactory.updateJob(fatherJob,ParentName.FATHER,request);
 	    Job motherJob = jobRepository.findByEntityId(mother.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
-	    jobFactory.updateJob(fatherJob, ParentName.MOTHER, request);
+	    jobFactory.updateJob(fatherJob,ParentName.MOTHER,request);
 	    
 	    Address studentAddr = addressRepository.findByEntityId(student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
-	    addressFactory.updateAddress(studentAddr, studentAddr.getEntityType(), request);
+	    addressFactory.updateAddress(studentAddr,studentAddr.getEntityType(),request);
 	    
 	    Contact studentContact = contactRepository.findByEntityId(student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
-	    contactFactory.updateContact(studentContact, studentContact.getEntityType(), request);
+	    contactFactory.updateContact(studentContact,studentContact.getEntityType(),request);
 	    
 	    studentRepository.save(student);
 	    entranceFormRepository.save(form);
@@ -180,6 +205,59 @@ public class StudentServiceImpl implements StudentService{
 	            .message("Entrance Form updated successfully.")
 	            .data(true)
 	            .build();
+	}
+	
+	@Override
+	public ApiResponse getEntranceForm() {
+	    Long userId = userUtil.getCurrentUserInternal().userId();
+	    Student student = studentRepository.findByUserId(userId);
+
+	    if (student == null || student.getEntranceForm() == null) {
+	        throw new EntityNotFoundException("Entrance form not found");
+	    }
+
+	    EntranceForm entranceForm = student.getEntranceForm();
+	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
+	    Parent father = ParentResolver.resolve(student.getParents(),ParentName.FATHER);
+	    Parent mother = ParentResolver.resolve(student.getParents(),ParentName.MOTHER);
+	    Job fatherJob = jobRepository.findByEntityId(father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
+	    Job motherJob = jobRepository.findByEntityId(mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
+	    Address studentAddr = addressRepository.findByEntityId(student.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
+	    Contact studentContact = contactRepository.findByEntityId(student.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
+	    
+	    EntranceFormResponse response = EntranceFormResponse.builder()
+	    	    .studentNameMm(student.getMmName())
+	    	    .studentNameEng(student.getEngName())
+	    	    .studentNrc(student.getNrc())
+	    	    .ethnicity(student.getEthnicity())
+	    	    .religion(student.getReligion())
+	    	    .dob(student.getDob())
+	    	    .matriculationPassedYear(medForm.getYear())
+	    	    .department(medForm.getDepartment())
+	    	    .fatherNameMm(father.getMmName())
+	    	    .fatherNameEng(father.getEngName())
+	    	    .fatherNrc(father.getNrc())
+	    	    .fatherJob(fatherJob.getName())
+	    	    .motherNameMm(mother.getMmName())
+	    	    .motherNameEng(mother.getEngName())
+	    	    .motherNrc(mother.getNrc())
+	    	    .motherJob(motherJob.getName())
+	    	    .address(studentAddr.getAddress())
+	    	    .phoneNumber(studentContact.getContactNumber())
+	    	    .permanentAddress(entranceForm.getPermanentAddress())
+	    	    .permanentPhoneNumber(entranceForm.getPermanentContactNumber())
+	    	    .build();
+
+	    return ApiResponse.builder()
+	        .success(1)
+	        .code(HttpStatus.OK.value())
+	        .message("Entrance Form retrieved successfully.")
+	        .data(response)
+	        .build();
 	}
 
 }

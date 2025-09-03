@@ -7,4 +7,5 @@ import org.tutgi.student_registration.features.students.dto.request.EntranceForm
 public interface StudentService {
 	ApiResponse createEntranceForm(final EntranceFormRequest entranceFormRequest);
 	ApiResponse updateEntranceForm(final EntranceFormUpdateRequest entranceFormUpdateRequest);
+	ApiResponse getEntranceForm();
 }

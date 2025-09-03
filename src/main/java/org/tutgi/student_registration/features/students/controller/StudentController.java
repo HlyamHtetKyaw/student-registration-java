@@ -2,6 +2,7 @@ package org.tutgi.student_registration.features.students.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -128,5 +129,25 @@ public class StudentController {
 	    final ApiResponse response = studentService.updateEntranceForm(updateRequest);
 	    return ResponseUtils.buildResponse(request, response, requestStartTime);
 	}
+	
+	@Operation(
+		    summary = "Get entrance form by student.",
+		    description = "Retrieves the entrance form registered by the currently logged-in student.",
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Entrance Form retrieved successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+		@GetMapping("/entranceForm")
+		public ResponseEntity<ApiResponse> getEntranceForm(final HttpServletRequest request) {
+		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+		    final ApiResponse response = studentService.getEntranceForm();
+		    return ResponseUtils.buildResponse(request, response, requestStartTime);
+		}
 
 }
