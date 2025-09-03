@@ -1,6 +1,6 @@
-package org.tutgi.student_registration.data.models;
+package org.tutgi.student_registration.data.models.lookup;
 
-import org.tutgi.student_registration.data.enums.RoleName;
+import org.tutgi.student_registration.data.enums.ParentName;
 import org.tutgi.student_registration.data.models.entity.MasterData;
 
 import jakarta.persistence.Column;
@@ -16,13 +16,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name="roles")
-public class Role extends MasterData {
+@Table(name="parent_type")
+public class ParentType extends MasterData {
 	@Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private RoleName name;
+    private ParentName name;
 
-    public Role(final RoleName name) {
+    public ParentType(final ParentName name) {
         this.name = name;
     }
 }
