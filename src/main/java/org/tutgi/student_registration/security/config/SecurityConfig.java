@@ -52,7 +52,7 @@ public class SecurityConfig {
                             RoleName.FINANCE.name(),
                             RoleName.STUDENT_AFFAIR.name()
                          )
-                        .requestMatchers("/api/v1/student/**").hasRole(Authority.STUDENT.name())
+                        .requestMatchers("/api/v1/student/**").hasRole(RoleName.STUDENT.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

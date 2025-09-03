@@ -109,6 +109,15 @@ public class Student extends MasterData{
         this.user = user;
     }
     
+    public void updatePersonalInfo(String engName, String mmName, String nrc, String ethnicity, String religion, LocalDate dob) {
+        this.engName = engName;
+        this.mmName = mmName;
+        this.nrc = nrc;
+        this.ethnicity = ethnicity;
+        this.religion = religion;
+        this.dob = dob;
+    }
+    
     public void addSibling(Sibling sibling) {
         if (sibling == null) return;
         siblings.add(sibling);

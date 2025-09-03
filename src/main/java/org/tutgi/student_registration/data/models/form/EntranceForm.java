@@ -33,7 +33,7 @@ public class EntranceForm extends MasterData{
     @Column(nullable = false, name="permanent_contact_no")
     private String permanentContactNumber;
     
-    @Column(nullable = false,name="signature")
+    @Column(name="signature")
     private String signatureUrl;
     
     @Lob
