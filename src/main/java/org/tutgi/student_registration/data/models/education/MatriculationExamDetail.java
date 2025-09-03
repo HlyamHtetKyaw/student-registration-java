@@ -36,7 +36,7 @@ public class MatriculationExamDetail extends MasterData{
 	@Column(nullable = false, name="year")
 	private String year;
 	
-	@Column(nullable = false, name="total_score")
+	@Column(name="total_score")
 	private Long totalScore;
 	
 	@OneToMany(mappedBy = "med", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

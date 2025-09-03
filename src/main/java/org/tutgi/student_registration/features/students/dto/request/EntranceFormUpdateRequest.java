@@ -4,6 +4,7 @@ import java.util.Optional;
 
 public record EntranceFormUpdateRequest(
         Optional<OptionalAcademicYear> academicYear,
+        Optional<String> rollNumber,
         Optional<String> studentNameMm,
         Optional<String> studentNameEng,
         Optional<OptionalNrc> studentNrc,

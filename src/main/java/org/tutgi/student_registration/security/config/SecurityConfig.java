@@ -45,14 +45,14 @@ public class SecurityConfig {
                                 "/api/v1/users/change-password",
                                 "/api/v1/users"
                         ).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole(RoleName.ADMIN.name())
-                        .requestMatchers("/api/v1/profile/**")
+                        .requestMatchers("/tutgi/api/v1/admin/**").hasRole(RoleName.ADMIN.name())
+                        .requestMatchers("/tutgi/api/v1/profile/**")
                         .hasAnyRole(
                             RoleName.DEAN.name(),
                             RoleName.FINANCE.name(),
                             RoleName.STUDENT_AFFAIR.name()
                          )
-                        .requestMatchers("/api/v1/student/**").hasRole(RoleName.STUDENT.name())
+                        .requestMatchers("/tutgi/api/v1/student/**").hasRole(RoleName.STUDENT.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

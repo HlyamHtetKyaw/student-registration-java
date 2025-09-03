@@ -45,6 +45,7 @@ public class StudentController {
 		                    value = """
 		                        {
 								  "academicYear":"2022-2023",
+								  "rollNumber":"သလ-တစ်",
 								  "studentNameMm": "မောင်မောင်",
 								  "studentNameEng": "Maung Maung",
 								  "studentNrc": "13/MASATA(N)123456",
