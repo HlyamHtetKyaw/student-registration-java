@@ -6,8 +6,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.data.enums.RoleName;
-import org.tutgi.student_registration.data.models.Role;
 import org.tutgi.student_registration.data.models.User;
+import org.tutgi.student_registration.data.models.lookup.Role;
 import org.tutgi.student_registration.data.repositories.RoleRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 

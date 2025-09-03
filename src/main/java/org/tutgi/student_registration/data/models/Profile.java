@@ -39,15 +39,18 @@ public class Profile extends MasterData{
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    public Profile(String mmName, String engName, String nrc,String photoUrl) {
+    public Profile(String mmName, String engName, String nrc,String photoUrl,User user) {
         this.mmName = mmName;
         this.engName = engName;
         this.nrc = nrc;
         this.photoUrl = photoUrl;
+        this.user = user;
     }
     
     public void assignUser(User user) {
         this.user = user;
-        user.setProfile(this);
+        if(user.getProfile()!=this) {
+        	user.setProfile(this);
+        }
     }
 }
