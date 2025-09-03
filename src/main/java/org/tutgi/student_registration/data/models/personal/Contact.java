@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "addresses", indexes = {
+@Table(name = "contacts", indexes = {
     @Index(name = "idx_entity_type_id", columnList = "entity_type, entity_id")
 })
 public class Contact extends MasterData {
