@@ -88,11 +88,42 @@ public class StudentController {
         return ResponseUtils.buildResponse(request, response, requestStartTime);
     }
 	
+	@Operation(
+		    summary = "Update entrance form by a student.",
+		    description = "This API endpoint allows a student to partially update their entrance form. Only the provided fields will be updated.",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+		        required = true,
+		        content = @Content(
+		            schema = @Schema(implementation = EntranceFormUpdateRequest.class),
+		            examples = {
+		                @ExampleObject(
+		                    name = "Entrance Form Patch Example",
+		                    value = """
+		                        {
+		                          "department": "Lashio",
+		                          "address": "No.99, New Street, Taunggyi",
+		                          "permanentAddress": "No.22, High Street, Bago",
+		                          "permanentPhoneNumber": "09876543210"
+		                        }
+		                        """
+		                )
+		            }
+		        )
+		    ),
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Entrance Form updated successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
 	@PatchMapping("/entranceForm")
 	public ResponseEntity<ApiResponse> updateEntranceForm(
 	        @Validated @RequestBody final EntranceFormUpdateRequest updateRequest,
 	        final HttpServletRequest request) {
-	    
 	    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
 	    final ApiResponse response = studentService.updateEntranceForm(updateRequest);
 	    return ResponseUtils.buildResponse(request, response, requestStartTime);

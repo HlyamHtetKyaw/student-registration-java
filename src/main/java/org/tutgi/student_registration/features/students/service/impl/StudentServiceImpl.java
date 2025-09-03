@@ -5,12 +5,18 @@ import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
+import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.enums.ParentName;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.User;
+import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
+import org.tutgi.student_registration.data.models.personal.Address;
+import org.tutgi.student_registration.data.models.personal.Contact;
 import org.tutgi.student_registration.data.models.personal.Job;
 import org.tutgi.student_registration.data.models.personal.Parent;
+import org.tutgi.student_registration.data.repositories.AddressRepository;
+import org.tutgi.student_registration.data.repositories.ContactRepository;
 import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
 import org.tutgi.student_registration.data.repositories.JobRepository;
 import org.tutgi.student_registration.data.repositories.MatriculationExamDetailRepository;
@@ -22,8 +28,11 @@ import org.tutgi.student_registration.features.students.dto.request.EntranceForm
 import org.tutgi.student_registration.features.students.dto.request.OptionalDob;
 import org.tutgi.student_registration.features.students.dto.request.OptionalNrc;
 import org.tutgi.student_registration.features.students.service.StudentService;
+import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
+import org.tutgi.student_registration.features.students.service.factory.ContactFactory;
 import org.tutgi.student_registration.features.students.service.factory.EntranceFormFactory;
 import org.tutgi.student_registration.features.students.service.factory.JobFactory;
+import org.tutgi.student_registration.features.students.service.factory.MEDFactory;
 import org.tutgi.student_registration.features.students.service.factory.ParentFactory;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
 
@@ -36,16 +45,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StudentServiceImpl implements StudentService{
 	private final UserUtil userUtil;
+	
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final ParentRepository parentRepository;
     private final JobRepository jobRepository;
     private final EntranceFormRepository entranceFormRepository;
-    private final MatriculationExamDetailRepository matRepository;
+    private final MatriculationExamDetailRepository medRepository;
+    private final AddressRepository addressRepository;
+    private final ContactRepository contactRepository;
+    
     private final ParentFactory parentFactory;
     private final JobFactory jobFactory;
     private final EntranceFormFactory entranceFormFactory;
-	
+    private final MEDFactory medFactory;
+    private final ContactFactory contactFactory;
+    private final AddressFactory addressFactory;
+    
 	@Override
 	@Transactional
     public ApiResponse createEntranceForm(EntranceFormRequest request) {
@@ -68,7 +84,13 @@ public class StudentServiceImpl implements StudentService{
         } else if (student.getEntranceForm() != null) {
             throw new DuplicateEntityException("Entrance Form already exists.");
         }
-
+        
+        Address studentAddr = addressFactory.createAddress(request.address(), student.getId(), EntityType.STUDENT);
+        addressRepository.save(studentAddr);
+        
+        Contact studentContact = contactFactory.createContact(request.phoneNumber(), student.getId(), EntityType.STUDENT);
+        contactRepository.save(studentContact);
+        
         Parent father = parentFactory.createParent(request, ParentName.FATHER, student);
         Parent mother = parentFactory.createParent(request, ParentName.MOTHER, student);
 
@@ -84,6 +106,9 @@ public class StudentServiceImpl implements StudentService{
         EntranceForm entranceForm = entranceFormFactory.createFromRequest(request, student);
         entranceFormRepository.save(entranceForm);
         
+        MatriculationExamDetail medForm = medFactory.createFromRequest(request, student);
+        medRepository.save(medForm);
+        
         studentRepository.save(student);
 
         return ApiResponse.builder()
@@ -94,8 +119,8 @@ public class StudentServiceImpl implements StudentService{
                 .build();
     }
 	
-	@Transactional
 	@Override
+	@Transactional
 	public ApiResponse updateEntranceForm(EntranceFormUpdateRequest request) {
 	    Long userId = userUtil.getCurrentUserInternal().userId();
 	    Student student = studentRepository.findByUserId(userId);
@@ -114,11 +139,14 @@ public class StudentServiceImpl implements StudentService{
 	    EntranceForm form = student.getEntranceForm();
 	    entranceFormFactory.updateFromPatch(form, request);
 	    
+	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
+	    medFactory.updateFromPatch(medForm, request);
+	    
 	    Parent father = parentRepository.findByStudentIdAndParentType_Name(student.getId(), ParentName.FATHER)
-	        .orElseThrow(() -> new EntityNotFoundException("Father not found"));
+	        .orElseThrow(() -> new EntityNotFoundException("Father entity not found"));
 	    parentFactory.updateParent(father, ParentName.FATHER, request);
 	    Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(), ParentName.MOTHER)
-	        .orElseThrow(() -> new EntityNotFoundException("Mother not found"));
+	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
 	    parentFactory.updateParent(mother, ParentName.MOTHER, request);
 	    
 	    Job fatherJob = jobRepository.findByEntityId(father.getId())
@@ -128,13 +156,24 @@ public class StudentServiceImpl implements StudentService{
 	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
 	    jobFactory.updateJob(fatherJob, ParentName.MOTHER, request);
 	    
+	    Address studentAddr = addressRepository.findByEntityId(student.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
+	    addressFactory.updateAddress(studentAddr, studentAddr.getEntityType(), request);
+	    
+	    Contact studentContact = contactRepository.findByEntityId(student.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
+	    contactFactory.updateContact(studentContact, studentContact.getEntityType(), request);
+	    
 	    studentRepository.save(student);
 	    entranceFormRepository.save(form);
+	    medRepository.save(medForm);
 	    parentRepository.save(father);
 	    parentRepository.save(mother);
 	    jobRepository.save(fatherJob);
 	    jobRepository.save(motherJob);
-
+	    addressRepository.save(studentAddr);
+	    contactRepository.save(studentContact);
+	    
 	    return ApiResponse.builder()
 	            .success(1)
 	            .code(HttpStatus.OK.value())
