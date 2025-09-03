@@ -1,12 +1,10 @@
 package org.tutgi.student_registration.data.models.education;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.entity.MasterData;
-import org.tutgi.student_registration.data.models.form.MajorSubjectChoiceForm;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
