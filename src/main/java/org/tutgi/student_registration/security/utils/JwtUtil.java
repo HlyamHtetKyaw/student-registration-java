@@ -14,56 +14,56 @@ import io.jsonwebtoken.security.Keys;
 
 public class JwtUtil {
 
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String SECRET = dotenv.get("JWT_SECRET_KEY");
-    private static final Key SECRET_KEY;
+	private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().systemProperties().load();
 
-    static {
-        assert SECRET != null;
-//        byte[] decodedKey = Base64.getDecoder().decode(SECRET);
-//        SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
-        byte[] decodedKey = Base64.getDecoder().decode(SECRET);
-        SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
-    }
+	private static final String SECRET = dotenv.get("JWT_SECRET_KEY");
+	private static final Key SECRET_KEY;
 
-    private static final String ISSUER = "1P1M";
+	static {
+		assert SECRET != null;
+		byte[] decodedKey = Base64.getDecoder().decode(SECRET);
+		SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
+	}
 
-    public static String generateToken(final Map<String, Object> claims, final String subject, final long expirationMillis) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuer(ISSUER)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
-                .signWith(SECRET_KEY)
-                .compact();
-    }
+	private static final String ISSUER = "tutgi";
 
-    public static Claims decodeToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
+	public static String generateToken(final Map<String, Object> claims, final String subject,
+			final long expirationMillis) {
+		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuer(ISSUER).setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis() + expirationMillis)).signWith(SECRET_KEY).compact();
+	}
 
-    public static boolean isTokenValid(String token) {
-        try {
-            final Claims claims = decodeToken(token);
+	public static Claims decodeToken(String token) {
+		return Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token).getBody();
+	}
 
-            if (claims.getExpiration().before(new Date())) {
-                return false;
-            }
+	public static boolean isTokenValid(String token) {
+		try {
+			final Claims claims = decodeToken(token);
 
-            if (!ISSUER.equals(claims.getIssuer())) {
-                return false;
-            }
+			if (claims.getExpiration().before(new Date())) {
+				return false;
+			}
 
-            return claims.getSubject() != null && !claims.getSubject().isEmpty();
-        } catch (ExpiredJwtException e) {
-            return false; // Token expired
-        } catch (JwtException e) {
-            return false; // Invalid token (e.g., signature tampered)
-        }
-    }
+			if (!ISSUER.equals(claims.getIssuer())) {
+				return false;
+			}
+
+			return claims.getSubject() != null && !claims.getSubject().isEmpty();
+		} catch (ExpiredJwtException e) {
+			return false; // Token expired
+		} catch (JwtException e) {
+			return false; // Invalid token (e.g., signature tampered)
+		}
+	}
+	
+	public static long getTokenRemainingValidityMillis(String token) {
+	    try {
+	        Claims claims = decodeToken(token);
+	        return Math.max(claims.getExpiration().getTime() - System.currentTimeMillis(), 0);
+	    } catch (JwtException e) {
+	        return 0;
+	    }
+	}
+
 }

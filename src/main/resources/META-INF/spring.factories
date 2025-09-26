@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+org.tutgi.student_registration.startup.processor.AppMetadataEnvironmentPostProcessor

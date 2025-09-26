@@ -1,38 +1,38 @@
 package org.tutgi.student_registration.security.service.normal.impl;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
-import org.tutgi.student_registration.config.service.EmailService;
-import org.tutgi.student_registration.config.utils.DtoUtil;
-import org.tutgi.student_registration.config.utils.EntityUtil;
-import org.tutgi.student_registration.data.enums.Gender;
+import org.tutgi.student_registration.data.models.Profile;
+import org.tutgi.student_registration.data.models.Token;
 import org.tutgi.student_registration.data.models.User;
+import org.tutgi.student_registration.data.repositories.TokenRepository;
+import org.tutgi.student_registration.data.repositories.UserRepository;
+import org.tutgi.student_registration.features.profile.dto.response.ProfileResponse;
 import org.tutgi.student_registration.features.users.dto.response.UserDto;
-import org.tutgi.student_registration.features.users.repository.UserRepository;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
-import org.tutgi.student_registration.security.dto.LoginRequest;
-import org.tutgi.student_registration.security.dto.RegisterRequest;
-import org.tutgi.student_registration.security.dto.ResetPasswordRequest;
-import org.tutgi.student_registration.security.dto.SetAmountUpdateRequest;
-import org.tutgi.student_registration.security.dto.UpdateUserSettingRequest;
-import org.tutgi.student_registration.security.dto.VerifyEmailRequest;
+import org.tutgi.student_registration.security.dto.request.ResetPasswordRequest;
+import org.tutgi.student_registration.security.dto.request.UserLoginRequest;
+import org.tutgi.student_registration.security.dto.request.VerifyOtpRequest;
+import org.tutgi.student_registration.security.dto.response.TokenResponse;
+import org.tutgi.student_registration.security.dto.response.UserLoginResponse;
 import org.tutgi.student_registration.security.service.normal.AuthService;
 import org.tutgi.student_registration.security.service.normal.JwtService;
+import org.tutgi.student_registration.security.utils.AuthUserUtility;
 import org.tutgi.student_registration.security.utils.AuthUtil;
-import org.tutgi.student_registration.security.utils.OtpUtils;
+import org.tutgi.student_registration.security.utils.ServerUtil;
 
 import io.jsonwebtoken.Claims;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,193 +42,184 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final ModelMapper modelMapper;
-    private final UserUtil userUtil;
-    private final AuthUtil authUtil;
-    private final EmailService emailService;
+	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final TokenRepository tokenRepository;
+	private final JwtService jwtService;
+	private final UserUtil userUtil;
+	private final AuthUtil authUtil;
+	private final ServerUtil serverUtil;
+	
+	@Value("${app.cookie.secure}")
+	private boolean cookieSecure;
 
-    private final Map<String, OtpUtils.OtpData> otpStore = new ConcurrentHashMap<>();
-    private String emailInProcess;
+	@Value("${app.cookie.sameSite}")
+	private String cookieSameSite;
+	
+	@Value("${otp.expiration.minutes}")
+	private String otpExpirationMinutes;
+	
+	@Transactional
+	@Override
+	public ApiResponse authenticateUser(final UserLoginRequest loginRequest, final HttpServletResponse response) {
+		final String email = loginRequest.email();
+		log.info("Authenticating user with email: {}", email);
 
-    @Override
-    public ApiResponse authenticateUser(final LoginRequest loginRequest) {
-        final String identifier = loginRequest.getEmail();
-        log.info("Authenticating user with identifier: {}", identifier);
+		final User user = this.userRepository.findByEmail(email).orElseThrow(() -> {
+			log.warn("User not found with email: {}", email);
+			return new UnauthorizedException("Invalid email or password");
+		});
 
-        final Optional<User> userOpt = this.userRepository.findByEmail(identifier)
-                .or(() -> this.userRepository.findByUsername(identifier));
+		if (!this.passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
+			log.warn("Invalid password for user: {}", loginRequest.email());
+			return ApiResponse.builder().success(0).code(HttpStatus.UNAUTHORIZED.value())
+					.message("Invalid email or password").build();
+		}
 
-        final User user = userOpt.orElseThrow(() -> {
-            log.warn("User not found with identifier: {}", identifier);
-            return new UnauthorizedException("Invalid email/username or password");
-        });
+		log.info("User authenticated successfully: {}", email);
+		final UserLoginResponse loginResponse = new UserLoginResponse();
+		AuthenticatedUser authUser = AuthUserUtility.fromUser(user);
+		Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+		Token refreshToken;
 
-        if (!user.isStatus()) {
-            log.warn("User is inactive: {}", loginRequest.getEmail());
-            return ApiResponse.builder()
-                    .success(0)
-                    .code(HttpStatus.UNAUTHORIZED.value())
-                    .message("Your account has been locked. Please contact your administrator.")
-                    .build();
-        }
+		if (user.getToken() != null) {
+			refreshToken = user.getToken();
+		} else {
+			refreshToken = new Token();
+			refreshToken.assignUser(user);
+		}
+		refreshToken.setRefreshtoken((String) tokenData.get("refreshToken"));
+		setCookieForRefreshToken((String) tokenData.get("refreshToken"), response);
+		
+		tokenRepository.save(refreshToken);
+		
+		Profile profile = user.getProfile();
 
-        if (!this.passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            log.warn("Invalid password for user: {}", loginRequest.getEmail());
-            return ApiResponse.builder()
-                    .success(0)
-                    .code(HttpStatus.UNAUTHORIZED.value())
-                    .message("Invalid email or password")
-                    .build();
-        }
+		UserDto userDto = UserDto.builder()
+		    .email(user.getEmail())
+		    .role(user.getRole().getName())
+		    .createdAt(user.getCreatedAt())
+		    .updatedAt(user.getUpdatedAt())
+		    .build();
 
-        log.info("User authenticated successfully: {}", loginRequest.getEmail());
+		ProfileResponse profileDto = (profile != null) ? ProfileResponse.builder()
+		    .mmName(profile.getMmName())
+		    .engName(profile.getEngName())
+		    .nrc(profile.getNrc())
+		    .photoUrl(profile.getPhotoUrl())
+		    .signatureUrl(profile.getSignatureUrl())
+		    .build() : null;
 
-        boolean firstTimeLogin = false;
+		TokenResponse tokenResponse = new TokenResponse(tokenData.get("accessToken"));
 
-        if(user.isLoginFirstTime()) {
-            user.setLoginFirstTime(firstTimeLogin);
-            this.userRepository.save(user);
-            log.info("User {} logged in for the first time.", user.getName());
-        }
+		loginResponse.setUser(userDto);
+		loginResponse.setToken(tokenResponse);
+		loginResponse.setProfile(profileDto);
+		
+		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(loginResponse)
+				.message("You are successfully logged in!").build();
+	}
+	
+	@Transactional
+	@Override
+	public ApiResponse generateAccessToken(HttpServletRequest request, HttpServletResponse response) {
+		Cookie[] cookies = request.getCookies();
 
-        final UserDto userDto = DtoUtil.map(user, UserDto.class, modelMapper);
-        userDto.setGenderId(Gender.fromInt(user.getGender()).getValue());
-        userDto.setGenderName(Gender.fromInt(user.getGender()).getCode());
-        userDto.setDateFormat(user.getDateFormat());
-        userDto.setCurrencyCode(user.getCurrencyCode());
-        userDto.setSetAmount(user.getSetAmount());
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if ("refreshToken".equals(cookie.getName())) {
+					String refreshToken = cookie.getValue();
+					final Claims claims = jwtService.validateToken(refreshToken);
+					Long userId = claims.get("id", Long.class);
+					Token token = tokenRepository.findByRefreshtoken(refreshToken).orElseThrow(() -> {
+						return new UnauthorizedException("Refresh token does not exist.");
+					});
+					if (!token.getUser().getId().equals(userId))
+						throw new UnauthorizedException("User mismatch.");
+					AuthenticatedUser authUser = AuthUserUtility.fromUser(token.getUser());
+					Map<String, Object> tokenData = authUtil.generateTokens(authUser);
+					token.setRefreshtoken((String) tokenData.get("refreshToken"));
+					tokenRepository.save(token);
+					setCookieForRefreshToken((String) tokenData.get("refreshToken"), response);
+					TokenResponse refreshResponse = new TokenResponse(tokenData.get("accessToken"));
+					return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(refreshResponse)
+							.message("Token generated successfully.").build();
+				}
+			}
+		}
+		return ApiResponse.builder().success(0).code(HttpStatus.UNAUTHORIZED.value()).data(null)
+				.message("Refresh token not found").build();
+	}
+	
+	@Transactional
+	@Override
+	public void logout(final String accessToken) {
+		if (accessToken != null && accessToken.startsWith("Bearer ")) {
+			final String token = accessToken.substring(7);
+			final Claims claims = this.jwtService.validateToken(token);
+			final String userEmail = claims.getSubject();
 
-        Map<String, Object> tokenData = authUtil.generateTokens(user);
+			final User user = this.userRepository.findByEmail(userEmail)
+					.orElseThrow(() -> new UnauthorizedException("User not found. Cannot proceed with logout."));
+			Token storedToken = user.getToken();
+			if (storedToken != null) {
+				tokenRepository.deleteTokenData(storedToken.getId());
+			}
+			log.debug("Revoking access token for user: {}", user.getEmail());
+			this.jwtService.revokeToken(token);
+		}
+		log.info("User successfully logged out.");
+	}
 
-        return ApiResponse.builder()
-                .success(1)
-                .code(HttpStatus.OK.value())
-                .data(
-                        Map.of(
-                        "currentUser", userDto,
-                        "accessToken", tokenData.get("accessToken")
-                        )
-                )
-                .message("You are successfully logged in!")
-                .build();
-    }
+	private void setCookieForRefreshToken(String refreshToken, HttpServletResponse response) {
+	    int maxAge = 7 * 24 * 60 * 60;
+	    
+	    StringBuilder cookieBuilder = new StringBuilder();
+	    cookieBuilder.append("refreshToken=").append(refreshToken).append("; ");
+	    cookieBuilder.append("HttpOnly; ");
+	    cookieBuilder.append("Path=/; ");
+	    cookieBuilder.append("Max-Age=").append(maxAge).append("; ");
+	    
+	    if (this.cookieSecure) {
+	        cookieBuilder.append("Secure; ");
+	    }
+	    
+	    if ("None".equalsIgnoreCase(this.cookieSameSite)) {
+	        cookieBuilder.append("SameSite=None");
+	    } else if ("Lax".equalsIgnoreCase(this.cookieSameSite)) {
+	        cookieBuilder.append("SameSite=Lax");
+	    } else if ("Strict".equalsIgnoreCase(this.cookieSameSite)) {
+	        cookieBuilder.append("SameSite=Strict");
+	    }
+	    
+	    response.addHeader("Set-Cookie", cookieBuilder.toString());
+	}
 
-    @Override
-    @Transactional
-    public ApiResponse registerUser(final RegisterRequest registerRequest) {
-        log.info("Registering new user with email: {}", registerRequest.getEmail());
-
-        if (this.userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
-            log.warn("Email already exists: {}", registerRequest.getEmail());
-            return ApiResponse.builder()
-                    .success(0)
-                    .code(HttpStatus.CONFLICT.value())
-                    .message("Email is already in use")
-                    .build();
-        }
-
-        if (this.userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
-            log.warn("Username already exists: {}", registerRequest.getUsername());
-            return ApiResponse.builder()
-                    .success(0)
-                    .code(HttpStatus.CONFLICT.value())
-                    .message("Username is already in use")
-                    .build();
-        }
-
-        final User newUser = User.builder()
-                .name(registerRequest.getName())
-                .username(registerRequest.getUsername())
-                .email(registerRequest.getEmail())
-                .password(this.passwordEncoder.encode(registerRequest.getPassword()))
-                .gender(registerRequest.getGender())
-                .emailVerified(false)
-                .build();
-
-        this.userRepository.save(newUser);
-
-        final Map<String, Object> tokenData = this.authUtil.generateTokens(newUser);
-
-        final String accessToken = (String) tokenData.get("accessToken");
-
-        log.info("User registered successfully: {}", registerRequest.getEmail());
-
-        final UserDto userDto = DtoUtil.map(newUser, UserDto.class, modelMapper);
-
-        final String token = UUID.randomUUID().toString();
-        final VerifyEmailRequest emailRequest = new VerifyEmailRequest(newUser.getEmail(), token);
-        this.emailService.sendVerifyEmail(emailRequest);
-
-        return ApiResponse.builder()
-                .success(1)
-                .code(HttpStatus.CREATED.value())
-                .data(
-                        Map.of(
-                        "user", userDto,
-                        "accessToken", accessToken
-                        )
-                )
-                .message("You have registered successfully.")
-                .build();
-    }
-
-    @Override
-    public void logout(final String accessToken) {
-        if (accessToken != null && accessToken.startsWith("Bearer ")) {
-            final String token = accessToken.substring(7);
-            final Claims claims = this.jwtService.validateToken(token);
-            final String userEmail = claims.getSubject();
-
-            final User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new UnauthorizedException(
-                            "User not found. Cannot proceed with logout."));
-
-            log.debug("Revoking access token for user: {}", user.getEmail());
-            this.jwtService.revokeToken(token);
-        }
-
-        log.info("User successfully logged out.");
-    }
-
-    @Override
-    public ApiResponse getCurrentUser(final String authHeader, final String routeName, final String browserName,
-                                      final String pageName) {
-        final UserDto userDto = userUtil.getCurrentUserDto(authHeader);
-        EntityUtil.getEntityById(userRepository, userDto.getId());
-
-        return ApiResponse.builder()
-                .success(1)
-                .code(HttpStatus.OK.value())
-                .data(Map.of(
-                        "user", userDto)
-                )
-                .message("User retrieved successfully")
-                .build();
-    }
+	@Override
+	public ApiResponse getCurrentUser(String authHeader,final String routeName, final String browserName,
+			final String pageName) {
+		final Object userDto = this.userUtil.getCurrentUserDto(authHeader);
+		return ApiResponse.builder().success(1).code(HttpStatus.OK.value()).data(userDto)
+				.message("User retrieved successfully").build();
+	}
 
     @Override
     public ApiResponse changePassword(String email) {
         log.info("Initiating password reset for email: {}", email);
 
-        final User user = userRepository.findByEmail(email)
+        final User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("No user found with email: {}", email);
                     return new UnauthorizedException("No user found with this email");
                 });
-
-        final String otp = OtpUtils.generateOtp();
-        otpStore.put(otp, new OtpUtils.OtpData(email, Instant.now().plus(30, ChronoUnit.MINUTES)));
-
+        String otp = ServerUtil.generateOtp();
+        this.serverUtil.sendOtpEmail(user.getEmail(), otp, "OtpTemplate", otpExpirationMinutes);
+//        this.serverUtil.send (user.getEmail(),"OtpTemplate",otpExpirationMinutes);
         try {
             return ApiResponse.builder()
                     .success(1)
                     .code(HttpStatus.OK.value())
-                    .data(Map.of(
-                            "otp", otp)
-                    )
+                    .data(true)
                     .message("OTP has been sent to your email")
                     .build();
         } catch (Exception e) {
@@ -236,46 +227,44 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Failed to send OTP");
         }
     }
-
+    
     @Override
-    public ApiResponse verifyOtp(final String otp) {
+    public ApiResponse verifyOtp(final VerifyOtpRequest otpRequest) {
         log.info("Verifying OTP");
-
-        final OtpUtils.OtpData otpData = otpStore.get(otp);
-        if (otpData == null || otpData.isExpired()) {
-            log.warn("Invalid or expired OTP");
-            throw new UnauthorizedException("Invalid or expired OTP");
-        }
-
-        emailInProcess = otpData.getEmail();
-        otpStore.remove(otp);
-
+        long expTime = this.serverUtil.verifyOtp(otpRequest.email(), otpRequest.otp());
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.OK.value())
                 .data(true)
-                .message("OTP verified successfully")
+                .message(String.format("OTP verified successfully, change your password within %s minutes.",expTime))
                 .build();
     }
-
+    
     @Override
+    @CacheEvict(value = "usersCache", allEntries = true)
     public ApiResponse resetPassword(final ResetPasswordRequest resetPasswordRequest) {
-        if (this.emailInProcess == null) {
+    	String email = resetPasswordRequest.email();
+        if (!this.serverUtil.isVerified(email)) {
             throw new UnauthorizedException("Please verify OTP first");
         }
 
-        if (!resetPasswordRequest.getNewPassword().equals(resetPasswordRequest.getConfirmPassword())) {
+        if (!resetPasswordRequest.newPassword().equals(resetPasswordRequest.confirmPassword())) {
             throw new UnauthorizedException("Passwords do not match");
         }
 
-        final User user = this.userRepository.findByEmail(emailInProcess)
+        final User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
-
-        user.setPassword(this.passwordEncoder.encode(resetPasswordRequest.getNewPassword()));
+        
+        if (passwordEncoder.matches(resetPasswordRequest.newPassword(), user.getPassword())) {
+            throw new UnauthorizedException("New password must be different from the old password");
+        }
+        
+        user.setPassword(this.passwordEncoder.encode(resetPasswordRequest.newPassword()));
+        
+        if(user.getToken()!=null)tokenRepository.deleteTokenData(user.getToken().getId());
+        
         this.userRepository.save(user);
-
-        this.emailInProcess = null;
-
+        this.serverUtil.deleteVerify(email);
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.OK.value())
@@ -284,20 +273,4 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    @Override
-    public void updateSetting(final String authHeader, final UpdateUserSettingRequest updateUserSettingRequest) {
-        final UserDto userDto = this.userUtil.getCurrentUserDto(authHeader);
-        this.userRepository.updateDateFormatAndCurrencyCode(
-                userDto.getId(),
-                updateUserSettingRequest.dateFormat(),
-                updateUserSettingRequest.currencyCode()
-        );
-    }
-
-	@Override
-	public void updateSetAmount(final String authHeader,final SetAmountUpdateRequest setAmountUpdateRequest) {
-		final UserDto userDto = this.userUtil.getCurrentUserDto(authHeader);
-		log.info("User {} is updating setAmount to {}", userDto.getId(), setAmountUpdateRequest.amount());
-		this.userRepository.updateSetAmountById(userDto.getId(), setAmountUpdateRequest.amount());
-	}
 }
