@@ -6,11 +6,11 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy; // Import this
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.tutgi.student_registration.data.enums.Authority;
-import org.tutgi.student_registration.data.enums.RoleName; // Assuming RoleName is an enum like "ADMIN", "DEAN"
+import org.tutgi.student_registration.data.enums.RoleName;
 import org.tutgi.student_registration.security.filter.CustomAuthenticationEntryPoint;
 import org.tutgi.student_registration.security.filter.JwtAuthenticationFilter;
 
