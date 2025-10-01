@@ -1,11 +1,12 @@
 package org.tutgi.student_registration.features.students.service.factory;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
-import org.tutgi.student_registration.features.students.dto.request.OptionalPhoneNumber;
 
 @Component
 public class EntranceFormFactory {
@@ -19,8 +20,9 @@ public class EntranceFormFactory {
     }
     
     public void updateFromPatch(EntranceForm form, EntranceFormUpdateRequest request) {
-    	request.permanentAddress().ifPresent(form::setPermanentAddress);
-    	request.permanentPhoneNumber().map(OptionalPhoneNumber::getValue).ifPresent(form::setPermanentContactNumber);
+        Optional.ofNullable(request.permanentAddress()).ifPresent(form::setPermanentAddress);
+        Optional.ofNullable(request.permanentPhoneNumber()).ifPresent(form::setPermanentContactNumber);
     }
+
 }
 
