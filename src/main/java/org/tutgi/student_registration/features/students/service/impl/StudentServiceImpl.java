@@ -1,5 +1,7 @@
 package org.tutgi.student_registration.features.students.service.impl;
 
+import java.util.Optional;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
@@ -25,8 +27,6 @@ import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
-import org.tutgi.student_registration.features.students.dto.request.OptionalDob;
-import org.tutgi.student_registration.features.students.dto.request.OptionalNrc;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
@@ -154,12 +154,13 @@ public class StudentServiceImpl implements StudentService{
 	        throw new EntityNotFoundException("Entrance Form not found for user");
 	    }
 	    
-	    request.studentNameEng().ifPresent(student::setEngName);
-        request.studentNameMm().ifPresent(student::setMmName);
-        request.studentNrc().map(OptionalNrc::getValue).ifPresent(student::setNrc);
-        request.ethnicity().ifPresent(student::setEthnicity);
-        request.religion().ifPresent(student::setReligion);
-        request.dob().map(OptionalDob::getValue).ifPresent(student::setDob);
+	    Optional.ofNullable(request.studentNameEng()).ifPresent(student::setEngName);
+	    Optional.ofNullable(request.studentNameMm()).ifPresent(student::setMmName);
+	    Optional.ofNullable(request.studentNrc()).ifPresent(student::setNrc);
+	    Optional.ofNullable(request.ethnicity()).ifPresent(student::setEthnicity);
+	    Optional.ofNullable(request.religion()).ifPresent(student::setReligion);
+	    Optional.ofNullable(request.dob()).ifPresent(student::setDob);
+
 	    
 	    EntranceForm form = student.getEntranceForm();
 	    entranceFormFactory.updateFromPatch(form,request);

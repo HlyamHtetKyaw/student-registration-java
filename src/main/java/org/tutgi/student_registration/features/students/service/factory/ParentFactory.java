@@ -1,5 +1,7 @@
 package org.tutgi.student_registration.features.students.service.factory;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
 import org.tutgi.student_registration.data.enums.ParentName;
@@ -9,7 +11,6 @@ import org.tutgi.student_registration.data.models.personal.Parent;
 import org.tutgi.student_registration.data.repositories.ParentTypeRepository;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
-import org.tutgi.student_registration.features.students.dto.request.OptionalNrc;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,16 +42,17 @@ public class ParentFactory {
     }
     
     public void updateParent(Parent parent, ParentName type, EntranceFormUpdateRequest request) {
-    	if(type==ParentName.FATHER) {
-    		request.fatherNameEng().ifPresent(parent::setEngName);
-    		request.fatherNameMm().ifPresent(parent::setMmName);
-    		request.fatherNrc().map(OptionalNrc::getValue).ifPresent(parent::setNrc);
-    	}else {
-    		request.motherNameEng().ifPresent(parent::setEngName);
-    		request.motherNameMm().ifPresent(parent::setMmName);
-    		request.motherNrc().map(OptionalNrc::getValue).ifPresent(parent::setNrc);
-    	}
+        if (type == ParentName.FATHER) {
+            Optional.ofNullable(request.fatherNameEng()).ifPresent(parent::setEngName);
+            Optional.ofNullable(request.fatherNameMm()).ifPresent(parent::setMmName);
+            Optional.ofNullable(request.fatherNrc()).ifPresent(parent::setNrc);
+        } else {
+            Optional.ofNullable(request.motherNameEng()).ifPresent(parent::setEngName);
+            Optional.ofNullable(request.motherNameMm()).ifPresent(parent::setMmName);
+            Optional.ofNullable(request.motherNrc()).ifPresent(parent::setNrc);
+        }
     }
+
 
 }
 
