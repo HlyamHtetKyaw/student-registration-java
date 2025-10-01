@@ -1,13 +1,18 @@
 package org.tutgi.student_registration.features.students.service.factory;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.personal.Address;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 
-@Component
-public class AddressFactory {
+import lombok.RequiredArgsConstructor;
 
+@Component
+@RequiredArgsConstructor
+public class AddressFactory {
+	
     public Address createAddress(String addressName, Long ownerId,EntityType entityType) {
     	Address address = new Address();
     	address.setAddress(addressName);
@@ -17,6 +22,6 @@ public class AddressFactory {
     }
     
     public void updateAddress(Address address, EntityType type, EntranceFormUpdateRequest request) {
-    	request.address().ifPresent(address::setAddress);
+    	Optional.ofNullable(request.address()).ifPresent(address::setAddress);
     }
 }

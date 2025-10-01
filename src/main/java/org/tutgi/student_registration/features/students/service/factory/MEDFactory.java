@@ -1,5 +1,7 @@
 package org.tutgi.student_registration.features.students.service.factory;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
@@ -17,9 +19,10 @@ public class MEDFactory {
         return med;
     }
     
-    public void updateFromPatch(MatriculationExamDetail med, EntranceFormUpdateRequest request) {
-    	request.rollNumber().ifPresent(med::setRollNumber);
-    	request.matriculationPassedYear().ifPresent(med::setYear);
-    	request.department().ifPresent(med::setDepartment);
-    }
+	public void updateFromPatch(MatriculationExamDetail med, EntranceFormUpdateRequest request) {
+	    Optional.ofNullable(request.rollNumber()).ifPresent(med::setRollNumber);
+	    Optional.ofNullable(request.matriculationPassedYear()).ifPresent(med::setYear);
+	    Optional.ofNullable(request.department()).ifPresent(med::setDepartment);
+	}
+
 }

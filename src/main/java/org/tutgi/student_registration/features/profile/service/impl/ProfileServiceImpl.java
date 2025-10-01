@@ -2,7 +2,6 @@ package org.tutgi.student_registration.features.profile.service.impl;
 
 import java.util.Optional;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository profileRepository;
     private final StorageService storageService;
     private final UserUtil userUtil;
-    private final ModelMapper modelMapper;
     
     @Override
     @Transactional
@@ -93,11 +91,11 @@ public class ProfileServiceImpl implements ProfileService {
         if (profile == null) {
             throw new EntityNotFoundException("Profile not found.");
         }
-        
-        modelMapper.map(updateRequest, profile);
-//        Optional.ofNullable(updateRequest.mmName()).ifPresent(profile::setMmName);
-//        Optional.ofNullable(updateRequest.engName()).ifPresent(profile::setEngName);
-//        Optional.ofNullable(updateRequest.nrc()).ifPresent(profile::setNrc);
+
+        Optional.ofNullable(updateRequest.mmName()).ifPresent(profile::setMmName);
+        Optional.ofNullable(updateRequest.engName()).ifPresent(profile::setEngName);
+        Optional.ofNullable(updateRequest.nrc()).ifPresent(profile::setNrc);
+
         profileRepository.save(profile);
 
         ProfileResponse profileDto = ProfileResponse.builder()
