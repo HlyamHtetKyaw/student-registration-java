@@ -1,5 +1,7 @@
 package org.tutgi.student_registration.features.students.service.factory;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.enums.ParentName;
@@ -18,11 +20,12 @@ public class JobFactory {
     }
     
     public void updateJob(Job job, ParentName type, EntranceFormUpdateRequest request) {
-    	if(type==ParentName.FATHER) {
-    		request.fatherJob().ifPresent(job::setName);
-    	}else {
-    		request.motherJob().ifPresent(job::setName);
-    	}
+        if (type == ParentName.FATHER) {
+            Optional.ofNullable(request.fatherJob()).ifPresent(job::setName);
+        } else {
+            Optional.ofNullable(request.motherJob()).ifPresent(job::setName);
+        }
     }
+
 }
 
