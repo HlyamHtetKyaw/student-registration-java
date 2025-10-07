@@ -9,6 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -41,6 +42,10 @@ public class Acknowledgement extends MasterData{
     @OneToOne(optional=false)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
+
+    @ManyToOne
+    @JoinColumn(name = "form_id")
+    private Form form;
     
     public Acknowledgement(String signatureUrl, LocalDate signatureDate, String guardianName,
     		String guardianSignatureUrl,Student student) {
