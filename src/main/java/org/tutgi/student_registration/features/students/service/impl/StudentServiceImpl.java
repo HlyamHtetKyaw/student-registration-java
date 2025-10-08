@@ -2,6 +2,7 @@ package org.tutgi.student_registration.features.students.service.impl;
 
 import java.util.Optional;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
@@ -13,6 +14,7 @@ import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
+import org.tutgi.student_registration.data.models.form.Form;
 import org.tutgi.student_registration.data.models.personal.Address;
 import org.tutgi.student_registration.data.models.personal.Contact;
 import org.tutgi.student_registration.data.models.personal.Job;
@@ -25,6 +27,7 @@ import org.tutgi.student_registration.data.repositories.MatriculationExamDetailR
 import org.tutgi.student_registration.data.repositories.ParentRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
+import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
@@ -35,6 +38,7 @@ import org.tutgi.student_registration.features.students.service.factory.Entrance
 import org.tutgi.student_registration.features.students.service.factory.JobFactory;
 import org.tutgi.student_registration.features.students.service.factory.MEDFactory;
 import org.tutgi.student_registration.features.students.service.factory.ParentFactory;
+import org.tutgi.student_registration.features.students.service.utility.FormValidator;
 import org.tutgi.student_registration.features.students.service.utility.ParentResolver;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
 
@@ -56,6 +60,7 @@ public class StudentServiceImpl implements StudentService{
     private final MatriculationExamDetailRepository medRepository;
     private final AddressRepository addressRepository;
     private final ContactRepository contactRepository;
+    private final FormValidator formValidator;
     
     private final ParentFactory parentFactory;
     private final JobFactory jobFactory;
@@ -64,10 +69,12 @@ public class StudentServiceImpl implements StudentService{
     private final ContactFactory contactFactory;
     private final AddressFactory addressFactory;
     
+    private final ModelMapper modelMapper;
 	@Override
 	@Transactional
     public ApiResponse createEntranceForm(EntranceFormRequest request) {
-        Long userId = userUtil.getCurrentUserInternal().userId();
+		Form form = formValidator.valideForm(request.formId());
+		Long userId = userUtil.getCurrentUserInternal().userId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         Student student = studentRepository.findByUserId(userId);
@@ -106,6 +113,7 @@ public class StudentServiceImpl implements StudentService{
         jobRepository.save(motherJob);
 
         EntranceForm entranceForm = entranceFormFactory.createFromRequest(request, student);
+        entranceForm.assignForm(form);
         entranceFormRepository.save(entranceForm);
         
         MatriculationExamDetail medForm = medFactory.createFromRequest(request, student);
@@ -230,7 +238,9 @@ public class StudentServiceImpl implements StudentService{
 	    Contact studentContact = contactRepository.findByEntityId(student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    
+	    Form formData = entranceForm.getForm();
 	    EntranceFormResponse response = EntranceFormResponse.builder()
+	    		.formData(modelMapper.map(formData, FormResponse.class))
 	    	    .studentNameMm(student.getMmName())
 	    	    .studentNameEng(student.getEngName())
 	    	    .studentNrc(student.getNrc())

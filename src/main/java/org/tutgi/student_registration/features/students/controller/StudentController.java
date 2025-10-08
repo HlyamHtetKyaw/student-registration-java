@@ -44,7 +44,7 @@ public class StudentController {
 		                    name = "Entrance Form Example",
 		                    value = """
 		                        {
-								  "academicYear":"2022-2023",
+								  "formId": 1,
 								  "rollNumber":"သလ-တစ်",
 								  "studentNameMm": "မောင်မောင်",
 								  "studentNameEng": "Maung Maung",

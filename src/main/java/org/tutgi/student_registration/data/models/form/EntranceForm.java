@@ -62,6 +62,10 @@ public class EntranceForm extends MasterData{
     private Student student;
     
     @ManyToOne
+    @JoinColumn(name = "form_id", nullable = false)
+    private Form form;
+    
+    @ManyToOne
     @JoinColumn(name = "verifier_id")
     private Profile profile;
     
@@ -82,5 +86,9 @@ public class EntranceForm extends MasterData{
     
     public void assignProfile(Profile profile) {
     	this.profile = profile;
+    }
+    
+    public void assignForm(Form form) {
+    	this.form = form;
     }
 }
