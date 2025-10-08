@@ -10,8 +10,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 
-public record EntranceFormRequest(
-		@NotNull Long formId,
+public record SubjectChoiceFormRequest(
+		@NotBlank @ValidAcademicYear String academicYear,
 		@NotBlank String rollNumber,
 	    @NotBlank String studentNameMm,
 	    @NotBlank String studentNameEng,
@@ -34,4 +34,3 @@ public record EntranceFormRequest(
 	    @NotBlank String permanentAddress,
 	    @NotBlank @ValidPhoneNumber String permanentPhoneNumber
 ) {}
-

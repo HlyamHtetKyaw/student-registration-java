@@ -62,4 +62,8 @@ public class Acknowledgement extends MasterData{
         	student.setAcknowledgement(this);
         }
     }
+    
+    public void assignForm(Form form) {
+    	this.form = form;
+    }
 }

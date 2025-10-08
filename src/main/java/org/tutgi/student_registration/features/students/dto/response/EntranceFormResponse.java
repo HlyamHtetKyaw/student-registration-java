@@ -2,6 +2,9 @@ package org.tutgi.student_registration.features.students.dto.response;
 
 import java.time.LocalDate;
 
+import org.tutgi.student_registration.data.models.form.Form;
+import org.tutgi.student_registration.features.form.dto.response.FormResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EntranceFormResponse {
-    private String academicYear;
+    private FormResponse formData;
     private String studentNameMm;
     private String studentNameEng;
     private String studentNrc;
@@ -34,4 +37,5 @@ public class EntranceFormResponse {
     private String permanentAddress;
     private String permanentPhoneNumber;
 }
+
 
