@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private List<String> getPermittedUrls() {
 		return Arrays.asList(
 				"/tutgi/api/v1/auth/**",
+				"/tutgi/api/v1/forms/**",
 				"/v3/api-docs/**",
 				"/swagger-ui/**",
 				"/swagger-ui.html",
