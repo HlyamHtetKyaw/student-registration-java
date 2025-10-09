@@ -1,16 +1,20 @@
 package org.tutgi.student_registration.features.form.service.impl;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
+import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginationMeta;
@@ -27,8 +31,8 @@ import org.tutgi.student_registration.features.form.service.FormService;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
 import org.tutgi.student_registration.security.utils.ServerUtil;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import jakarta.persistence.criteria.From;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -201,5 +205,16 @@ public class FormServiceImpl implements FormService {
                 .meta(meta)
                 .data(formResponses)
                 .build();
+    }
+
+    @Override
+    public Resource retrieveFile(String filePath,Long id) {
+        Form form = formRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Form not found for id "+id));
+        String expectedPath = form.getStampUrl();
+        if (!filePath.equals(expectedPath)) {
+            throw new UnauthorizedException("You are not allowed to access this file.");
+        }
+        return storageService.loadAsResource(filePath);
     }
 }
