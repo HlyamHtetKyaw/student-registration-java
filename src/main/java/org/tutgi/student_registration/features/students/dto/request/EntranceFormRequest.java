@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Past;
 
 public record EntranceFormRequest(
 		@NotNull Long formId,
-		@NotBlank String rollNumber,
+		@NotBlank String enrollmentNumber,
 	    @NotBlank String studentNameMm,
 	    @NotBlank String studentNameEng,
 	    @NotBlank @ValidNrc String studentNrc,

@@ -13,6 +13,7 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
+import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.service.StudentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,7 @@ public class StudentController {
 		                    value = """
 		                        {
 								  "formId": 1,
-								  "rollNumber":"သလ-တစ်",
+								  "enrollmentNumber":"သလ-တစ်",
 								  "studentNameMm": "မောင်မောင်",
 								  "studentNameEng": "Maung Maung",
 								  "studentNrc": "13/MASATA(N)123456",
@@ -144,11 +145,68 @@ public class StudentController {
 		        )
 		    }
 		)
-		@GetMapping("/entranceForm")
-		public ResponseEntity<ApiResponse> getEntranceForm(final HttpServletRequest request) {
-		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-		    final ApiResponse response = studentService.getEntranceForm();
-		    return ResponseUtils.buildResponse(request, response, requestStartTime);
-		}
-
+	@GetMapping("/entranceForm")
+	public ResponseEntity<ApiResponse> getEntranceForm(final HttpServletRequest request) {
+	    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+	    final ApiResponse response = studentService.getEntranceForm();
+	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+	}
+	
+	@Operation(
+	    summary = "Register entrance form by a student.",
+	    description = "This API endpoint allows the registration of entrance form for students.",
+	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+	        required = true,
+	        content = @Content(
+	            schema = @Schema(implementation = EntranceFormRequest.class),
+	            examples = {
+	                @ExampleObject(
+	                    name = "Entrance Form Example",
+	                    value = """
+	                        {
+							  "formId": 1,
+							  "rollNumber":"သလ-တစ်",
+							  "studentNameMm": "မောင်မောင်",
+							  "studentNameEng": "Maung Maung",
+							  "studentNrc": "13/MASATA(N)123456",
+							  "ethnicity": "Burma",
+							  "religion": "Buddhism",
+							  "dob": "2003-11-27",
+							  "matriculationPassedYear": "2024-2025",
+							  "department": "Muse",
+							  "fatherNameMm": "ကိုကို",
+							  "fatherNameEng": "Ko Ko",
+							  "fatherNrc": "13/MASATA(N)654321",
+							  "fatherJob": "Teacher",
+							  "motherNameMm": "ဒေါ်စုစု",
+							  "motherNameEng": "Daw Su Su",
+							  "motherNrc": "13/MASATA(N)789123",
+							  "motherJob": "Doctor",
+							  "address": "No.123, Some Street, Yangon",
+							  "phoneNumber": "09123456789",
+							  "permanentAddress": "No.45, Main Road, Mandalay",
+							  "permanentPhoneNumber": "09987654321"
+							}
+	                        """
+	                )
+	            }
+	        )
+	    ),
+	    responses = {
+	    		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+	            responseCode = "200",
+	            description = "Subject Choice Form registered successfully.",
+	            content = @Content(
+	                schema = @Schema(implementation = ApiResponse.class)
+	            )
+	        )
+	    }
+	)
+	@PostMapping("/subjectChoiceForm")
+    public ResponseEntity<ApiResponse> registerSubjectChoiceForm(@Validated @RequestBody final SubjectChoiceFormRequest subjectChoiceForm,
+            final HttpServletRequest request) {
+        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+        final ApiResponse response = studentService.createSubjectChoiceForm(subjectChoiceForm);
+        return ResponseUtils.buildResponse(request, response, requestStartTime);
+    }
 }

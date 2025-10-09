@@ -30,6 +30,7 @@ import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
+import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
@@ -81,6 +82,7 @@ public class StudentServiceImpl implements StudentService{
         if (student == null) {
             student = new Student();
             student.updatePersonalInfo(
+            		request.enrollmentNumber(),
                     request.studentNameEng(),
                     request.studentNameMm(),
                     request.studentNrc(),
@@ -122,6 +124,7 @@ public class StudentServiceImpl implements StudentService{
         studentRepository.save(student);
         
         EntranceFormResponse response = EntranceFormResponse.builder()
+        		.formData(modelMapper.map(form, FormResponse.class))
 	    	    .studentNameMm(student.getMmName())
 	    	    .studentNameEng(student.getEngName())
 	    	    .studentNrc(student.getNrc())
@@ -269,6 +272,12 @@ public class StudentServiceImpl implements StudentService{
 	        .message("Entrance Form retrieved successfully.")
 	        .data(response)
 	        .build();
+	}
+
+	@Override
+	public ApiResponse createSubjectChoiceForm(SubjectChoiceFormRequest subjectChoiceFormRequest) {
+		
+		return null;
 	}
 
 }

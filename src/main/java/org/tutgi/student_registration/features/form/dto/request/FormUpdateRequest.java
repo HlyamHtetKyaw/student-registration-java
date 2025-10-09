@@ -6,6 +6,5 @@ public record FormUpdateRequest(
     @ValidAcademicYear
     String academicYear,
     String number,
-    String code,
-    Boolean isOpen
+    String code
 ) {}

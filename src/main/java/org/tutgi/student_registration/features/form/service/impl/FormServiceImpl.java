@@ -1,6 +1,7 @@
 package org.tutgi.student_registration.features.form.service.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
@@ -73,8 +74,9 @@ public class FormServiceImpl implements FormService {
     public ApiResponse updateForm(Long id, FormUpdateRequest updateRequest) {
         Form form = formRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Form not found with id: " + id));
-
-        modelMapper.map(updateRequest, form);
+        Optional.ofNullable(updateRequest.academicYear()).ifPresent(form::setAcademicYear);
+        Optional.ofNullable(updateRequest.number()).ifPresent(form::setNumber);
+        Optional.ofNullable(updateRequest.code()).ifPresent(form::setCode);
         Form updatedForm = formRepository.save(form);
 
         return ApiResponse.builder()
