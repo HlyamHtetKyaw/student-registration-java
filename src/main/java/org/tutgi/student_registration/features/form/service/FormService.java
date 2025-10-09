@@ -1,8 +1,10 @@
 package org.tutgi.student_registration.features.form.service;
 
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
+import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.features.form.dto.request.FormRequest;
 import org.tutgi.student_registration.features.form.dto.request.FormUpdateRequest;
 import org.tutgi.student_registration.features.form.dto.request.UploadStampRequest;
@@ -19,4 +21,6 @@ public interface FormService {
     ApiResponse getFormById(Long id);
     ApiResponse initiateFormClosure(Long id);
     ApiResponse verifyAndCloseForm(Long id, VerifyFormClosureRequest verifyRequest);
+    
+    Resource retrieveFile(String photoUrl,Long id);
 }
