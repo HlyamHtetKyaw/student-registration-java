@@ -41,6 +41,9 @@ import lombok.ToString;
 @Table(name = "students")
 @ToString(exclude = {"siblings", "parents", "photos", "entranceForm", "registrationForm", "acknowledgement", "subjectChoice","matriculationExamDetail"})
 public class Student extends MasterData{
+	@Column(nullable = false, name="enrollment_number")
+    private String enrollmentNumber;
+	
     @Column(nullable = false, name="name_mm")
     private String mmName;
 
@@ -109,8 +112,9 @@ public class Student extends MasterData{
         this.user = user;
     }
     
-    public void updatePersonalInfo(String engName, String mmName, String nrc, String ethnicity, String religion, LocalDate dob) {
-        this.engName = engName;
+    public void updatePersonalInfo(String enrollmentNumber,String engName, String mmName, String nrc, String ethnicity, String religion, LocalDate dob) {
+        this.enrollmentNumber = enrollmentNumber;
+    	this.engName = engName;
         this.mmName = mmName;
         this.nrc = nrc;
         this.ethnicity = ethnicity;

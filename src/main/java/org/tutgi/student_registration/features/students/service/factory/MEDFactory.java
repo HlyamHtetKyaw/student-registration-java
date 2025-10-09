@@ -12,7 +12,6 @@ import org.tutgi.student_registration.features.students.dto.request.EntranceForm
 public class MEDFactory {
 	public MatriculationExamDetail createFromRequest(EntranceFormRequest request, Student student) {
 		MatriculationExamDetail med = new MatriculationExamDetail();
-		med.setRollNumber(request.rollNumber());
         med.setYear(request.matriculationPassedYear());
         med.setDepartment(request.department());
         med.assignStudent(student);
