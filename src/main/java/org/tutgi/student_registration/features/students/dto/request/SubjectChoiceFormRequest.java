@@ -1,10 +1,14 @@
 package org.tutgi.student_registration.features.students.dto.request;
 
 import java.time.LocalDate;
-import java.util.Map;
+import java.util.List;
 
 import org.tutgi.student_registration.config.annotations.ValidPhoneNumber;
+import org.tutgi.student_registration.data.enums.PriorityScore;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -28,5 +32,23 @@ public record SubjectChoiceFormRequest(
 		@NotBlank String fatherAddress,
 		@NotBlank String motherAddress,
 		@NotBlank String matriculationRollNumber,
-		Map<Long,Integer> subjectScores
-) {}
+	    @NotNull
+	    @Valid
+	    List<@Valid SubjectScore> subjectScores,
+	    @NotNull
+	    @Valid
+	    List<@Valid MajorChoice> majorChoices
+) {
+	public record SubjectScore(
+		    @NotNull Long subjectId,
+		    @NotNull
+		    @Min(0)
+		    @Max(100)
+		    Integer score
+		) {}
+	public record MajorChoice(
+			@NotNull Long majorId,
+		    @NotNull
+		    PriorityScore priorityScore
+		) {}
+}

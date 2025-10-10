@@ -11,6 +11,7 @@ import org.tutgi.student_registration.data.models.personal.Parent;
 import org.tutgi.student_registration.data.repositories.ParentTypeRepository;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
+import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,7 +53,21 @@ public class ParentFactory {
             Optional.ofNullable(request.motherNrc()).ifPresent(parent::setNrc);
         }
     }
-
-
+    
+    public void updateParentFromSubjectChoice(Parent parent, ParentName type, SubjectChoiceFormRequest request) {
+        if (type == ParentName.FATHER) {
+            Optional.ofNullable(request.fatherNickname()).ifPresent(parent::setNickname);
+            Optional.ofNullable(request.fatherEthnicity()).ifPresent(parent::setEthnicity);
+            Optional.ofNullable(request.fatherReligion()).ifPresent(parent::setReligion);
+            Optional.ofNullable(request.fatherDob()).ifPresent(parent::setDob);
+            Optional.ofNullable(request.fatherPob()).ifPresent(parent::setPob);
+        } else {
+        	Optional.ofNullable(request.motherNickname()).ifPresent(parent::setNickname);
+            Optional.ofNullable(request.motherEthnicity()).ifPresent(parent::setEthnicity);
+            Optional.ofNullable(request.motherReligion()).ifPresent(parent::setReligion);
+            Optional.ofNullable(request.motherDob()).ifPresent(parent::setDob);
+            Optional.ofNullable(request.motherPob()).ifPresent(parent::setPob);
+        }
+    }
 }
 

@@ -7,6 +7,7 @@ import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
+import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 
 @Component
 public class MEDFactory {
@@ -19,9 +20,11 @@ public class MEDFactory {
     }
     
 	public void updateFromPatch(MatriculationExamDetail med, EntranceFormUpdateRequest request) {
-	    Optional.ofNullable(request.enrollmentNumber()).ifPresent(med::setRollNumber);
 	    Optional.ofNullable(request.matriculationPassedYear()).ifPresent(med::setYear);
 	    Optional.ofNullable(request.department()).ifPresent(med::setDepartment);
 	}
-
+	
+	public void updateMedFromSubjectChoice(MatriculationExamDetail med, SubjectChoiceFormRequest request) {
+		 Optional.ofNullable(request.matriculationRollNumber()).ifPresent(med::setRollNumber);
+	}
 }
