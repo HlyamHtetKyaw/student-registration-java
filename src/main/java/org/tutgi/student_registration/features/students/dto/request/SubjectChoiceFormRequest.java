@@ -1,6 +1,7 @@
 package org.tutgi.student_registration.features.students.dto.request;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import org.tutgi.student_registration.config.annotations.ValidPhoneNumber;
 
@@ -20,11 +21,12 @@ public record SubjectChoiceFormRequest(
 		@NotNull @Past LocalDate fatherDob,
 		@NotNull @Past LocalDate motherDob,
 		@NotBlank String studentPob,
-		@NotBlank String fahterPob,
+		@NotBlank String fatherPob,
 		@NotBlank String motherPob,
-		@ValidPhoneNumber String fatherPhoneNo,
-		@ValidPhoneNumber String motherPhoneNo,
+		@ValidPhoneNumber String fatherPhoneNumber,
+		@ValidPhoneNumber String motherPhoneNumber,
 		@NotBlank String fatherAddress,
-		@NotBlank String mohterAddress,
-		@NotBlank String medRollNo
+		@NotBlank String motherAddress,
+		@NotBlank String matriculationRollNumber,
+		Map<Long,Integer> subjectScores
 ) {}

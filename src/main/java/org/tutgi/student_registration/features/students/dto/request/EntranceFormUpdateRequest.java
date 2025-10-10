@@ -9,7 +9,7 @@ import org.tutgi.student_registration.config.annotations.ValidPhoneNumber;
 import jakarta.validation.constraints.Past;
 
 public record EntranceFormUpdateRequest(
-		 String rollNumber,
+		 String enrollmentNumber,
 	     String studentNameMm,
 	     String studentNameEng,
 	     @ValidNrc String studentNrc,

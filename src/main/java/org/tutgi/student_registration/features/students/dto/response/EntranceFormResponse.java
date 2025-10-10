@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EntranceFormResponse {
     private FormResponse formData;
+    private String enrollmentNumber;
     private String studentNameMm;
     private String studentNameEng;
     private String studentNrc;
