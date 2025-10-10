@@ -19,7 +19,7 @@ public class MEDFactory {
     }
     
 	public void updateFromPatch(MatriculationExamDetail med, EntranceFormUpdateRequest request) {
-	    Optional.ofNullable(request.rollNumber()).ifPresent(med::setRollNumber);
+	    Optional.ofNullable(request.enrollmentNumber()).ifPresent(med::setRollNumber);
 	    Optional.ofNullable(request.matriculationPassedYear()).ifPresent(med::setYear);
 	    Optional.ofNullable(request.department()).ifPresent(med::setDepartment);
 	}

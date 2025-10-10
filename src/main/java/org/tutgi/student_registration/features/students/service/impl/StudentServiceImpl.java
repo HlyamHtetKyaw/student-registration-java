@@ -123,29 +123,13 @@ public class StudentServiceImpl implements StudentService{
         
         studentRepository.save(student);
         
-        EntranceFormResponse response = EntranceFormResponse.builder()
-        		.formData(modelMapper.map(form, FormResponse.class))
-	    	    .studentNameMm(student.getMmName())
-	    	    .studentNameEng(student.getEngName())
-	    	    .studentNrc(student.getNrc())
-	    	    .ethnicity(student.getEthnicity())
-	    	    .religion(student.getReligion())
-	    	    .dob(student.getDob())
-	    	    .matriculationPassedYear(medForm.getYear())
-	    	    .department(medForm.getDepartment())
-	    	    .fatherNameMm(father.getMmName())
-	    	    .fatherNameEng(father.getEngName())
-	    	    .fatherNrc(father.getNrc())
-	    	    .fatherJob(fatherJob.getName())
-	    	    .motherNameMm(mother.getMmName())
-	    	    .motherNameEng(mother.getEngName())
-	    	    .motherNrc(mother.getNrc())
-	    	    .motherJob(motherJob.getName())
-	    	    .address(studentAddr.getAddress())
-	    	    .phoneNumber(studentContact.getContactNumber())
-	    	    .permanentAddress(entranceForm.getPermanentAddress())
-	    	    .permanentPhoneNumber(entranceForm.getPermanentContactNumber())
-	    	    .build();
+        EntranceFormResponse response = buildEntranceFormResponse(
+                form, student, medForm,
+                father, fatherJob,
+                mother, motherJob,
+                studentAddr, studentContact,
+                entranceForm, modelMapper);
+
         
         return ApiResponse.builder()
                 .success(1)
@@ -171,7 +155,6 @@ public class StudentServiceImpl implements StudentService{
 	    Optional.ofNullable(request.ethnicity()).ifPresent(student::setEthnicity);
 	    Optional.ofNullable(request.religion()).ifPresent(student::setReligion);
 	    Optional.ofNullable(request.dob()).ifPresent(student::setDob);
-
 	    
 	    EntranceForm form = student.getEntranceForm();
 	    entranceFormFactory.updateFromPatch(form,request);
@@ -242,29 +225,13 @@ public class StudentServiceImpl implements StudentService{
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    
 	    Form formData = entranceForm.getForm();
-	    EntranceFormResponse response = EntranceFormResponse.builder()
-	    		.formData(modelMapper.map(formData, FormResponse.class))
-	    	    .studentNameMm(student.getMmName())
-	    	    .studentNameEng(student.getEngName())
-	    	    .studentNrc(student.getNrc())
-	    	    .ethnicity(student.getEthnicity())
-	    	    .religion(student.getReligion())
-	    	    .dob(student.getDob())
-	    	    .matriculationPassedYear(medForm.getYear())
-	    	    .department(medForm.getDepartment())
-	    	    .fatherNameMm(father.getMmName())
-	    	    .fatherNameEng(father.getEngName())
-	    	    .fatherNrc(father.getNrc())
-	    	    .fatherJob(fatherJob.getName())
-	    	    .motherNameMm(mother.getMmName())
-	    	    .motherNameEng(mother.getEngName())
-	    	    .motherNrc(mother.getNrc())
-	    	    .motherJob(motherJob.getName())
-	    	    .address(studentAddr.getAddress())
-	    	    .phoneNumber(studentContact.getContactNumber())
-	    	    .permanentAddress(entranceForm.getPermanentAddress())
-	    	    .permanentPhoneNumber(entranceForm.getPermanentContactNumber())
-	    	    .build();
+	    EntranceFormResponse response = buildEntranceFormResponse(
+	            formData, student, medForm,
+	            father, fatherJob,
+	            mother, motherJob,
+	            studentAddr, studentContact,
+	            entranceForm, modelMapper);
+
 
 	    return ApiResponse.builder()
 	        .success(1)
@@ -272,6 +239,45 @@ public class StudentServiceImpl implements StudentService{
 	        .message("Entrance Form retrieved successfully.")
 	        .data(response)
 	        .build();
+	}
+	
+	public EntranceFormResponse buildEntranceFormResponse(
+	        Form formData,
+	        Student student,
+	        MatriculationExamDetail medForm,
+	        Parent father,
+	        Job fatherJob,
+	        Parent mother,
+	        Job motherJob,
+	        Address studentAddr,
+	        Contact studentContact,
+	        EntranceForm entranceForm,
+	        ModelMapper modelMapper) {
+
+	    return EntranceFormResponse.builder()
+	            .formData(modelMapper.map(formData, FormResponse.class))
+	            .enrollmentNumber(student.getEnrollmentNumber())
+	            .studentNameMm(student.getMmName())
+	            .studentNameEng(student.getEngName())
+	            .studentNrc(student.getNrc())
+	            .ethnicity(student.getEthnicity())
+	            .religion(student.getReligion())
+	            .dob(student.getDob())
+	            .matriculationPassedYear(medForm.getYear())
+	            .department(medForm.getDepartment())
+	            .fatherNameMm(father.getMmName())
+	            .fatherNameEng(father.getEngName())
+	            .fatherNrc(father.getNrc())
+	            .fatherJob(fatherJob.getName())
+	            .motherNameMm(mother.getMmName())
+	            .motherNameEng(mother.getEngName())
+	            .motherNrc(mother.getNrc())
+	            .motherJob(motherJob.getName())
+	            .address(studentAddr.getAddress())
+	            .phoneNumber(studentContact.getContactNumber())
+	            .permanentAddress(entranceForm.getPermanentAddress())
+	            .permanentPhoneNumber(entranceForm.getPermanentContactNumber())
+	            .build();
 	}
 
 	@Override
