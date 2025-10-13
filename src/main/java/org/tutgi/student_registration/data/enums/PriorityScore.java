@@ -1,7 +1,6 @@
 package org.tutgi.student_registration.data.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,9 +8,9 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum PriorityScore implements BaseEnum<Integer,String> {
-    SIX(6, "Six"),
-    FIVE(5, "Five"),
-    FOUR(4, "Four"),
+    SIX(6,"Six"),
+    FIVE(5,"Five"),
+    FOUR(4,"Four"),
     THREE(3,"Three"),
     TWO(2,"Two"),
     ONE(1,"One");
@@ -20,9 +19,13 @@ public enum PriorityScore implements BaseEnum<Integer,String> {
     private final String label;
     
     @Override
-    @JsonValue
     public Integer getValue() {
         return value;
+    }
+
+    @Override
+    public String getLabel() {
+        return label;
     }
     
     @JsonCreator
@@ -35,8 +38,4 @@ public enum PriorityScore implements BaseEnum<Integer,String> {
         throw new IllegalArgumentException("Invalid priority score: " + value);
     }
     
-    @Override
-    public String getLabel() {
-        return label;
-    }
 }

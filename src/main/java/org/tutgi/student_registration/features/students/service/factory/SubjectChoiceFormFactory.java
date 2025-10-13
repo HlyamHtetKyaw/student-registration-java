@@ -16,7 +16,7 @@ public class SubjectChoiceFormFactory {
         SubjectChoice form = new SubjectChoice();
 //        form.setForm(request.);
 //        form.setPermanentContactNumber(request.permanentPhoneNumber());
-//        form.assignStudent(student);
+        form.assignStudent(student);
         return form;
     }
     
