@@ -18,7 +18,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Table(
-	    name = "major_subject_choice_form",
+	    name = "subject_exam",
 	    uniqueConstraints = {
 	        @UniqueConstraint(columnNames = {"med_id", "subject_id"})
 	    }

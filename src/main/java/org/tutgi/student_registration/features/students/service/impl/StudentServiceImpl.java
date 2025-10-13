@@ -1,10 +1,12 @@
 package org.tutgi.student_registration.features.students.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
@@ -13,8 +15,13 @@ import org.tutgi.student_registration.data.enums.ParentName;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
+import org.tutgi.student_registration.data.models.education.SubjectChoice;
+import org.tutgi.student_registration.data.models.education.SubjectExam;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.Form;
+import org.tutgi.student_registration.data.models.form.MajorSubjectChoiceForm;
+import org.tutgi.student_registration.data.models.lookup.Major;
+import org.tutgi.student_registration.data.models.lookup.Subject;
 import org.tutgi.student_registration.data.models.personal.Address;
 import org.tutgi.student_registration.data.models.personal.Contact;
 import org.tutgi.student_registration.data.models.personal.Job;
@@ -23,14 +30,21 @@ import org.tutgi.student_registration.data.repositories.AddressRepository;
 import org.tutgi.student_registration.data.repositories.ContactRepository;
 import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
 import org.tutgi.student_registration.data.repositories.JobRepository;
+import org.tutgi.student_registration.data.repositories.MajorRepository;
+import org.tutgi.student_registration.data.repositories.MajorSubjectChoiceFormRepository;
 import org.tutgi.student_registration.data.repositories.MatriculationExamDetailRepository;
 import org.tutgi.student_registration.data.repositories.ParentRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
+import org.tutgi.student_registration.data.repositories.SubjectChoiceRepository;
+import org.tutgi.student_registration.data.repositories.SubjectExamRepository;
+import org.tutgi.student_registration.data.repositories.SubjectRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
+import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.MajorChoice;
+import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.SubjectScore;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
@@ -39,6 +53,7 @@ import org.tutgi.student_registration.features.students.service.factory.Entrance
 import org.tutgi.student_registration.features.students.service.factory.JobFactory;
 import org.tutgi.student_registration.features.students.service.factory.MEDFactory;
 import org.tutgi.student_registration.features.students.service.factory.ParentFactory;
+import org.tutgi.student_registration.features.students.service.factory.SubjectChoiceFormFactory;
 import org.tutgi.student_registration.features.students.service.utility.FormValidator;
 import org.tutgi.student_registration.features.students.service.utility.ParentResolver;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
@@ -58,14 +73,21 @@ public class StudentServiceImpl implements StudentService{
     private final ParentRepository parentRepository;
     private final JobRepository jobRepository;
     private final EntranceFormRepository entranceFormRepository;
+    private final SubjectChoiceRepository subjectChoiceRepository;
     private final MatriculationExamDetailRepository medRepository;
     private final AddressRepository addressRepository;
     private final ContactRepository contactRepository;
+    private final SubjectRepository subjectRepository;
+    private final MajorRepository majorRepository;
+    private final SubjectExamRepository subjectExamRepository;
+    private final MajorSubjectChoiceFormRepository majorSubjectChoiceFormRepository;
+    
     private final FormValidator formValidator;
     
     private final ParentFactory parentFactory;
     private final JobFactory jobFactory;
     private final EntranceFormFactory entranceFormFactory;
+    private final SubjectChoiceFormFactory subjectChoiceFormFactory;
     private final MEDFactory medFactory;
     private final ContactFactory contactFactory;
     private final AddressFactory addressFactory;
@@ -129,7 +151,6 @@ public class StudentServiceImpl implements StudentService{
                 mother, motherJob,
                 studentAddr, studentContact,
                 entranceForm, modelMapper);
-
         
         return ApiResponse.builder()
                 .success(1)
@@ -149,6 +170,7 @@ public class StudentServiceImpl implements StudentService{
 	        throw new EntityNotFoundException("Entrance Form not found for user");
 	    }
 	    
+	    Optional.ofNullable(request.enrollmentNumber()).ifPresent(student::setEnrollmentNumber);
 	    Optional.ofNullable(request.studentNameEng()).ifPresent(student::setEngName);
 	    Optional.ofNullable(request.studentNameMm()).ifPresent(student::setMmName);
 	    Optional.ofNullable(request.studentNrc()).ifPresent(student::setNrc);
@@ -281,9 +303,87 @@ public class StudentServiceImpl implements StudentService{
 	}
 
 	@Override
-	public ApiResponse createSubjectChoiceForm(SubjectChoiceFormRequest subjectChoiceFormRequest) {
-		
-		return null;
+	@Transactional
+	public ApiResponse createSubjectChoiceForm(SubjectChoiceFormRequest request) {
+		Form form = formValidator.valideForm(request.formId());
+		Long userId = userUtil.getCurrentUserInternal().userId();
+
+        Student student = studentRepository.findByUserId(userId);
+        if(student==null) {
+        	throw new EntityNotFoundException("Student entity not found");
+        }
+        if(student.getSubjectChoice()!=null) {
+        	throw new BadRequestException("Form already exits");
+        }
+        List<SubjectScore> subjectScores = request.subjectScores();
+        List<MajorChoice> majorChoice = request.majorChoices();
+        
+	     if (subjectScores.size() != 6 || majorChoice.size() != 6) {
+	         throw new IllegalArgumentException("Exactly 6 subjects or majors must be provided.");
+	     }
+     
+        Optional.ofNullable(request.studentNickname()).ifPresent(student::setNickname);
+        Optional.ofNullable(request.studentPob()).ifPresent(student::setPob);
+        
+        Parent father = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.FATHER)
+    	        .orElseThrow(() -> new EntityNotFoundException("Father entity not found"));
+        parentFactory.updateParentFromSubjectChoice(father, ParentName.FATHER,request);
+        
+        Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.MOTHER)
+    	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
+        parentFactory.updateParentFromSubjectChoice(mother, ParentName.MOTHER,request);
+        
+        Contact fatherContact = contactFactory.createContact(request.fatherPhoneNumber(), father.getId(), EntityType.PARENTS);
+        contactRepository.save(fatherContact);
+        
+        Contact motherContact = contactFactory.createContact(request.motherPhoneNumber(), mother.getId(), EntityType.PARENTS);
+        contactRepository.save(motherContact);
+        
+        MatriculationExamDetail medForm = student.getMatriculationExamDetail();
+        long totalScore = request.subjectScores().stream()
+	    	    .mapToLong(score -> score.score())
+	    	    .sum();
+	    medForm.setTotalScore(totalScore);
+	    medFactory.updateMedFromSubjectChoice(medForm,request);
+	    
+	    Address fatherAddress = addressFactory.createAddress(request.fatherAddress(), father.getId(), EntityType.PARENTS);
+        addressRepository.save(fatherAddress);
+        Address motherAddress = addressFactory.createAddress(request.motherAddress(), mother.getId(), EntityType.PARENTS);
+        addressRepository.save(motherAddress);
+        
+        SubjectChoice subjectChoice = subjectChoiceFormFactory.createFromRequest(request, student);
+        subjectChoice.assignForm(form);
+        subjectChoiceRepository.save(subjectChoice);
+        
+        studentRepository.save(student);
+        parentRepository.save(father);
+	    parentRepository.save(mother);
+	    medRepository.save(medForm);
+	    
+	    List<SubjectExam> subjectExams = request.subjectScores().stream()
+	        .map(score -> {
+	            Subject subject = subjectRepository.findByName(score.subjectName())
+	                .orElseThrow(() -> new EntityNotFoundException("Subject not found: " + score.subjectName()));
+	            return new SubjectExam(subject, medForm, score.score().longValue());
+	        })
+	        .toList();
+	    subjectExamRepository.saveAll(subjectExams);
+
+	    List<MajorSubjectChoiceForm> majorChoices = request.majorChoices().stream()
+	        .map(mc -> {
+	            Major major = majorRepository.findByName(mc.majorName())
+	                .orElseThrow(() -> new EntityNotFoundException("Major not found: " + mc.majorName()));
+	            return new MajorSubjectChoiceForm(major, subjectChoice, mc.priorityScore());
+	        })
+	        .toList();
+	    majorSubjectChoiceFormRepository.saveAll(majorChoices);
+	    
+		return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.CREATED.value())
+                .message("Form registered successfully.")
+                .data(true)
+                .build();
 	}
 
 }

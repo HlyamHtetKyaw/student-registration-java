@@ -2,7 +2,6 @@ package org.tutgi.student_registration.data.models.form;
 
 import org.tutgi.student_registration.data.enums.PriorityScore;
 import org.tutgi.student_registration.data.enums.converter.PriorityScoreConverter;
-import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.education.SubjectChoice;
 import org.tutgi.student_registration.data.models.entity.MasterData;
 import org.tutgi.student_registration.data.models.lookup.Major;
@@ -31,9 +30,9 @@ import lombok.Setter;
 	)
 
 public class MajorSubjectChoiceForm extends MasterData{
-    @ManyToOne(optional=false)
-    @JoinColumn(name = "major_id", nullable = false)
-    private Major major;
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "major_id", nullable = false)
+	private Major major;
     
     @ManyToOne(optional=false)
     @JoinColumn(name = "subject_choice_id", nullable = false)

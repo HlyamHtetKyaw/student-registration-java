@@ -31,7 +31,7 @@ import lombok.Setter;
 	    @Index(name = "idx_student_id", columnList = "student_id")
 	})
 public class SubjectChoice extends MasterData{
-    @Column(nullable = false,name="signature")
+    @Column(name="signature")
     private String signatureUrl;
     
     @Column(name="signature_date")

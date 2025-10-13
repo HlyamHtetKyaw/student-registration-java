@@ -153,60 +153,73 @@ public class StudentController {
 	}
 	
 	@Operation(
-	    summary = "Register entrance form by a student.",
-	    description = "This API endpoint allows the registration of entrance form for students.",
-	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-	        required = true,
-	        content = @Content(
-	            schema = @Schema(implementation = EntranceFormRequest.class),
-	            examples = {
-	                @ExampleObject(
-	                    name = "Entrance Form Example",
-	                    value = """
-	                        {
-							  "formId": 1,
-							  "rollNumber":"သလ-တစ်",
-							  "studentNameMm": "မောင်မောင်",
-							  "studentNameEng": "Maung Maung",
-							  "studentNrc": "13/MASATA(N)123456",
-							  "ethnicity": "Burma",
-							  "religion": "Buddhism",
-							  "dob": "2003-11-27",
-							  "matriculationPassedYear": "2024-2025",
-							  "department": "Muse",
-							  "fatherNameMm": "ကိုကို",
-							  "fatherNameEng": "Ko Ko",
-							  "fatherNrc": "13/MASATA(N)654321",
-							  "fatherJob": "Teacher",
-							  "motherNameMm": "ဒေါ်စုစု",
-							  "motherNameEng": "Daw Su Su",
-							  "motherNrc": "13/MASATA(N)789123",
-							  "motherJob": "Doctor",
-							  "address": "No.123, Some Street, Yangon",
-							  "phoneNumber": "09123456789",
-							  "permanentAddress": "No.45, Main Road, Mandalay",
-							  "permanentPhoneNumber": "09987654321"
-							}
-	                        """
-	                )
-	            }
-	        )
-	    ),
-	    responses = {
-	    		@io.swagger.v3.oas.annotations.responses.ApiResponse(
-	            responseCode = "200",
-	            description = "Subject Choice Form registered successfully.",
-	            content = @Content(
-	                schema = @Schema(implementation = ApiResponse.class)
-	            )
-	        )
-	    }
-	)
-	@PostMapping("/subjectChoiceForm")
-    public ResponseEntity<ApiResponse> registerSubjectChoiceForm(@Validated @RequestBody final SubjectChoiceFormRequest subjectChoiceForm,
-            final HttpServletRequest request) {
-        final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-        final ApiResponse response = studentService.createSubjectChoiceForm(subjectChoiceForm);
-        return ResponseUtils.buildResponse(request, response, requestStartTime);
-    }
+		    summary = "Register subject choice form by a student.",
+		    description = "This API endpoint allows a student to register their subject scores and preferred major choices.",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+		        required = true,
+		        content = @Content(
+		            schema = @Schema(implementation = SubjectChoiceFormRequest.class),
+		            examples = {
+		                @ExampleObject(
+		                    name = "Subject Choice Form Example",
+		                    value = """
+		                        {
+		                          "formId": 1,
+		                          "studentNickname": "Ko Aung",
+		                          "fatherNickname": "U Hla",
+		                          "motherNickname": "Daw Mya",
+		                          "fatherEthnicity": "Bamar",
+		                          "motherEthnicity": "Shan",
+		                          "fatherReligion": "Buddhism",
+		                          "motherReligion": "Christianity",
+		                          "fatherDob": "1970-05-15",
+		                          "motherDob": "1975-08-20",
+		                          "studentPob": "Yangon",
+		                          "fatherPob": "Mandalay",
+		                          "motherPob": "Taunggyi",
+		                          "fatherPhoneNumber": "09123456789",
+		                          "motherPhoneNumber": "09987654321",
+		                          "fatherAddress": "No. 123, Main Road, Mandalay",
+		                          "motherAddress": "No. 456, Park Street, Taunggyi",
+		                          "matriculationRollNumber": "yasasa-1",
+		                          "subjectScores": [
+		                            { "subjectName": "MYAN", "score": 80 },
+		                            { "subjectName": "ENG", "score": 85 },
+		                            { "subjectName": "MATH", "score": 90 },
+		                            { "subjectName": "CHEMIST", "score": 88 },
+		                            { "subjectName": "PHYSICS", "score": 84 },
+		                            { "subjectName": "OTHERS", "score": 77 }
+		                          ],
+		                          "majorChoices": [
+		                            { "majorName": "Civil", "priorityScore": 1 },
+		                            { "majorName": "EC", "priorityScore": 2 },
+		                            { "majorName": "EP", "priorityScore": 3 },
+		                            { "majorName": "IT", "priorityScore": 4 },
+		                            { "majorName": "Mech", "priorityScore": 5 },
+		                            { "majorName": "MN", "priorityScore": 6 }
+		                          ]
+		                        }
+		                        """
+		                )
+		            }
+		        )
+		    ),
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Form registered successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+		@PostMapping("/subjectChoiceForm")
+		public ResponseEntity<ApiResponse> registerSubjectChoiceForm(
+		        @Validated @RequestBody final SubjectChoiceFormRequest subjectChoiceForm,
+		        final HttpServletRequest request) {
+		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+		    final ApiResponse response = studentService.createSubjectChoiceForm(subjectChoiceForm);
+		    return ResponseUtils.buildResponse(request, response, requestStartTime);
+		}
 }
