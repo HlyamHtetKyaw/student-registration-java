@@ -11,10 +11,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 
 public record RegistrationFormRequest(
-		@NotNull Long formId,
 		@Nullable @Past LocalDate fatherDeathDate,
 		@Nullable @Past LocalDate motherDeathDate,
-		@NotNull
 	    @Valid
 	    List<Sibling> siblings
 ) {

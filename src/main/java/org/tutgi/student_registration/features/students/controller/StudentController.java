@@ -312,8 +312,8 @@ public class StudentController {
 	}
 	
 	@Operation(
-		    summary = "Register a registration form by a student.",
-		    description = "This API endpoint allows the registration of a student's registration form, including optional father/mother death dates and sibling information.",
+		    summary = "Patch Update for a registration form by a student.",
+		    description = "This API endpoint allows updating a student's registration form, including optional father/mother death dates and sibling information.",
 		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 		        required = true,
 		        content = @Content(
@@ -323,7 +323,6 @@ public class StudentController {
 		                    name = "Registration Form Example",
 		                    value = """
 		                        {
-		                          "formId": 1,
 		                          "fatherDeathDate": "1000-05-10",
 		                          "motherDeathDate": null,
 		                          "siblings": [
@@ -349,21 +348,22 @@ public class StudentController {
 		    responses = {
 		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
 		            responseCode = "200",
-		            description = "Registration Form submitted successfully.",
+		            description = "Updation for Registration Form is successfully.",
 		            content = @Content(
 		                schema = @Schema(implementation = ApiResponse.class)
 		            )
 		        )
 		    }
 		)
-		@PostMapping("/registrationForm")
-		public ResponseEntity<ApiResponse> registerRegistrationForm(
+		@PatchMapping("/registrationForm")
+		public ResponseEntity<ApiResponse> updateForRegistratinForm(
 		        @Validated @RequestBody final RegistrationFormRequest registrationFormRequest,
 		        final HttpServletRequest request) {
 		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
-		    final ApiResponse response = studentService.createRegistrationForm(registrationFormRequest);
+		    final ApiResponse response = studentService.updateForRegistratinForm(registrationFormRequest);
 		    return ResponseUtils.buildResponse(request, response, requestStartTime);
 		}
-
+	
+	
 	
 }

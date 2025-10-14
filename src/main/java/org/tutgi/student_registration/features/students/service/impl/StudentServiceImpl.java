@@ -602,8 +602,7 @@ public class StudentServiceImpl implements StudentService{
 
 	@Override
 	@Transactional
-	public ApiResponse createRegistrationForm(RegistrationFormRequest request) {
-		formValidator.valideForm(request.formId());
+	public ApiResponse updateForRegistratinForm(RegistrationFormRequest request) {
 		Long userId = userUtil.getCurrentUserInternal().userId();
 
         Student student = studentRepository.findByUserId(userId);
@@ -619,22 +618,23 @@ public class StudentServiceImpl implements StudentService{
         Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.MOTHER)
     	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
         parentFactory.updateParentFromRegistrationForm(mother, ParentName.MOTHER,request);
-
-        List<Sibling> siblings = request.siblings().stream().map(s->{
-    		Sibling sibling = new Sibling();
-    		sibling.setName(s.name());
-        	sibling.setNrc(s.nrc());
-        	sibling.setAddress(s.address());
-        	sibling.setJob(s.job());
-        	sibling.assignStudent(student);
-        	return sibling;
-    	}).toList();
-        siblingRepository.saveAll(siblings);
-
+        if(request.siblings()!=null) {
+        	if(student.getSiblings() != null) siblingRepository.deleteByStudentId(student.getId());
+        	List<Sibling> siblings = request.siblings().stream().map(s->{
+        		Sibling sibling = new Sibling();
+        		sibling.setName(s.name());
+            	sibling.setNrc(s.nrc());
+            	sibling.setAddress(s.address());
+            	sibling.setJob(s.job());
+            	sibling.assignStudent(student);
+            	return sibling;
+        	}).toList();
+            siblingRepository.saveAll(siblings);
+        }
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.CREATED.value())
-                .message("Registration form submitted successfully.")
+                .message("Updation for Registration Form is successfully.")
                 .data(true)
                 .build();
 	}
