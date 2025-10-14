@@ -58,6 +58,7 @@ public class SubjectChoiceResponse {
 	
     private List<SubjectScoreResponse> subjectScores;
     private List<MajorChoiceResponse> majorChoices;
+    
     private String enrollmentNumber;
     
     private String studentNameMm;

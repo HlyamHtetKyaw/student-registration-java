@@ -13,6 +13,7 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
+import org.tutgi.student_registration.features.students.dto.request.RegistrationFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.service.StudentService;
@@ -310,5 +311,59 @@ public class StudentController {
 	    return ResponseUtils.buildResponse(request, response, requestStartTime);
 	}
 	
+	@Operation(
+		    summary = "Register a registration form by a student.",
+		    description = "This API endpoint allows the registration of a student's registration form, including optional father/mother death dates and sibling information.",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+		        required = true,
+		        content = @Content(
+		            schema = @Schema(implementation = RegistrationFormRequest.class),
+		            examples = {
+		                @ExampleObject(
+		                    name = "Registration Form Example",
+		                    value = """
+		                        {
+		                          "formId": 1,
+		                          "fatherDeathDate": "1000-05-10",
+		                          "motherDeathDate": null,
+		                          "siblings": [
+		                            {
+		                              "name": "Mg Aung",
+		                              "nrc": "13/MASATA(N)123456",
+		                              "job": "Engineer",
+		                              "address": "No.123, Some Street, Yangon"
+		                            },
+		                            {
+		                              "name": "Su Su",
+		                              "nrc": "13/MASATA(N)654321",
+		                              "job": "Teacher",
+		                              "address": "No.45, Main Road, Mandalay"
+		                            }
+		                          ]
+		                        }
+		                        """
+		                )
+		            }
+		        )
+		    ),
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Registration Form submitted successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+		@PostMapping("/registrationForm")
+		public ResponseEntity<ApiResponse> registerRegistrationForm(
+		        @Validated @RequestBody final RegistrationFormRequest registrationFormRequest,
+		        final HttpServletRequest request) {
+		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+		    final ApiResponse response = studentService.createRegistrationForm(registrationFormRequest);
+		    return ResponseUtils.buildResponse(request, response, requestStartTime);
+		}
+
 	
 }
