@@ -1,5 +1,6 @@
 package org.tutgi.student_registration.features.students.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -483,6 +484,13 @@ public class StudentServiceImpl implements StudentService{
 	    Address motherAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Mother's address not found"));
 	    
+	    Job fatherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
+	    Job motherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
+	    Contact studentContact = contactRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
+	    
 	    List<SubjectScoreResponse> subjectScoreResponses = medForm.getSubjectExams()
 											    	    .stream()
 											    	    .map(se -> SubjectScoreResponse.builder()
@@ -502,7 +510,7 @@ public class StudentServiceImpl implements StudentService{
 	    Form formData = subjectChoice.getForm();
 	    SubjectChoiceResponse response = buildSubjectChoiceResponse(
 	            formData, student, medForm,
-	            father,mother, fatherContact,motherContact,
+	            father,mother, fatherJob,motherJob,fatherContact,motherContact,studentContact,
 	            fatherAddr,motherAddr,subjectChoice,majorChoiceResponses,subjectScoreResponses,modelMapper);
 
 	    return ApiResponse.builder()
@@ -519,34 +527,66 @@ public class StudentServiceImpl implements StudentService{
 	        MatriculationExamDetail medForm,
 	        Parent father,
 	        Parent mother,
+	        Job fatherJob,
+	        Job motherJob,
 	        Contact fatherContact,
 	        Contact motherContact,
+	        Contact studentContact,
 	        Address fatherAddr,
 	        Address motherAddr,
 	        SubjectChoice subjectChoice,
 	        List<MajorChoiceResponse> majorChoiceResponses,
 	        List<SubjectScoreResponse> subjectScoreResponses,
 	        ModelMapper modelMapper) {
-		
 	    return SubjectChoiceResponse.builder()
 	            .formData(modelMapper.map(formData, FormResponse.class))
+	            .enrollmentNumber(student.getEnrollmentNumber())
+	            
+	            .studentNameEng(student.getEngName())
+	            .studentNameMm(student.getMmName())
 	            .studentNickname(student.getNickname())
+	            
+	            .fatherNameEng(father.getEngName())
+	            .fatherNameMm(father.getMmName())
 	            .fatherNickname(father.getNickname())
+	            
+	            .motherNameEng(mother.getEngName())
+	            .motherNameMm(mother.getMmName())
 	            .motherNickname(mother.getNickname())
+	            
+	            .studentNrc(student.getNrc())
+	            .fatherNrc(father.getNrc())
+	            .motherNrc(mother.getNrc())
+	            
+	            .studentEthnicity(student.getEthnicity())
 	            .fatherEthnicity(father.getEthnicity())
 	            .motherEthnicity(mother.getEthnicity())
+	            
+	            .studentReligion(student.getReligion())
 	            .fatherReligion(father.getReligion())
 	            .motherReligion(mother.getReligion())
+	            
+	            .studentDob(student.getDob())
 	            .fatherDob(father.getDob())
 	            .motherDob(mother.getDob())
 	            .studentPob(student.getPob())
 	            .fatherPob(father.getPob())
 	            .motherPob(mother.getPob())
+	            
+	            .studentPhoneNumber(studentContact.getContactNumber())
 	            .fatherPhoneNumber(fatherContact.getContactNumber())
 	            .motherPhoneNumber(motherContact.getContactNumber())
+	            
 	            .fatherAddress(fatherAddr.getAddress())
 	            .motherAddress(motherAddr.getAddress())
+	            
+	            .fatherJob(fatherJob.getName())
+	            .motherJob(motherJob.getName())
+	            
 	            .matriculationRollNumber(medForm.getRollNumber())
+	            .department(medForm.getDepartment())
+	            .matriculationPassedYear(medForm.getYear())
+	            
 	            .studentSignatureUrl(subjectChoice.getSignatureUrl())
 	            .studentSignatureDate(subjectChoice.getSignatureDate())
 	            .guardianName(subjectChoice.getGuardianName())
