@@ -1,18 +1,13 @@
 package org.tutgi.student_registration.data.models.personal;
 
-import java.util.List;
-
-import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.entity.MasterData;
-import org.tutgi.student_registration.data.repositories.AddressRepository;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,6 +23,12 @@ public class Sibling extends MasterData{
     
     @Column
     private String nrc;
+    
+    @Column
+    private String address;
+    
+    @Column
+    private String job;
     
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)

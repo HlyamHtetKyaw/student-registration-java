@@ -1,6 +1,5 @@
 package org.tutgi.student_registration.features.students.service.impl;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,6 +27,7 @@ import org.tutgi.student_registration.data.models.personal.Address;
 import org.tutgi.student_registration.data.models.personal.Contact;
 import org.tutgi.student_registration.data.models.personal.Job;
 import org.tutgi.student_registration.data.models.personal.Parent;
+import org.tutgi.student_registration.data.models.personal.Sibling;
 import org.tutgi.student_registration.data.repositories.AddressRepository;
 import org.tutgi.student_registration.data.repositories.ContactRepository;
 import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
@@ -36,6 +36,7 @@ import org.tutgi.student_registration.data.repositories.MajorRepository;
 import org.tutgi.student_registration.data.repositories.MajorSubjectChoiceFormRepository;
 import org.tutgi.student_registration.data.repositories.MatriculationExamDetailRepository;
 import org.tutgi.student_registration.data.repositories.ParentRepository;
+import org.tutgi.student_registration.data.repositories.SiblingRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.repositories.SubjectChoiceRepository;
 import org.tutgi.student_registration.data.repositories.SubjectExamRepository;
@@ -44,6 +45,7 @@ import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
+import org.tutgi.student_registration.features.students.dto.request.RegistrationFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.MajorChoice;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.SubjectScore;
@@ -87,6 +89,7 @@ public class StudentServiceImpl implements StudentService{
     private final MajorRepository majorRepository;
     private final SubjectExamRepository subjectExamRepository;
     private final MajorSubjectChoiceFormRepository majorSubjectChoiceFormRepository;
+    private final SiblingRepository siblingRepository;
     
     private final FormValidator formValidator;
     
@@ -595,5 +598,44 @@ public class StudentServiceImpl implements StudentService{
 	            .majorChoices(majorChoiceResponses)
 	            .subjectScores(subjectScoreResponses)
 	            .build();
+	}
+
+	@Override
+	@Transactional
+	public ApiResponse updateForRegistratinForm(RegistrationFormRequest request) {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+
+        Student student = studentRepository.findByUserId(userId);
+        
+        if(student==null) {
+        	throw new EntityNotFoundException("Student entity not found");
+        }
+        
+        Parent father = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.FATHER)
+    	        .orElseThrow(() -> new EntityNotFoundException("Father entity not found"));
+        parentFactory.updateParentFromRegistrationForm(father, ParentName.FATHER,request);
+        
+        Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.MOTHER)
+    	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
+        parentFactory.updateParentFromRegistrationForm(mother, ParentName.MOTHER,request);
+        if(request.siblings()!=null) {
+        	if(student.getSiblings() != null) siblingRepository.deleteByStudentId(student.getId());
+        	List<Sibling> siblings = request.siblings().stream().map(s->{
+        		Sibling sibling = new Sibling();
+        		sibling.setName(s.name());
+            	sibling.setNrc(s.nrc());
+            	sibling.setAddress(s.address());
+            	sibling.setJob(s.job());
+            	sibling.assignStudent(student);
+            	return sibling;
+        	}).toList();
+            siblingRepository.saveAll(siblings);
+        }
+        return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.CREATED.value())
+                .message("Updation for Registration Form is successfully.")
+                .data(true)
+                .build();
 	}
 }
