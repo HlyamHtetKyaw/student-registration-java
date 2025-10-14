@@ -201,7 +201,7 @@ public class StudentServiceImpl implements StudentService{
 	    jobFactory.updateJob(fatherJob,ParentName.FATHER,request);
 	    Job motherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
-	    jobFactory.updateJob(fatherJob,ParentName.MOTHER,request);
+	    jobFactory.updateJob(motherJob,ParentName.MOTHER,request);
 	    
 	    Address studentAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
@@ -211,15 +211,15 @@ public class StudentServiceImpl implements StudentService{
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    contactFactory.updateContact(studentContact,request.phoneNumber());
 	    
-	    studentRepository.save(student);
-	    entranceFormRepository.save(form);
-	    medRepository.save(medForm);
-	    parentRepository.save(father);
-	    parentRepository.save(mother);
-	    jobRepository.save(fatherJob);
-	    jobRepository.save(motherJob);
-	    addressRepository.save(studentAddr);
-	    contactRepository.save(studentContact);
+//	    studentRepository.save(student);
+//	    entranceFormRepository.save(form);
+//	    medRepository.save(medForm);
+//	    parentRepository.save(father);
+//	    parentRepository.save(mother);
+//	    jobRepository.save(fatherJob);
+//	    jobRepository.save(motherJob);
+//	    addressRepository.save(studentAddr);
+//	    contactRepository.save(studentContact);
 	    
 	    return ApiResponse.builder()
 	            .success(1)
