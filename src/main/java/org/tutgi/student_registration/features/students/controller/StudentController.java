@@ -289,5 +289,24 @@ public class StudentController {
 		    final ApiResponse response = studentService.updateSubjectChoiceForm(updateRequest);
 		    return ResponseUtils.buildResponse(request, response, requestStartTime);
 		}
-
+	
+	@Operation(
+		    summary = "Get subject choice form by student.",
+		    description = "Retrieves the subject choice form registered by the currently logged-in student.",
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Subject choice Form retrieved successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+	@GetMapping("/subjectChoiceForm")
+	public ResponseEntity<ApiResponse> getSubjectChoiceForm(final HttpServletRequest request) {
+	    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+	    final ApiResponse response = studentService.getSubjectChoiceForm();
+	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+	}
 }
