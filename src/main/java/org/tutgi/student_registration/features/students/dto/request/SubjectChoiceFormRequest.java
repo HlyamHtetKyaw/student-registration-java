@@ -46,7 +46,7 @@ public record SubjectChoiceFormRequest(
 	        @UniqueFieldInList(fieldName = "priorityScore", message = "Duplicate priority scores are not allowed")
 	    })
 	    List<MajorChoice> majorChoices
-	) {
+	) implements ParentInfoProvider{
 	    public record SubjectScore(
 	        @NotNull SubjectName subjectName,
 	        @NotNull @Min(0) @Max(100) Integer score

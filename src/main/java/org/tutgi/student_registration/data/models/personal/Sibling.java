@@ -45,9 +45,4 @@ public class Sibling extends MasterData{
             student.getSiblings().add(this);
         }
     }
-    
-    @Transient
-    public List<Address> getAddresses(AddressRepository addressRepository) {
-        return addressRepository.findByEntityTypeAndEntityId(EntityType.SIBLING, this.getId());
-    }
 }
