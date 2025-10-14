@@ -58,7 +58,29 @@ public class SubjectChoiceResponse {
 	
     private List<SubjectScoreResponse> subjectScores;
     private List<MajorChoiceResponse> majorChoices;
-
+    private String enrollmentNumber;
+    
+    private String studentNameMm;
+    private String studentNameEng;
+    private String fatherNameMm;
+    private String fatherNameEng;
+    private String motherNameMm;
+    private String motherNameEng;
+    
+    private String studentNrc;
+    private String fatherNrc;
+    private String motherNrc;
+    
+    private String studentEthnicity;
+    private String studentReligion;
+    private LocalDate studentDob;
+    private String matriculationPassedYear;
+    private String department;
+    
+    private String fatherJob;
+    private String motherJob;
+    
+    private String studentPhoneNumber;
     @Data
     @Builder
     @AllArgsConstructor
