@@ -21,7 +21,7 @@ public class AddressFactory {
         return address;
     }
     
-    public void updateAddress(Address address, EntityType type, EntranceFormUpdateRequest request) {
-    	Optional.ofNullable(request.address()).ifPresent(address::setAddress);
+    public void updateAddress(Address address, String addressName) {
+    	Optional.ofNullable(addressName).ifPresent(address::setAddress);
     }
 }

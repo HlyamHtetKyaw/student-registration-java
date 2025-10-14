@@ -23,7 +23,6 @@ import lombok.Setter;
 	        @UniqueConstraint(columnNames = {"med_id", "subject_id"})
 	    }
 	)
-
 public class SubjectExam extends MasterData{
     @ManyToOne(optional=false)
     @JoinColumn(name = "subject_id", nullable = false)

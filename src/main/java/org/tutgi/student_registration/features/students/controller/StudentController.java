@@ -14,6 +14,7 @@ import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
+import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.service.StudentService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -222,4 +223,71 @@ public class StudentController {
 		    final ApiResponse response = studentService.createSubjectChoiceForm(subjectChoiceForm);
 		    return ResponseUtils.buildResponse(request, response, requestStartTime);
 		}
+	
+	@Operation(
+		    summary = "Update subject choice form by a student.",
+		    description = "This API endpoint allows a student to update their subject scores and personal details. All fields are required except major choices.",
+		    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+		        required = true,
+		        content = @Content(
+		            schema = @Schema(implementation = UpdateSubjectChoiceFormRequest.class),
+		            examples = {
+		                @ExampleObject(
+		                    name = "Update Subject Choice Form Example",
+		                    value = """
+		                        {
+		                          "studentNickname": "Ko Aung",
+		                          "fatherNickname": "U Hla",
+		                          "motherNickname": "Daw Mya",
+		                          "fatherEthnicity": "Bamar",
+		                          "motherEthnicity": "Shan",
+		                          "fatherReligion": "Buddhism",
+		                          "motherReligion": "Christianity",
+		                          "fatherDob": "1970-05-15",
+		                          "motherDob": "1975-08-20",
+		                          "studentPob": "Yangon",
+		                          "fatherPob": "Mandalay",
+		                          "motherPob": "Taunggyi",
+		                          "fatherPhoneNumber": "09123456789",
+		                          "motherPhoneNumber": "09987654321",
+		                          "fatherAddress": "No. 123, Main Road, Mandalay",
+		                          "motherAddress": "No. 456, Park Street, Taunggyi",
+		                          "matriculationRollNumber": "yasasa-1",
+		                          "subjectScores": [
+		                            { "subjectName": "MYAN", "score": 100 }
+		                          ],
+		                          "majorChoices": [
+		                            { "majorName": "Civil", "priorityScore": 1 },
+		                            { "majorName": "EC", "priorityScore": 2 },
+		                            { "majorName": "EP", "priorityScore": 3 },
+		                            { "majorName": "IT", "priorityScore": 4 },
+		                            { "majorName": "Mech", "priorityScore": 5 },
+		                            { "majorName": "MN", "priorityScore": 6 }
+		                          ]
+		                        }
+		                        """
+		                )
+		            }
+		        )
+		    ),
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Form updated successfully.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+		@PatchMapping("/subjectChoiceForm")
+		public ResponseEntity<ApiResponse> updateSubjectChoiceForm(
+		    @Validated @RequestBody final UpdateSubjectChoiceFormRequest updateRequest,
+		    final HttpServletRequest request) {
+		    
+		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+		    final ApiResponse response = studentService.updateSubjectChoiceForm(updateRequest);
+		    return ResponseUtils.buildResponse(request, response, requestStartTime);
+		}
+
 }

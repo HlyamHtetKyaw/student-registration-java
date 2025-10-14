@@ -11,7 +11,7 @@ import org.tutgi.student_registration.data.models.personal.Parent;
 import org.tutgi.student_registration.data.repositories.ParentTypeRepository;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
-import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
+import org.tutgi.student_registration.features.students.dto.request.ParentInfoProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -54,7 +54,7 @@ public class ParentFactory {
         }
     }
     
-    public void updateParentFromSubjectChoice(Parent parent, ParentName type, SubjectChoiceFormRequest request) {
+    public void updateParentFromSubjectChoice(Parent parent, ParentName type, ParentInfoProvider request) {
         if (type == ParentName.FATHER) {
             Optional.ofNullable(request.fatherNickname()).ifPresent(parent::setNickname);
             Optional.ofNullable(request.fatherEthnicity()).ifPresent(parent::setEthnicity);

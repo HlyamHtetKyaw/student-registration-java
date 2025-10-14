@@ -24,7 +24,7 @@ public class MEDFactory {
 	    Optional.ofNullable(request.department()).ifPresent(med::setDepartment);
 	}
 	
-	public void updateMedFromSubjectChoice(MatriculationExamDetail med, SubjectChoiceFormRequest request) {
-		 Optional.ofNullable(request.matriculationRollNumber()).ifPresent(med::setRollNumber);
+	public void updateMedFromSubjectChoice(MatriculationExamDetail med, String rollNumber) {
+		 Optional.ofNullable(rollNumber).ifPresent(med::setRollNumber);
 	}
 }

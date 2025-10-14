@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.personal.Contact;
-import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 
 @Component
 public class ContactFactory {
@@ -18,7 +17,7 @@ public class ContactFactory {
         return contact;
     }
     
-    public void updateContact(Contact contact, EntityType type, EntranceFormUpdateRequest request) {
-    	Optional.ofNullable(request.phoneNumber()).ifPresent(contact::setContactNumber);
+    public void updateContact(Contact contact, String phoneNumber) {
+        Optional.ofNullable(phoneNumber).ifPresent(contact::setContactNumber);
     }
 }

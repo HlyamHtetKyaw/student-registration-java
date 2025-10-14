@@ -139,9 +139,4 @@ public class Student extends MasterData{
         photos.add(photo);
         photo.setStudent(this);
     }
-
-    @Transient
-    public List<Address> getAddresses(AddressRepository addressRepository) {
-        return addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT, this.getId());
-    }
 }

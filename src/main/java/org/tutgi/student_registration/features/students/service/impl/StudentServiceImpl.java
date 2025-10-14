@@ -2,6 +2,7 @@ package org.tutgi.student_registration.features.students.service.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -45,6 +46,7 @@ import org.tutgi.student_registration.features.students.dto.request.EntranceForm
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.MajorChoice;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.SubjectScore;
+import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
@@ -191,20 +193,20 @@ public class StudentServiceImpl implements StudentService{
 	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
 	    parentFactory.updateParent(mother,ParentName.MOTHER,request);
 	    
-	    Job fatherJob = jobRepository.findByEntityId(father.getId())
+	    Job fatherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
 	    jobFactory.updateJob(fatherJob,ParentName.FATHER,request);
-	    Job motherJob = jobRepository.findByEntityId(mother.getId())
+	    Job motherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
 	    jobFactory.updateJob(fatherJob,ParentName.MOTHER,request);
 	    
-	    Address studentAddr = addressRepository.findByEntityId(student.getId())
+	    Address studentAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
-	    addressFactory.updateAddress(studentAddr,studentAddr.getEntityType(),request);
+	    addressFactory.updateAddress(studentAddr,request.address());
 	    
-	    Contact studentContact = contactRepository.findByEntityId(student.getId())
+	    Contact studentContact = contactRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
-	    contactFactory.updateContact(studentContact,studentContact.getEntityType(),request);
+	    contactFactory.updateContact(studentContact,request.phoneNumber());
 	    
 	    studentRepository.save(student);
 	    entranceFormRepository.save(form);
@@ -237,13 +239,13 @@ public class StudentServiceImpl implements StudentService{
 	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
 	    Parent father = ParentResolver.resolve(student.getParents(),ParentName.FATHER);
 	    Parent mother = ParentResolver.resolve(student.getParents(),ParentName.MOTHER);
-	    Job fatherJob = jobRepository.findByEntityId(father.getId())
+	    Job fatherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
-	    Job motherJob = jobRepository.findByEntityId(mother.getId())
+	    Job motherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
-	    Address studentAddr = addressRepository.findByEntityId(student.getId())
+	    Address studentAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
-	    Contact studentContact = contactRepository.findByEntityId(student.getId())
+	    Contact studentContact = contactRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    
 	    Form formData = entranceForm.getForm();
@@ -344,7 +346,7 @@ public class StudentServiceImpl implements StudentService{
 	    	    .mapToLong(score -> score.score())
 	    	    .sum();
 	    medForm.setTotalScore(totalScore);
-	    medFactory.updateMedFromSubjectChoice(medForm,request);
+	    medFactory.updateMedFromSubjectChoice(medForm,request.matriculationRollNumber());
 	    
 	    Address fatherAddress = addressFactory.createAddress(request.fatherAddress(), father.getId(), EntityType.PARENTS);
         addressRepository.save(fatherAddress);
@@ -384,6 +386,75 @@ public class StudentServiceImpl implements StudentService{
                 .message("Form registered successfully.")
                 .data(true)
                 .build();
+	}
+
+	@Override
+	@Transactional
+	public ApiResponse updateSubjectChoiceForm(UpdateSubjectChoiceFormRequest request) {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+		Student student = studentRepository.findByUserId(userId);
+		if(student.getSubjectChoice()==null)throw new BadRequestException("Form does not exit");
+		
+		Optional.ofNullable(request.studentNickname()).ifPresent(student::setNickname);
+        Optional.ofNullable(request.studentPob()).ifPresent(student::setPob);
+        
+        updateParentAndContact(request, ParentName.FATHER, student);
+        updateParentAndContact(request, ParentName.MOTHER, student);
+
+        MatriculationExamDetail medForm = student.getMatriculationExamDetail();
+	    medFactory.updateMedFromSubjectChoice(medForm,request.matriculationRollNumber());
+	    AtomicLong previousScore = new AtomicLong(0);
+	    AtomicLong newScore = new AtomicLong(0);
+
+	    request.subjectScores().forEach(score -> {
+	        SubjectExam subjectExam = subjectExamRepository
+	            .findBySubject_NameAndMed_Id(score.subjectName(), medForm.getId())
+	            .orElseThrow(() -> new EntityNotFoundException(
+	                "SubjectExam not found for subject: " + score.subjectName() + " and MED ID: " + medForm.getId()));
+
+	        previousScore.addAndGet(subjectExam.getScore());
+	        newScore.addAndGet(score.score().longValue());
+
+	        subjectExam.setScore(score.score().longValue());
+	    });
+
+	    medForm.setTotalScore((medForm.getTotalScore() - previousScore.get()) + newScore.get());
+	    List<MajorChoice> majorChoice = request.majorChoices();
+	    if(majorChoice!=null) {
+	    	if (majorChoice.size() != 6) throw new IllegalArgumentException("Exactly 6 majors must be provided.");
+	    	majorSubjectChoiceFormRepository.deleteBySubjectChoiceId(student.getSubjectChoice().getId());
+		    List<MajorSubjectChoiceForm> majorChoices = request.majorChoices().stream()
+			        .map(mc -> {
+			            Major major = majorRepository.findByName(mc.majorName())
+			                .orElseThrow(() -> new EntityNotFoundException("Major not found: " + mc.majorName()));
+			            return new MajorSubjectChoiceForm(major, student.getSubjectChoice(), mc.priorityScore());
+			        })
+			        .toList();
+			majorSubjectChoiceFormRepository.saveAll(majorChoices);
+	    }
+	    
+	    return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.OK.value())
+                .message("Form updated successfully.")
+                .data(true)
+                .build();
+	}
+	
+	private void updateParentAndContact(UpdateSubjectChoiceFormRequest request, ParentName parentName, Student student) {
+	    Parent parent = parentRepository.findByStudentIdAndParentType_Name(student.getId(), parentName)
+	        .orElseThrow(() -> new EntityNotFoundException(parentName + " entity not found"));
+	    parentFactory.updateParentFromSubjectChoice(parent, parentName, request);
+
+	    Contact contact = contactRepository.findByEntityTypeAndEntityId(EntityType.PARENTS, parent.getId())
+	        .orElseThrow(() -> new EntityNotFoundException(parentName + "'s contact not found"));
+	    String phone = (parentName == ParentName.FATHER) ? request.fatherPhoneNumber() : request.motherPhoneNumber();
+	    contactFactory.updateContact(contact, phone);
+
+	    Address address = addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS, parent.getId())
+	        .orElseThrow(() -> new EntityNotFoundException(parentName + "'s address not found"));
+	    String addr = (parentName == ParentName.FATHER) ? request.fatherAddress() : request.motherAddress();
+	    addressFactory.updateAddress(address, addr);
 	}
 
 }
