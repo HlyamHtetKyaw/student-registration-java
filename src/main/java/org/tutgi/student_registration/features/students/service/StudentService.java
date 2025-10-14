@@ -13,4 +13,5 @@ public interface StudentService {
 	
 	ApiResponse createSubjectChoiceForm(final SubjectChoiceFormRequest subjectChoiceFormRequest);
 	ApiResponse updateSubjectChoiceForm(final UpdateSubjectChoiceFormRequest updateSubjectChoiceFormRequest);
+	ApiResponse getSubjectChoiceForm();
 }

@@ -9,6 +9,7 @@ import org.tutgi.student_registration.data.enums.MajorName;
 import org.tutgi.student_registration.data.enums.PriorityScore;
 import org.tutgi.student_registration.data.enums.SubjectName;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -18,9 +19,9 @@ import jakarta.validation.constraints.Past;
 
 public record SubjectChoiceFormRequest(
 		@NotNull Long formId,
-		@NotBlank String studentNickname,
-		@NotBlank String fatherNickname,
-		@NotBlank String motherNickname,
+		@Nullable String studentNickname,
+		@Nullable String fatherNickname,
+		@Nullable String motherNickname,
 		@NotBlank String fatherEthnicity,
 		@NotBlank String motherEthnicity,
 		@NotBlank String fatherReligion,

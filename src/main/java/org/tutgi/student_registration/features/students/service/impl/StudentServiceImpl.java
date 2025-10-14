@@ -48,6 +48,9 @@ import org.tutgi.student_registration.features.students.dto.request.SubjectChoic
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.SubjectScore;
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse.MajorChoiceResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse.SubjectScoreResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.students.service.factory.AddressFactory;
 import org.tutgi.student_registration.features.students.service.factory.ContactFactory;
@@ -315,7 +318,7 @@ public class StudentServiceImpl implements StudentService{
         	throw new EntityNotFoundException("Student entity not found");
         }
         if(student.getSubjectChoice()!=null) {
-        	throw new BadRequestException("Form already exits");
+        	throw new DuplicateEntityException("Form already exits");
         }
         List<SubjectScore> subjectScores = request.subjectScores();
         List<MajorChoice> majorChoice = request.majorChoices();
@@ -457,4 +460,100 @@ public class StudentServiceImpl implements StudentService{
 	    addressFactory.updateAddress(address, addr);
 	}
 
+	@Override
+	public ApiResponse getSubjectChoiceForm() {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+	    Student student = studentRepository.findByUserId(userId);
+
+	    if (student == null || student.getSubjectChoice() == null) {
+	        throw new EntityNotFoundException("Subject choice form not found");
+	    }
+
+	    SubjectChoice subjectChoice = student.getSubjectChoice();
+	    
+	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
+	    Parent father = ParentResolver.resolve(student.getParents(),ParentName.FATHER);
+	    Parent mother = ParentResolver.resolve(student.getParents(),ParentName.MOTHER);
+	    Contact fatherContact = contactRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
+	    Contact motherContact = contactRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
+	    Address fatherAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's address not found"));
+	    Address motherAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's address not found"));
+	    
+	    List<SubjectScoreResponse> subjectScoreResponses = medForm.getSubjectExams()
+											    	    .stream()
+											    	    .map(se -> SubjectScoreResponse.builder()
+											    	        .subjectName(se.getSubject().getName().getDisplayName())
+											    	        .score(se.getScore())
+											    	        .build())
+											    	    .toList();
+	    
+	    List<MajorChoiceResponse> majorChoiceResponses = subjectChoice.getMajorSubjectChoices()
+												        .stream()
+												        .map(msc -> MajorChoiceResponse.builder()
+												            .majorName(msc.getMajor().getName().name())
+												            .priorityScore(msc.getPriorityScore().getValue()) 
+												            .build())
+												        .toList();
+	    
+	    Form formData = subjectChoice.getForm();
+	    SubjectChoiceResponse response = buildSubjectChoiceResponse(
+	            formData, student, medForm,
+	            father,mother, fatherContact,motherContact,
+	            fatherAddr,motherAddr,subjectChoice,majorChoiceResponses,subjectScoreResponses,modelMapper);
+
+	    return ApiResponse.builder()
+	        .success(1)
+	        .code(HttpStatus.OK.value())
+	        .message("Subject Choice Form retrieved successfully.")
+	        .data(response)
+	        .build();
+	}
+	
+	public SubjectChoiceResponse buildSubjectChoiceResponse(
+	        Form formData,
+	        Student student,
+	        MatriculationExamDetail medForm,
+	        Parent father,
+	        Parent mother,
+	        Contact fatherContact,
+	        Contact motherContact,
+	        Address fatherAddr,
+	        Address motherAddr,
+	        SubjectChoice subjectChoice,
+	        List<MajorChoiceResponse> majorChoiceResponses,
+	        List<SubjectScoreResponse> subjectScoreResponses,
+	        ModelMapper modelMapper) {
+		
+	    return SubjectChoiceResponse.builder()
+	            .formData(modelMapper.map(formData, FormResponse.class))
+	            .studentNickname(student.getNickname())
+	            .fatherNickname(father.getNickname())
+	            .motherNickname(mother.getNickname())
+	            .fatherEthnicity(father.getEthnicity())
+	            .motherEthnicity(mother.getEthnicity())
+	            .fatherReligion(father.getReligion())
+	            .motherReligion(mother.getReligion())
+	            .fatherDob(father.getDob())
+	            .motherDob(mother.getDob())
+	            .studentPob(student.getPob())
+	            .fatherPob(father.getPob())
+	            .motherPob(mother.getPob())
+	            .fatherPhoneNumber(fatherContact.getContactNumber())
+	            .motherPhoneNumber(motherContact.getContactNumber())
+	            .fatherAddress(fatherAddr.getAddress())
+	            .motherAddress(motherAddr.getAddress())
+	            .matriculationRollNumber(medForm.getRollNumber())
+	            .studentSignatureUrl(subjectChoice.getSignatureUrl())
+	            .studentSignatureDate(subjectChoice.getSignatureDate())
+	            .guardianName(subjectChoice.getGuardianName())
+	            .guardianSginatureUrl(subjectChoice.getGuardianSignatureUrl())
+	            .guardianSignatureDate(subjectChoice.getGuardianSignatureDate())
+	            .majorChoices(majorChoiceResponses)
+	            .subjectScores(subjectScoreResponses)
+	            .build();
+	}
 }
