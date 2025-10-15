@@ -1,16 +1,23 @@
 package org.tutgi.student_registration.features.students.controller;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
+import org.tutgi.student_registration.data.enums.FileType;
+import org.tutgi.student_registration.data.enums.SignatureType;
+import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 import org.tutgi.student_registration.features.students.dto.request.RegistrationFormRequest;
@@ -19,6 +26,8 @@ import org.tutgi.student_registration.features.students.dto.request.UpdateSubjec
 import org.tutgi.student_registration.features.students.service.StudentService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -385,4 +394,230 @@ public class StudentController {
 	    return ResponseUtils.buildResponse(request, response, requestStartTime);
 	}
 	
+    @PatchMapping(
+    	    value = "/entranceForm/uploadSignature",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    	)
+    	@Operation(
+    	    summary = "Upload signature file",
+    	    description = "Uploads a file for signature.",
+    	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    	        description = "Multipart form with image file",
+    	        required = true,
+    	        content = @Content(
+    	            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+    	            schema = @Schema(implementation = UploadFileRequest.class)
+    	        )
+    	    )
+    	)
+    	public ResponseEntity<ApiResponse> uploadSignatureForETF(
+    	    @Parameter(hidden = true)
+    	    @ModelAttribute UploadFileRequest fileRequest,
+    	    HttpServletRequest request
+    	) {
+    	    double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	    ApiResponse response = studentService.uploadSignatureForETF(fileRequest);
+    	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+    	}
+    
+    @PatchMapping(
+    	    value = "/entranceForm/uploadPhoto",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    	)
+    	@Operation(
+    	    summary = "Upload student photo",
+    	    description = "Uploads a file for student's photo.",
+    	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    	        description = "Multipart form with image file",
+    	        required = true,
+    	        content = @Content(
+    	            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+    	            schema = @Schema(implementation = UploadFileRequest.class)
+    	        )
+    	    )
+    	)
+    	public ResponseEntity<ApiResponse> uploadPhotoForETF(
+    	    @Parameter(hidden = true)
+    	    @ModelAttribute UploadFileRequest fileRequest,
+    	    HttpServletRequest request
+    	) {
+    	    double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	    ApiResponse response = studentService.uploadPhotoForETF(fileRequest);
+    	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+    	}
+
+    @PatchMapping(
+    	    value = "/subjectChoiceForm/uploadSignature",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    	)
+    	@Operation(
+    	    summary = "Upload a signature (for student picture or guardian)",
+    	    description = "Uploads a file for the specified type.",
+    	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    	        description = "Multipart form with image file",
+    	        required = true,
+    	        content = @Content(
+    	            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+    	            schema = @Schema(implementation = UploadFileRequest.class)
+    	        )
+    	    ),
+    	    parameters = @Parameter(
+    	        name = "type",
+    	        description = "Type of signature",
+    	        required = true,
+    	        in = ParameterIn.QUERY
+    	    )
+    	)
+    	public ResponseEntity<ApiResponse> uploadSignatureForSCF(
+    	    @RequestParam("type") SignatureType type,
+    	    @RequestParam(value = "guardianName", required = false) String guardianName,
+    	    @Parameter(hidden = true)
+    	    @ModelAttribute UploadFileRequest fileRequest,
+    	    HttpServletRequest request
+    	) {
+	    	if (type == SignatureType.GUARDIAN_SIGNATURE && (guardianName == null || guardianName.isBlank())) {
+	            throw new IllegalArgumentException("Guardian name is required for guardian signature");
+	        }
+    	    double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	    ApiResponse response = studentService.uploadSignatureForSCF(fileRequest, type,guardianName);
+    	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+    	}
+    	
+    @PatchMapping(
+    	    value = "/registrationForm/uploadSignature",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    	)
+    	@Operation(
+    	    summary = "Upload a signature (for student picture or guardian)",
+    	    description = "Uploads a file for the specified type.",
+    	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    	        description = "Multipart form with image file",
+    	        required = true,
+    	        content = @Content(
+    	            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+    	            schema = @Schema(implementation = UploadFileRequest.class)
+    	        )
+    	    ),
+    	    parameters = @Parameter(
+    	        name = "type",
+    	        description = "Type of signature",
+    	        required = true,
+    	        in = ParameterIn.QUERY
+    	    )
+    	)
+    	public ResponseEntity<ApiResponse> uploadSignatureForRF(
+    	    @RequestParam("type") SignatureType type,
+    	    @RequestParam(value = "guardianName", required = false) String guardianName,
+    	    @Parameter(hidden = true)
+    	    @ModelAttribute UploadFileRequest fileRequest,
+    	    HttpServletRequest request
+    	) {
+	    	if (type == SignatureType.GUARDIAN_SIGNATURE && (guardianName == null || guardianName.isBlank())) {
+	            throw new IllegalArgumentException("Guardian name is required for guardian signature");
+	        }
+    	    double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	    ApiResponse response = studentService.uploadSignatureForRF(fileRequest, type,guardianName);
+    	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+    	}
+    @Operation(
+    	    summary = "Retrieve File",
+    	    description = "Returns a file as an image file for a given `fileUrl`.",
+    	    parameters = {
+    	        @Parameter(
+    	            name = "fileUrl",
+    	            description = "Relative path to the stored file",
+    	            required = true,
+    	            in = ParameterIn.QUERY,
+    	            example = "folder-name/example.jpg"
+    	        )
+    	    },
+    	    responses = {
+    	        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	            responseCode = "200",
+    	            description = "Successfully retrieved image",
+    	            content = @Content(
+    	                mediaType = "image/jpeg",
+    	                schema = @Schema(type = "string", format = "binary")
+    	            )
+    	        )
+    	    }
+    	)
+	@GetMapping("/entranceForm/getFile")
+	public ResponseEntity<Resource> retrieveFileForETF(
+		@RequestParam("fileUrl")final String fileUrl,
+		@RequestParam("type") FileType type,
+        final HttpServletRequest request
+	) {
+    	final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	Resource resource = studentService.retrieveFileForETF(fileUrl,type);
+    	return ResponseUtils.buildFileResponse(resource, false, requestStartTime);
+	}
+    
+    @Operation(
+    	    summary = "Retrieve File",
+    	    description = "Returns a file as an image file for a given `fileUrl`.",
+    	    parameters = {
+    	        @Parameter(
+    	            name = "fileUrl",
+    	            description = "Relative path to the stored file",
+    	            required = true,
+    	            in = ParameterIn.QUERY,
+    	            example = "folder-name/example.jpg"
+    	        )
+    	    },
+    	    responses = {
+    	        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	            responseCode = "200",
+    	            description = "Successfully retrieved image",
+    	            content = @Content(
+    	                mediaType = "image/jpeg",
+    	                schema = @Schema(type = "string", format = "binary")
+    	            )
+    	        )
+    	    }
+    	)
+	@GetMapping("/subjectChoiceForm/getFile")
+	public ResponseEntity<Resource> retrieveFileForSCF(
+		@RequestParam("fileUrl")final String fileUrl,
+		@RequestParam("type") SignatureType type,
+        final HttpServletRequest request
+	) {
+    	final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	Resource resource = studentService.retrieveFileForSCF(fileUrl,type);
+    	return ResponseUtils.buildFileResponse(resource, false, requestStartTime);
+	}
+    
+    @Operation(
+    	    summary = "Retrieve File",
+    	    description = "Returns a file as an image file for a given `fileUrl`.",
+    	    parameters = {
+    	        @Parameter(
+    	            name = "fileUrl",
+    	            description = "Relative path to the stored file",
+    	            required = true,
+    	            in = ParameterIn.QUERY,
+    	            example = "folder-name/example.jpg"
+    	        )
+    	    },
+    	    responses = {
+    	        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	            responseCode = "200",
+    	            description = "Successfully retrieved image",
+    	            content = @Content(
+    	                mediaType = "image/jpeg",
+    	                schema = @Schema(type = "string", format = "binary")
+    	            )
+    	        )
+    	    }
+    	)
+	@GetMapping("/registrationForm/getFile")
+	public ResponseEntity<Resource> retrieveFileForRF(
+		@RequestParam("fileUrl")final String fileUrl,
+		@RequestParam("type") SignatureType type,
+        final HttpServletRequest request
+	) {
+    	final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	Resource resource = studentService.retrieveFileForRF(fileUrl,type);
+    	return ResponseUtils.buildFileResponse(resource, false, requestStartTime);
+	}
 }

@@ -58,6 +58,8 @@ public class RegistrationFormResponse {
     private String fatherAddress;
     private String motherAddress;
     
+    private String studentPhotoUrl;
+    
     @JsonFormat(pattern = "EEEE, dd MMMM yyyy")
 	private LocalDate fatherDeathDate;
     @JsonFormat(pattern = "EEEE, dd MMMM yyyy")
