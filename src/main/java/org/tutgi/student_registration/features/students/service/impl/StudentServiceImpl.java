@@ -18,6 +18,7 @@ import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
 import org.tutgi.student_registration.data.models.education.SubjectChoice;
 import org.tutgi.student_registration.data.models.education.SubjectExam;
+import org.tutgi.student_registration.data.models.form.Acknowledgement;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.Form;
 import org.tutgi.student_registration.data.models.form.MajorSubjectChoiceForm;
@@ -28,6 +29,7 @@ import org.tutgi.student_registration.data.models.personal.Contact;
 import org.tutgi.student_registration.data.models.personal.Job;
 import org.tutgi.student_registration.data.models.personal.Parent;
 import org.tutgi.student_registration.data.models.personal.Sibling;
+import org.tutgi.student_registration.data.repositories.AcknowledgementRepository;
 import org.tutgi.student_registration.data.repositories.AddressRepository;
 import org.tutgi.student_registration.data.repositories.ContactRepository;
 import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
@@ -51,6 +53,8 @@ import org.tutgi.student_registration.features.students.dto.request.SubjectChoic
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.SubjectScore;
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse.SiblingResponse;
 import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
 import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse.MajorChoiceResponse;
 import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse.SubjectScoreResponse;
@@ -90,7 +94,7 @@ public class StudentServiceImpl implements StudentService{
     private final SubjectExamRepository subjectExamRepository;
     private final MajorSubjectChoiceFormRepository majorSubjectChoiceFormRepository;
     private final SiblingRepository siblingRepository;
-    
+    private final AcknowledgementRepository ackRepository;
     private final FormValidator formValidator;
     
     private final ParentFactory parentFactory;
@@ -427,7 +431,7 @@ public class StudentServiceImpl implements StudentService{
 
 	    medForm.setTotalScore((medForm.getTotalScore() - previousScore.get()) + newScore.get());
 	    List<MajorChoice> majorChoice = request.majorChoices();
-	    if(majorChoice!=null) {
+	    if(majorChoice!=null && !request.majorChoices().isEmpty()) {
 	    	if (majorChoice.size() != 6) throw new IllegalArgumentException("Exactly 6 majors must be provided.");
 	    	majorSubjectChoiceFormRepository.deleteBySubjectChoiceId(student.getSubjectChoice().getId());
 		    List<MajorSubjectChoiceForm> majorChoices = request.majorChoices().stream()
@@ -606,11 +610,21 @@ public class StudentServiceImpl implements StudentService{
 		Long userId = userUtil.getCurrentUserInternal().userId();
 
         Student student = studentRepository.findByUserId(userId);
-        
+        boolean isCreate = false;
         if(student==null) {
         	throw new EntityNotFoundException("Student entity not found");
         }
-        
+        if(request.formId()!=null && student.getAcknowledgement()==null) {
+        	Form form = formValidator.valideForm(request.formId());
+        	Acknowledgement ack = new Acknowledgement();
+        	ack.assignForm(form);
+        	ack.assignStudent(student);
+        	ackRepository.save(ack);
+        	isCreate = true;
+        }
+        if(student.getAcknowledgement()==null) {
+        	throw new EntityNotFoundException("Registration Form not found");
+        }
         Parent father = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.FATHER)
     	        .orElseThrow(() -> new EntityNotFoundException("Father entity not found"));
         parentFactory.updateParentFromRegistrationForm(father, ParentName.FATHER,request);
@@ -618,8 +632,8 @@ public class StudentServiceImpl implements StudentService{
         Parent mother = parentRepository.findByStudentIdAndParentType_Name(student.getId(),ParentName.MOTHER)
     	        .orElseThrow(() -> new EntityNotFoundException("Mother entity not found"));
         parentFactory.updateParentFromRegistrationForm(mother, ParentName.MOTHER,request);
-        if(request.siblings()!=null) {
-        	if(student.getSiblings() != null) siblingRepository.deleteByStudentId(student.getId());
+        if(request.siblings()!=null && !request.siblings().isEmpty()) {
+        	siblingRepository.deleteByStudentId(student.getId());
         	List<Sibling> siblings = request.siblings().stream().map(s->{
         		Sibling sibling = new Sibling();
         		sibling.setName(s.name());
@@ -634,8 +648,133 @@ public class StudentServiceImpl implements StudentService{
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.CREATED.value())
-                .message("Updation for Registration Form is successfully.")
+                .message(String.format("%s for Registration Form is successfully.", (isCreate)?"Creation":"Updation"))
                 .data(true)
                 .build();
+	}
+
+	@Override
+	public ApiResponse getRegistrationForm() {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+	    Student student = studentRepository.findByUserId(userId);
+
+	    if (student == null || student.getAcknowledgement() == null) {
+	        throw new EntityNotFoundException("Form not found");
+	    }
+
+	    Acknowledgement acknowldegement = student.getAcknowledgement();
+	    
+	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
+	    Parent father = ParentResolver.resolve(student.getParents(),ParentName.FATHER);
+	    Parent mother = ParentResolver.resolve(student.getParents(),ParentName.MOTHER);
+	    Contact fatherContact = contactRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
+	    Contact motherContact = contactRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
+	    Address fatherAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's address not found"));
+	    Address motherAddr = addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's address not found"));
+	    
+	    Job fatherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,father.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Father's job not found"));
+	    Job motherJob = jobRepository.findByEntityTypeAndEntityId(EntityType.PARENTS,mother.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Mother's job not found"));
+	    Contact studentContact = contactRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
+	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
+	    
+	    List<SiblingResponse> siblingResponses = student.getSiblings()
+												        .stream()
+												        .map(s -> SiblingResponse.builder()
+												            .name(s.getName())
+												            .nrc(s.getNrc()) 
+												            .job(s.getJob())
+												            .address(s.getAddress())
+												            .build())
+												        .toList();
+	    
+	    Form formData = acknowldegement.getForm();
+	    
+	    RegistrationFormResponse response = buildRegistrationResponse(
+	            formData, student, medForm,
+	            father,mother, fatherJob,motherJob,fatherContact,motherContact,studentContact,
+	            fatherAddr,motherAddr,acknowldegement,siblingResponses,modelMapper);
+
+	    return ApiResponse.builder()
+	        .success(1)
+	        .code(HttpStatus.OK.value())
+	        .message("Subject Choice Form retrieved successfully.")
+	        .data(response)
+	        .build();
+	}
+	
+	public RegistrationFormResponse buildRegistrationResponse(
+	        Form formData,
+	        Student student,
+	        MatriculationExamDetail medForm,
+	        Parent father,
+	        Parent mother,
+	        Job fatherJob,
+	        Job motherJob,
+	        Contact fatherContact,
+	        Contact motherContact,
+	        Contact studentContact,
+	        Address fatherAddr,
+	        Address motherAddr,
+	        Acknowledgement ack,
+	        List<SiblingResponse> siblingResponses,
+	        ModelMapper modelMapper) {
+	    return RegistrationFormResponse.builder()
+	            .formData(modelMapper.map(formData, FormResponse.class))
+	            .enrollmentNumber(student.getEnrollmentNumber())
+	            .matriculationRollNumber(medForm.getRollNumber())
+	            
+	            .studentNameEng(student.getEngName())
+	            .studentNameMm(student.getMmName())
+	            .studentNickname(student.getNickname())
+	            
+	            .fatherNameEng(father.getEngName())
+	            .fatherNameMm(father.getMmName())
+	            .fatherNickname(father.getNickname())
+	            
+	            .motherNameEng(mother.getEngName())
+	            .motherNameMm(mother.getMmName())
+	            .motherNickname(mother.getNickname())
+	            
+	            .studentNrc(student.getNrc())
+	            .fatherNrc(father.getNrc())
+	            .motherNrc(mother.getNrc())
+	            
+	            .studentEthnicity(student.getEthnicity())
+	            .fatherEthnicity(father.getEthnicity())
+	            .motherEthnicity(mother.getEthnicity())
+	            
+	            .studentReligion(student.getReligion())
+	            .fatherReligion(father.getReligion())
+	            .motherReligion(mother.getReligion())
+	            
+	            .studentDob(student.getDob())
+	            .fatherDob(father.getDob())
+	            .motherDob(mother.getDob())
+	            .studentPob(student.getPob())
+	            .fatherPob(father.getPob())
+	            .motherPob(mother.getPob())
+	            
+	            .fatherJob(fatherJob.getName())
+	            .motherJob(motherJob.getName())
+	            
+	            .fatherAddress(fatherAddr.getAddress())
+	            .motherAddress(motherAddr.getAddress())
+	            
+	            .studentSignatureUrl(ack.getSignatureUrl())
+	            .studentSignatureDate(ack.getSignatureDate())
+	            .guardianSignatureDate(ack.getGuardianSignatureDate())
+	            
+	            .guardianName(ack.getGuardianName())
+	            .guardianSginatureUrl(ack.getGuardianSignatureUrl())
+	            .fatherDeathDate(father.getDeathDate())
+	            .motherDeathDate(mother.getDeathDate())
+	            .siblings(siblingResponses)
+	            .build();
 	}
 }

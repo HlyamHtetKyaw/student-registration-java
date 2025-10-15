@@ -323,6 +323,7 @@ public class StudentController {
 		                    name = "Registration Form Example",
 		                    value = """
 		                        {
+		                          "formId":1,
 		                          "fatherDeathDate": "1000-05-10",
 		                          "motherDeathDate": null,
 		                          "siblings": [
@@ -364,6 +365,24 @@ public class StudentController {
 		    return ResponseUtils.buildResponse(request, response, requestStartTime);
 		}
 	
-	
+	@Operation(
+	    summary = "Get registration form by student.",
+	    description = "Retrieves the registration form by the currently logged-in student.",
+	    responses = {
+	        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+	            responseCode = "200",
+	            description = "Registration Form retrieved successfully.",
+	            content = @Content(
+	                schema = @Schema(implementation = ApiResponse.class)
+	            )
+	        )
+	    }
+	)
+	@GetMapping("/registrationForm")
+	public ResponseEntity<ApiResponse> getRegistrationForm(final HttpServletRequest request) {
+	    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+	    final ApiResponse response = studentService.getRegistrationForm();
+	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+	}
 	
 }
