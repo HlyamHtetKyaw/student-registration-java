@@ -45,7 +45,7 @@ public class SubjectChoiceResponse {
     private String matriculationRollNumber;
     
     private String studentSignatureUrl;
-
+    
     @JsonFormat(pattern = "EEEE, dd MMMM yyyy")
 	LocalDate studentSignatureDate;
 	
@@ -82,6 +82,8 @@ public class SubjectChoiceResponse {
     private String motherJob;
     
     private String studentPhoneNumber;
+    
+    private String studentPhotoUrl;
     @Data
     @Builder
     @AllArgsConstructor
