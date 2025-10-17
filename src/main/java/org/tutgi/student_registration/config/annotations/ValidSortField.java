@@ -19,6 +19,6 @@ public @interface ValidSortField {
     String message() default "Invalid sort field";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
-    String[] allowedFields() default {"email", "createdAt", "updatedAt"};
+    String[] allowedFields() default {"email", "createdAt", "updatedAt","mmName","engName","enrollmentNumber"};
 }
 

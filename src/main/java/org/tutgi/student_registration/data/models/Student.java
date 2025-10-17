@@ -64,6 +64,9 @@ public class Student extends MasterData{
     @Column(name="photo_url")
     private String photoUrl;
     
+    @Column(nullable = false)
+    private boolean submitted = false;
+    
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

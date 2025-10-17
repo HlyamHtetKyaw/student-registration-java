@@ -16,13 +16,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
-import org.tutgi.student_registration.data.enums.UserType;
 import org.tutgi.student_registration.security.dto.CustomUserPrincipal;
 import org.tutgi.student_registration.security.service.normal.JwtService;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
@@ -40,6 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private List<String> getPermittedUrls() {
 		return Arrays.asList(
+				"/publish/**",
+				"/sse/**",
 				"/tutgi/api/v1/auth/**",
 				"/tutgi/api/v1/forms/**",
 				"/v3/api-docs/**",
@@ -66,14 +68,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
+//		final String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
+//
+//		if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+//			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
+//			return;
+//		}
+//
+//		final String token = authorizationHeader.substring(BEARER_PREFIX.length());
+		
 		final String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
+		String token = null;
 
-		if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header.");
-			return;
+		if (authorizationHeader != null && authorizationHeader.startsWith(BEARER_PREFIX)) {
+		    token = authorizationHeader.substring(BEARER_PREFIX.length());
+		} else {
+		    if (request.getCookies() != null) {
+		        for (Cookie cookie : request.getCookies()) {
+		            if ("refreshToken".equals(cookie.getName())) {
+		                token = cookie.getValue();
+		                break;
+		            }
+		        }
+		    }
 		}
-
-		final String token = authorizationHeader.substring(BEARER_PREFIX.length());
 
 		try {
 			final Claims claims = jwtService.validateToken(token);

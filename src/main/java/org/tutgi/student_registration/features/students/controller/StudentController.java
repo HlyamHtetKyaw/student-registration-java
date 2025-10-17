@@ -25,6 +25,8 @@ import org.tutgi.student_registration.features.students.dto.request.SubjectChoic
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.service.StudentService;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -620,4 +622,25 @@ public class StudentController {
     	Resource resource = studentService.retrieveFileForRF(fileUrl,type);
     	return ResponseUtils.buildFileResponse(resource, false, requestStartTime);
 	}
+    
+    @Operation(
+		    summary = "Acknowledge all the rules by student.",
+		    description = "This API endpoint allows a student whether they acknowledge the rules or not.(necessary)",
+		    responses = {
+		        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+		            responseCode = "200",
+		            description = "Wait for your response.",
+		            content = @Content(
+		                schema = @Schema(implementation = ApiResponse.class)
+		            )
+		        )
+		    }
+		)
+		@PostMapping("/acknowledge")
+		public ResponseEntity<ApiResponse> acknowledged(
+		        final HttpServletRequest request) throws JsonProcessingException {
+		    final double requestStartTime = RequestUtils.extractRequestStartTime(request);
+		    final ApiResponse response = studentService.acknowledge();
+		    return ResponseUtils.buildResponse(request, response, requestStartTime);
+		}
 }
