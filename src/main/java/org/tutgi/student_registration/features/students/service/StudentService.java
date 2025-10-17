@@ -11,6 +11,8 @@ import org.tutgi.student_registration.features.students.dto.request.Registration
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 public interface StudentService {
 	ApiResponse createEntranceForm(final EntranceFormRequest entranceFormRequest);
 	ApiResponse updateEntranceForm(final EntranceFormUpdateRequest entranceFormUpdateRequest);
@@ -32,4 +34,6 @@ public interface StudentService {
 	Resource retrieveFileForETF(final String filePath,final FileType type);
 	Resource retrieveFileForSCF(final String filePath,final SignatureType type);
 	Resource retrieveFileForRF(final String filePath,final SignatureType type);
+	
+	ApiResponse acknowledge() throws JsonProcessingException;
 }

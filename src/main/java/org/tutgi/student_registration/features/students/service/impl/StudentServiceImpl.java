@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.core.io.Resource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
@@ -20,7 +21,6 @@ import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.ParentName;
 import org.tutgi.student_registration.data.enums.SignatureType;
 import org.tutgi.student_registration.data.enums.StorageDirectory;
-import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
@@ -53,6 +53,7 @@ import org.tutgi.student_registration.data.repositories.SubjectExamRepository;
 import org.tutgi.student_registration.data.repositories.SubjectRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.data.storage.StorageService;
+import org.tutgi.student_registration.features.dean.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
@@ -79,6 +80,10 @@ import org.tutgi.student_registration.features.students.service.factory.SubjectC
 import org.tutgi.student_registration.features.students.service.utility.FormValidator;
 import org.tutgi.student_registration.features.students.service.utility.ParentResolver;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
+import org.tutgi.student_registration.sse.topicChannel.Topic;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -115,7 +120,9 @@ public class StudentServiceImpl implements StudentService{
     private final ContactFactory contactFactory;
     private final AddressFactory addressFactory;
     
+    private final RedisTemplate<String, String> redisTemplate;
     private final ModelMapper modelMapper;
+    private final ObjectMapper objectMapper;
     
     private final StorageService storageService;
     
@@ -279,7 +286,6 @@ public class StudentServiceImpl implements StudentService{
 	            mother, motherJob,
 	            studentAddr, studentContact,
 	            entranceForm, modelMapper);
-
 
 	    return ApiResponse.builder()
 	        .success(1)
@@ -886,13 +892,15 @@ public class StudentServiceImpl implements StudentService{
         Acknowledgement ack = student.getAcknowledgement();
         String currentFile = getFilePathByType(ack, type);
 
-        return handleSignatureUpload(
+        ApiResponse response = handleSignatureUpload(
                 fileRequest,
                 type,
                 guardianName,
                 currentFile,
                 filename -> setFilePathByType(ack, type, filename, guardianName)
         );
+        return response;
+
     }
     
     @Override
@@ -949,6 +957,53 @@ public class StudentServiceImpl implements StudentService{
         }
 
         return storageService.loadAsResource(filePath);
+    }
+    
+    @Override
+    @Transactional
+    public ApiResponse acknowledge() throws JsonProcessingException {
+        Long userId = userUtil.getCurrentUserInternal().userId();
+        Student student = studentRepository.findByUserId(userId);
+
+        if (student == null) {
+            throw new BadRequestException("Student not found.");
+        }
+
+        if (student.isSubmitted()) {
+            return ApiResponse.builder()
+                    .success(0)
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .message("Form already acknowledged.")
+                    .data(false)
+                    .build();
+        }
+
+        if (student.getEntranceForm() == null || 
+            student.getSubjectChoice() == null || 
+            student.getAcknowledgement() == null) {
+            throw new BadRequestException("You need to fill the form first.");
+        }
+
+        student.setSubmitted(true);
+        studentRepository.save(student);
+
+        SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
+                .studentId(student.getId())
+                .studentNameEng(student.getEngName())
+                .studentNameMM(student.getMmName())
+                .createdAt(student.getCreatedAt())
+                .updatedAt(student.getUpdatedAt())
+                .build();
+
+        String json = objectMapper.writeValueAsString(sseResponse);
+        redisTemplate.convertAndSend(Topic.DEAN.name(), json);
+
+        return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.OK.value())
+                .data(true)
+                .message("Wait for your response.")
+                .build();
     }
     
 	private ApiResponse handleSignatureUpload(
