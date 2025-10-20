@@ -316,6 +316,8 @@ public class StudentServiceImpl implements StudentService{
 
 	    return EntranceFormResponse.builder()
 	            .formData(modelMapper.map(formData, FormResponse.class))
+	            .submitted(student.isSubmitted())
+	            .paid(student.isPaid())
 	            .enrollmentNumber(student.getEnrollmentNumber())
 	            .studentNameMm(student.getMmName())
 	            .studentNameEng(student.getEngName())

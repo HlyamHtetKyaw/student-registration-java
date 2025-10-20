@@ -39,6 +39,8 @@ public class EntranceFormResponse {
     private String permanentPhoneNumber;
     private String studentSignatureUrl;
     private String studentPhotoUrl;
+    private boolean submitted;
+    private boolean paid;
 }
 
 

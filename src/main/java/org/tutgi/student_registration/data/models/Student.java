@@ -70,6 +70,9 @@ public class Student extends MasterData{
     @Column(nullable = false)
     private boolean submitted = false;
     
+    @Column(nullable = false)
+    private boolean isPaid = false;
+    
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
