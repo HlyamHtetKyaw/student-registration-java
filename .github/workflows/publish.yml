@@ -43,16 +43,3 @@ jobs:
           provenance: false
           platforms: linux/amd64
           tags: hlyamhtet/student-registration-system:latest
-          tags: hlyamhtet/student-registration-system:latest
-          max_attempts: 3
-          retry_wait_seconds: 15
-          timeout_minutes: 15
-          polling_interval_seconds: 1
-          warning_on_retry: true
-          command: |
-            docker buildx build \
-              --platform linux/amd64 \
-              --push \
-              -t hlyamhtet/student-registration-system:latest \
-              -f ./Dockerfile .
-
