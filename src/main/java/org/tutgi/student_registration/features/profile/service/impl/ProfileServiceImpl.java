@@ -207,6 +207,7 @@ public class ProfileServiceImpl implements ProfileService {
 	    return switch (type) {
 	        case PROFILE_PHOTO -> profile.getPhotoUrl();
 	        case SIGNATURE -> profile.getSignatureUrl();
+		default -> throw new IllegalArgumentException("Unexpected value: " + type);
 	    };
 	}
 
@@ -221,6 +222,7 @@ public class ProfileServiceImpl implements ProfileService {
 	    return switch (type) {
 	        case PROFILE_PHOTO -> StorageDirectory.PROFILE_PICTURES;
 	        case SIGNATURE -> StorageDirectory.SIGNATURE_PICTURES;
+		default -> throw new IllegalArgumentException("Unexpected value: " + type);
 	    };
 	}
 }

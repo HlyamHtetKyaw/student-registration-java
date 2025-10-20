@@ -64,6 +64,9 @@ public class Student extends MasterData{
     @Column(name="photo_url")
     private String photoUrl;
     
+    @Column(name="payment_url")
+    private String paymentUrl;
+    
     @Column(nullable = false)
     private boolean submitted = false;
     
