@@ -35,8 +35,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                        		"/publish/**",
-                        		"/sse/**",
                         		"/tutgi/api/v1/auth/**",
                         		"/tutgi/api/v1/forms/**",
                                 "/v3/api-docs/**",
@@ -56,7 +54,7 @@ public class SecurityConfig {
                             RoleName.STUDENT_AFFAIR.name()
                          )
                         .requestMatchers("/tutgi/api/v1/student/**").hasRole(RoleName.STUDENT.name())
-                        .requestMatchers("/tutgi/api/v1/dean/**").hasRole(RoleName.DEAN.name())
+                        .requestMatchers("/tutgi/api/v1/finance/**").hasRole(RoleName.FINANCE.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

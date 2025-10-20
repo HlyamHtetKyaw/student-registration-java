@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -67,6 +68,7 @@ public class LocalStorageService implements StorageService {
         }
     }
 
+
     @Override
     public List<Path> loadAll() {
         try (Stream<Path> stream = Files.walk(this.rootLocation, 1)) {
@@ -121,4 +123,32 @@ public class LocalStorageService implements StorageService {
     	delete(existingFilepath);
     	return store(newFile,storageDirectory);
     }
+    
+    @Override
+    public String update(byte[] newData, String oldFilePath, String baseName,  StorageDirectory storageDirectory) {
+        delete(oldFilePath);
+        return store(newData, baseName, storageDirectory);
+    }
+
+    @Override
+    public String store(byte[] data, String baseName, StorageDirectory storageDirectory) {
+        try {
+            String filename = System.currentTimeMillis() + "_" + UUID.randomUUID() + "_" + baseName + "." + "docx";
+
+            final Path directoryPath = this.rootLocation.resolve(storageDirectory.getDirectoryName());
+            Files.createDirectories(directoryPath);
+
+            final Path destinationFile = directoryPath.resolve(filename).normalize().toAbsolutePath();
+
+            Files.write(destinationFile, data, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            log.info("Stored generated file locally: {}", filename);
+
+            return storageDirectory.getDirectoryName() + "/" + filename;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store generated file.", e);
+        }
+    }
+    
 }

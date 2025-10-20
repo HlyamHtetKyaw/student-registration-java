@@ -16,11 +16,13 @@ import org.tutgi.student_registration.config.exceptions.DuplicateEntityException
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
+import org.tutgi.student_registration.data.docsUtils.Docx4jFillerService;
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.ParentName;
 import org.tutgi.student_registration.data.enums.SignatureType;
 import org.tutgi.student_registration.data.enums.StorageDirectory;
+import org.tutgi.student_registration.data.enums.YearType;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
@@ -30,6 +32,7 @@ import org.tutgi.student_registration.data.models.form.Acknowledgement;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.Form;
 import org.tutgi.student_registration.data.models.form.MajorSubjectChoiceForm;
+import org.tutgi.student_registration.data.models.form.Receipt;
 import org.tutgi.student_registration.data.models.lookup.Major;
 import org.tutgi.student_registration.data.models.lookup.Subject;
 import org.tutgi.student_registration.data.models.personal.Address;
@@ -46,6 +49,7 @@ import org.tutgi.student_registration.data.repositories.MajorRepository;
 import org.tutgi.student_registration.data.repositories.MajorSubjectChoiceFormRepository;
 import org.tutgi.student_registration.data.repositories.MatriculationExamDetailRepository;
 import org.tutgi.student_registration.data.repositories.ParentRepository;
+import org.tutgi.student_registration.data.repositories.ReceiptRepository;
 import org.tutgi.student_registration.data.repositories.SiblingRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.repositories.SubjectChoiceRepository;
@@ -53,7 +57,7 @@ import org.tutgi.student_registration.data.repositories.SubjectExamRepository;
 import org.tutgi.student_registration.data.repositories.SubjectRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.data.storage.StorageService;
-import org.tutgi.student_registration.features.dean.dto.response.SubmittedStudentResponse;
+import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
@@ -110,6 +114,8 @@ public class StudentServiceImpl implements StudentService{
     private final MajorSubjectChoiceFormRepository majorSubjectChoiceFormRepository;
     private final SiblingRepository siblingRepository;
     private final AcknowledgementRepository ackRepository;
+    private final ReceiptRepository receiptRepository;
+    
     private final FormValidator formValidator;
     
     private final ParentFactory parentFactory;
@@ -125,7 +131,7 @@ public class StudentServiceImpl implements StudentService{
     private final ObjectMapper objectMapper;
     
     private final StorageService storageService;
-    
+    private final Docx4jFillerService docxFillerService;
 	@Override
 	@Transactional
     public ApiResponse createEntranceForm(EntranceFormRequest request) {
@@ -286,7 +292,7 @@ public class StudentServiceImpl implements StudentService{
 	            mother, motherJob,
 	            studentAddr, studentContact,
 	            entranceForm, modelMapper);
-
+	    
 	    return ApiResponse.builder()
 	        .success(1)
 	        .code(HttpStatus.OK.value())
@@ -1003,6 +1009,27 @@ public class StudentServiceImpl implements StudentService{
                 .code(HttpStatus.OK.value())
                 .data(true)
                 .message("Wait for your response.")
+                .build();
+    }
+    
+    @Override
+    public ApiResponse getReceiptByYear(YearType year) {
+        List<Receipt> receipts = receiptRepository.findByYear(year);
+
+        if (receipts.isEmpty()) {
+            return ApiResponse.builder()
+                    .success(0)
+                    .code(HttpStatus.NOT_FOUND.value())
+                    .message("No receipts found for year: " + year.getLabel())
+                    .data(null)
+                    .build();
+        }
+
+        return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.OK.value())
+                .message("Receipts fetched successfully for year: " + year.getLabel())
+                .data(receipts)
                 .build();
     }
     

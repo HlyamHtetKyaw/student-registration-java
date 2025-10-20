@@ -17,6 +17,8 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.SignatureType;
+import org.tutgi.student_registration.data.enums.YearType;
+import org.tutgi.student_registration.features.finance.service.FinanceService;
 import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StudentController {
 	private final StudentService studentService;
+	private final FinanceService financeService;
 	
 	@Operation(
 		    summary = "Register entrance form by a student.",
@@ -643,4 +646,32 @@ public class StudentController {
 		    final ApiResponse response = studentService.acknowledge();
 		    return ResponseUtils.buildResponse(request, response, requestStartTime);
 		}
+    
+    @Operation(summary = "Get receipt by year")
+    @GetMapping("/receipt")
+    public ResponseEntity<ApiResponse> getReceiptByYear(
+            @RequestParam(name = "year", required = true) YearType year,
+            HttpServletRequest request
+    ) {
+        double startTime = RequestUtils.extractRequestStartTime(request);
+        ApiResponse response = studentService.getReceiptByYear(year);
+        return ResponseUtils.buildResponse(request, response, startTime);
+    }
+//    private final StorageService storageService;
+//
+//    @GetMapping("/download/{directory}/{filename:.+}")
+//    public ResponseEntity<Resource> downloadFile(
+//            @PathVariable String directory,
+//            @PathVariable String filename
+//    ) {
+//        String fullPath = directory + "/" + filename;
+//        Resource resource = storageService.loadAsResource(fullPath);
+//        String downloadName = "EntranceForm.docx";
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(
+//                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+//                ))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"")
+//                .body(resource);
+//    }
 }

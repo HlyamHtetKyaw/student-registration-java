@@ -4,6 +4,7 @@ import org.springframework.core.io.Resource;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.SignatureType;
+import org.tutgi.student_registration.data.enums.YearType;
 import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
@@ -36,4 +37,5 @@ public interface StudentService {
 	Resource retrieveFileForRF(final String filePath,final SignatureType type);
 	
 	ApiResponse acknowledge() throws JsonProcessingException;
+	ApiResponse getReceiptByYear(YearType year);
 }

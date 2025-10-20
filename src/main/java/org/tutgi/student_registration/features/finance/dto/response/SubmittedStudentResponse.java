@@ -1,4 +1,4 @@
-package org.tutgi.student_registration.features.dean.dto.response;
+package org.tutgi.student_registration.features.finance.dto.response;
 
 import java.time.LocalDateTime;
 
