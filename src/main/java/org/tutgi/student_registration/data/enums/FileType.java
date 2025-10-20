@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum FileType {
     PROFILE_PHOTO("Profile Photo"),
+    PAYMENT("Payment"),
 	SIGNATURE("Signature");
 
     private final String displayName;

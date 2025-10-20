@@ -863,6 +863,38 @@ public class StudentServiceImpl implements StudentService{
             .message("Photo uploaded successfully.")
             .build();
 	}
+    
+    @Transactional
+    @Override
+	public ApiResponse uploadPayment(UploadFileRequest fileRequest) {
+    	Long userId = userUtil.getCurrentUserInternal().userId();
+        Student student = studentRepository.findByUserId(userId);
+        if(student==null) {
+        	throw new EntityNotFoundException("Student entity not found");
+        }
+        if (student.getEntranceForm() == null || 
+            student.getSubjectChoice() == null || 
+            student.getAcknowledgement() == null) {
+            throw new BadRequestException("You need to fill the form first.");
+        }
+        
+        String currentFile = student.getPaymentUrl();
+        String filename;
+
+        if (currentFile != null) {
+            filename = storageService.update(fileRequest.file(), currentFile, StorageDirectory.PAYMENT);
+        } else {
+            filename = storageService.store(fileRequest.file(), StorageDirectory.PAYMENT);
+        }
+        student.setPaymentUrl(filename);
+        
+        return ApiResponse.builder()
+            .success(1)
+            .code(HttpStatus.OK.value())
+            .data(filename)
+            .message("Payment uploaded successfully.")
+            .build();
+	}
 	
     @Transactional
     @Override
@@ -921,8 +953,10 @@ public class StudentServiceImpl implements StudentService{
         String expectedPath = switch (type) {
 						        case PROFILE_PHOTO -> student.getPhotoUrl();
 						        case SIGNATURE     -> entranceForm.getSignatureUrl();
-						    };
-
+						        case PAYMENT	   -> student.getPaymentUrl();
+						        };
+		System.out.println("Actural path: "+expectedPath);
+		System.out.println("Comming path: "+filePath);
         if (!filePath.equals(expectedPath)) {
             throw new UnauthorizedException("You are not allowed to access this file.");
         }

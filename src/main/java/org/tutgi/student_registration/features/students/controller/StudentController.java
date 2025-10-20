@@ -450,6 +450,32 @@ public class StudentController {
     	    ApiResponse response = studentService.uploadPhotoForETF(fileRequest);
     	    return ResponseUtils.buildResponse(request, response, requestStartTime);
     	}
+    
+    @PatchMapping(
+    	    value = "/payment",
+    	    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    	)
+    	@Operation(
+    	    summary = "Upload payment screen shot",
+    	    description = "Uploads a screen shot for student's payment.",
+    	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    	        description = "Multipart form with image file",
+    	        required = true,
+    	        content = @Content(
+    	            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+    	            schema = @Schema(implementation = UploadFileRequest.class)
+    	        )
+    	    )
+    	)
+    	public ResponseEntity<ApiResponse> uploadPayment(
+    	    @Parameter(hidden = true)
+    	    @ModelAttribute UploadFileRequest fileRequest,
+    	    HttpServletRequest request
+    	) {
+    	    double requestStartTime = RequestUtils.extractRequestStartTime(request);
+    	    ApiResponse response = studentService.uploadPayment(fileRequest);
+    	    return ResponseUtils.buildResponse(request, response, requestStartTime);
+    	}
 
     @PatchMapping(
     	    value = "/subjectChoiceForm/uploadSignature",

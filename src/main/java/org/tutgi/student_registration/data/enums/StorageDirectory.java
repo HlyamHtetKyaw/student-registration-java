@@ -6,6 +6,7 @@ public enum StorageDirectory {
 	STUDENT_SIGNATURE("student-signatures"),
 	GUARDIAN_SIGNATURE("guardian-signatures"),
 	STUDENT_PICTURES("student-pictures"),
+	PAYMENT("payment"),
 	ENTRANCE_FORM("entrance-forms"),
 	
 	ENTRANCE_FORM_TEMPLATE("shell/entranceForm.docx");

@@ -27,6 +27,7 @@ public interface StudentService {
 	ApiResponse getRegistrationForm();
 	
 	ApiResponse uploadSignatureForETF(final UploadFileRequest fileRequest);
+	ApiResponse uploadPayment(final UploadFileRequest fileRequest);
 	ApiResponse uploadPhotoForETF(final UploadFileRequest fileRequest);
 	
 	ApiResponse uploadSignatureForSCF(final UploadFileRequest fileRequest,final SignatureType type,final String guardiaName);
