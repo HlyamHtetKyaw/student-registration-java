@@ -16,4 +16,7 @@ public interface StorageService {
     void delete(final String filepath);
     void deleteAll();
     String update(final MultipartFile newFile,final String existingFilepath,final StorageDirectory storageDirecotry);
+    
+    String store(byte[] data, String baseName, StorageDirectory storageDirectory);
+    String update(byte[] newData, String oldFilePath, String baseName,  StorageDirectory storageDirectory);
 }

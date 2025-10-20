@@ -5,8 +5,10 @@ public enum StorageDirectory {
 	SIGNATURE_PICTURES("signature-pictures"),
 	STUDENT_SIGNATURE("student-signatures"),
 	GUARDIAN_SIGNATURE("guardian-signatures"),
-	STUDENT_PICTURES("student-pictures");
+	STUDENT_PICTURES("student-pictures"),
+	ENTRANCE_FORM("entrance-forms"),
 	
+	ENTRANCE_FORM_TEMPLATE("shell/entranceForm.docx");
     private final String directoryName;
 
     StorageDirectory(String directoryName) {
