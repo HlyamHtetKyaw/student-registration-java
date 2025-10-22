@@ -6,7 +6,7 @@ public enum YearType {
     SECOND_YEAR(2, "second-year"),
     THIRD_YEAR(3, "third-year"),
     FOURTH_YEAR(4, "fourth-year"),
-	FITH_YEAR(5,"fifth-year"),
+	FIFTH_YEAR(5,"fifth-year"),
 	SIXTH_YEAR(6,"sixth-year");
 	
     private final int numericValue;

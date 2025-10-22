@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import org.tutgi.student_registration.data.models.form.Form;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +42,26 @@ public class EntranceFormResponse {
     private String studentSignatureUrl;
     private String studentPhotoUrl;
     private boolean submitted;
-    private boolean paid;
+    private boolean isPaid;
+    private boolean isVerified;
+    private DepartmentSection departmentSection;
+    
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class DepartmentSection {
+        private String studentAffairNote;
+        private String studentAffairOtherNote;
+        @JsonFormat(pattern = "EEEE, dd MMMM yyyy")
+        private LocalDate studentAffairVerifiedDate;
+        private String financeNote;
+        @JsonFormat(pattern = "EEEE, dd MMMM yyyy")
+        private LocalDate financeDate;
+        private String financeVoucherNumber;
+        private String financeVerifierName;
+        private String financeVerifierSignature;
+    }
 }
 
 

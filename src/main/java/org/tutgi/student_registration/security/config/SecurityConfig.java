@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 "/api/v1/users"
                         ).permitAll()
                         .requestMatchers("/tutgi/api/v1/admin/**").hasRole(RoleName.ADMIN.name())
-                        .requestMatchers("/tutgi/api/v1/profile/**")
+                        .requestMatchers("/tutgi/api/v1/staff/**")
                         .hasAnyRole(
                             RoleName.DEAN.name(),
                             RoleName.FINANCE.name(),

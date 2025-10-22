@@ -69,6 +69,8 @@ import org.tutgi.student_registration.features.students.dto.request.SubjectChoic
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest.SubjectScore;
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse.DepartmentSection;
+import org.tutgi.student_registration.features.students.dto.response.FinanceVerifierDto;
 import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse;
 import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse.SiblingResponse;
 import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
@@ -184,18 +186,11 @@ public class StudentServiceImpl implements StudentService{
         
         studentRepository.save(student);
         
-        EntranceFormResponse response = buildEntranceFormResponse(
-                form, student, medForm,
-                father, fatherJob,
-                mother, motherJob,
-                studentAddr, studentContact,
-                entranceForm, modelMapper);
-        
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.CREATED.value())
                 .message("Entrance Form registered successfully.")
-                .data(response)
+                .data(true)
                 .build();
     }
 	
@@ -208,7 +203,9 @@ public class StudentServiceImpl implements StudentService{
 	    if (student == null || student.getEntranceForm() == null) {
 	        throw new EntityNotFoundException("Entrance Form not found for user");
 	    }
-	    
+	    if(student.isSubmitted()) {
+	    	throw new BadRequestException("Form is already submitted.");
+	    }
 	    Optional.ofNullable(request.enrollmentNumber()).ifPresent(student::setEnrollmentNumber);
 	    Optional.ofNullable(request.studentNameEng()).ifPresent(student::setEngName);
 	    Optional.ofNullable(request.studentNameMm()).ifPresent(student::setMmName);
@@ -244,16 +241,6 @@ public class StudentServiceImpl implements StudentService{
 	    Contact studentContact = contactRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    contactFactory.updateContact(studentContact,request.phoneNumber());
-	    
-//	    studentRepository.save(student);
-//	    entranceFormRepository.save(form);
-//	    medRepository.save(medForm);
-//	    parentRepository.save(father);
-//	    parentRepository.save(mother);
-//	    jobRepository.save(fatherJob);
-//	    jobRepository.save(motherJob);
-//	    addressRepository.save(studentAddr);
-//	    contactRepository.save(studentContact);
 	    
 	    return ApiResponse.builder()
 	            .success(1)
@@ -292,14 +279,16 @@ public class StudentServiceImpl implements StudentService{
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's address not found"));
 	    Contact studentContact = contactRepository.findByEntityTypeAndEntityId(EntityType.STUDENT,student.getId())
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
-	    
+	    List<FinanceVerifierDto> financeVerifiers = entranceFormRepository.findFinanceVerifiersByFormId(student.getEntranceForm().getId());
+	    String verifierName = financeVerifiers.isEmpty() ? null : financeVerifiers.get(0).getMmName();
+	    String verifierSignature = financeVerifiers.isEmpty() ? null : financeVerifiers.get(0).getSignatureUrl();
 	    Form formData = entranceForm.getForm();
 	    return buildEntranceFormResponse(
 	            formData, student, medForm,
 	            father, fatherJob,
 	            mother, motherJob,
 	            studentAddr, studentContact,
-	            entranceForm, modelMapper);
+	            entranceForm, verifierName, verifierSignature,modelMapper);
 	}
 	public EntranceFormResponse buildEntranceFormResponse(
 	        Form formData,
@@ -312,12 +301,15 @@ public class StudentServiceImpl implements StudentService{
 	        Address studentAddr,
 	        Contact studentContact,
 	        EntranceForm entranceForm,
+	        String verifierName,
+	        String verifierSignature,
 	        ModelMapper modelMapper) {
 
 	    return EntranceFormResponse.builder()
 	            .formData(modelMapper.map(formData, FormResponse.class))
 	            .submitted(student.isSubmitted())
-	            .paid(student.isPaid())
+	            .isPaid(student.isPaid())
+	            .isVerified(student.isVerified())
 	            .enrollmentNumber(student.getEnrollmentNumber())
 	            .studentNameMm(student.getMmName())
 	            .studentNameEng(student.getEngName())
@@ -341,6 +333,16 @@ public class StudentServiceImpl implements StudentService{
 	            .permanentPhoneNumber(entranceForm.getPermanentContactNumber())
 	            .studentSignatureUrl(entranceForm.getSignatureUrl())
 	            .studentPhotoUrl(student.getPhotoUrl())
+	            .departmentSection(DepartmentSection.builder()
+	            		.studentAffairNote(student.getEntranceForm().getStudentAffairNote())
+	            		.studentAffairOtherNote(student.getEntranceForm().getStudentAffairOtherNote())
+	            		.studentAffairVerifiedDate(student.getEntranceForm().getStudentAffairVerifiedDate())
+	            		.financeNote(student.getEntranceForm().getFinanceNote())
+	            		.financeDate(student.getEntranceForm().getFinanceDate())
+	            		.financeVoucherNumber(student.getEntranceForm().getFinanceVoucherNumber())
+	            		.financeVerifierName(verifierName)
+	            		.financeVerifierSignature(verifierSignature)
+	            		.build())
 	            .build();
 	}
 
@@ -434,7 +436,7 @@ public class StudentServiceImpl implements StudentService{
 		Long userId = userUtil.getCurrentUserInternal().userId();
 		Student student = studentRepository.findByUserId(userId);
 		if(student.getSubjectChoice()==null)throw new BadRequestException("Form does not exit");
-		
+		if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
 		Optional.ofNullable(request.studentNickname()).ifPresent(student::setNickname);
         Optional.ofNullable(request.studentPob()).ifPresent(student::setPob);
         
@@ -644,9 +646,8 @@ public class StudentServiceImpl implements StudentService{
 
         Student student = studentRepository.findByUserId(userId);
         boolean isCreate = false;
-        if(student==null) {
-        	throw new EntityNotFoundException("Student entity not found");
-        }
+        if(student==null)throw new EntityNotFoundException("Student entity not found");
+        if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
         if(request.formId()!=null && student.getAcknowledgement()==null) {
         	Form form = formValidator.valideForm(request.formId());
         	Acknowledgement ack = new Acknowledgement();
@@ -825,6 +826,7 @@ public class StudentServiceImpl implements StudentService{
         if(student==null || student.getEntranceForm()==null) {
         	throw new EntityNotFoundException("Student or form not found");
         }
+        if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
         EntranceForm entranceForm = student.getEntranceForm();
         
         String currentFile = entranceForm.getSignatureUrl();
@@ -853,7 +855,7 @@ public class StudentServiceImpl implements StudentService{
         if(student==null) {
         	throw new EntityNotFoundException("Student entity not found");
         }
-        
+        if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
         String currentFile = student.getPhotoUrl();
         String filename;
 
@@ -885,7 +887,7 @@ public class StudentServiceImpl implements StudentService{
             student.getAcknowledgement() == null) {
             throw new BadRequestException("You need to fill the form first.");
         }
-        
+        if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
         String currentFile = student.getPaymentUrl();
         String filename;
 
@@ -912,7 +914,7 @@ public class StudentServiceImpl implements StudentService{
         if (student == null || student.getSubjectChoice() == null) {
             throw new EntityNotFoundException("Student or form not found");
         }
-
+        if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
         SubjectChoice form = student.getSubjectChoice();
         String currentFile = getFilePathByType(form, type);
 
@@ -934,7 +936,7 @@ public class StudentServiceImpl implements StudentService{
         if (student == null || student.getAcknowledgement() == null) {
             throw new EntityNotFoundException("Student or form not found");
         }
-
+        if(student.isSubmitted())throw new BadRequestException("Form is already submitted.");
         Acknowledgement ack = student.getAcknowledgement();
         String currentFile = getFilePathByType(ack, type);
 
@@ -956,12 +958,15 @@ public class StudentServiceImpl implements StudentService{
         if(student==null || student.getEntranceForm()==null) {
         	throw new EntityNotFoundException("Student or form not found");
         }
-        EntranceForm entranceForm = student.getEntranceForm();
         
+        EntranceForm entranceForm = student.getEntranceForm();
+        List<FinanceVerifierDto> financeVerifiers = entranceFormRepository.findFinanceVerifiersByFormId(student.getEntranceForm().getId());
+	    String verifierSignature = financeVerifiers.isEmpty() ? null : financeVerifiers.get(0).getSignatureUrl();
         String expectedPath = switch (type) {
 						        case PROFILE_PHOTO -> student.getPhotoUrl();
 						        case SIGNATURE     -> entranceForm.getSignatureUrl();
 						        case PAYMENT	   -> student.getPaymentUrl();
+						        case FINANCE_SIGN -> verifierSignature;
 						        };
         if (!filePath.equals(expectedPath)) {
             throw new UnauthorizedException("You are not allowed to access this file.");
@@ -1014,16 +1019,7 @@ public class StudentServiceImpl implements StudentService{
         if (student == null) {
             throw new BadRequestException("Student not found.");
         }
-
-        if (student.isSubmitted()) {
-            return ApiResponse.builder()
-                    .success(0)
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .message("Form already acknowledged.")
-                    .data(false)
-                    .build();
-        }
-
+        if(student.isSubmitted())throw new BadRequestException("Form is already acknowledged.");
         if (student.getEntranceForm() == null || 
             student.getSubjectChoice() == null || 
             student.getAcknowledgement() == null) {

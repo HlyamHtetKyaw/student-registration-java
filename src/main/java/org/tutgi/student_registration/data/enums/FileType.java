@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum FileType {
     PROFILE_PHOTO("Profile Photo"),
     PAYMENT("Payment"),
-	SIGNATURE("Signature");
-
+	SIGNATURE("Signature"),
+	FINANCE_SIGN("Finance Sign");
     private final String displayName;
 
     FileType(String displayName) {

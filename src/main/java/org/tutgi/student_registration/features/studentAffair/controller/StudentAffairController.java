@@ -3,6 +3,7 @@ package org.tutgi.student_registration.features.studentAffair.controller;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -186,7 +187,7 @@ public class StudentAffairController {
     	    summary = "Subscribe for real time data",
     	    description = "Subscribe by student affair"
     )
-    @GetMapping("/subscribe")
+    @GetMapping(value = "/subscribe")
     public SseEmitter subscribe() {
         return sseEmitterService.createEmitter(Topic.STUDENT_AFFAIR.name());
     }
