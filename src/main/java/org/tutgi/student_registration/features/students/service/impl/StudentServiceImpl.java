@@ -12,13 +12,12 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.tutgi.student_registration.config.event.FormGenerateEvent;
+import org.tutgi.student_registration.config.event.StudentAcknowledgedEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
-import org.tutgi.student_registration.data.docsUtils.Docx4jFillerService;
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.ParentName;
@@ -86,7 +85,6 @@ import org.tutgi.student_registration.features.students.service.factory.SubjectC
 import org.tutgi.student_registration.features.students.service.utility.FormValidator;
 import org.tutgi.student_registration.features.students.service.utility.ParentResolver;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
-import org.tutgi.student_registration.sse.topicChannel.Topic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -1065,8 +1063,11 @@ public class StudentServiceImpl implements StudentService{
                 .updatedAt(student.getUpdatedAt())
                 .build();
 
-        String json = objectMapper.writeValueAsString(sseResponse);
-        redisTemplate.convertAndSend(Topic.FINANCE.name(), json);
+//        String json = objectMapper.writeValueAsString(sseResponse);
+//        String topic = student.isPaid() ? Topic.STUDENT_AFFAIR.name() : Topic.FINANCE.name();
+//        redisTemplate.convertAndSend(topic, json);
+        
+        eventPublisher.publishEvent(new StudentAcknowledgedEvent(sseResponse, student.isPaid()));
 
         return ApiResponse.builder()
                 .success(1)

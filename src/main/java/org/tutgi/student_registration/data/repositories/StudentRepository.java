@@ -13,7 +13,7 @@ import org.tutgi.student_registration.data.models.Student;
 public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpecificationExecutor<Student> {
 	@Query("""
 		    SELECT s FROM Student s
-		    WHERE s.submitted = true
+		    WHERE s.submitted = true AND s.isPaid = false
 		      AND (
 		           :keyword IS NULL OR :keyword = '' 
 		           OR LOWER(s.mmName) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -21,7 +21,19 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 		           OR LOWER(s.enrollmentNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
 		      )
 		    """)
-		Page<Student> findAllFiltered(@Param("keyword") String keyword, Pageable pageable);
+		Page<Student> findAllFilteredByFinance(@Param("keyword") String keyword, Pageable pageable);
+	
+	@Query("""
+		    SELECT s FROM Student s
+		    WHERE s.submitted = true AND s.isPaid = true AND s.isVerified = false
+		      AND (
+		           :keyword IS NULL OR :keyword = '' 
+		           OR LOWER(s.mmName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		           OR LOWER(s.engName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		           OR LOWER(s.enrollmentNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		      )
+		    """)
+		Page<Student> findAllFilteredByStudentAffair(@Param("keyword") String keyword, Pageable pageable);
 	
 	Student findByUserId(Long userId);
 }

@@ -20,4 +20,5 @@ public interface FinanceService {
     ApiResponse getRegistrationFormByStudentId(Long id);
     
     ApiResponse verifyStudentByFinance(Long studentId,FinanceVerificationRequest request);
+    ApiResponse rejectStudentByFinance(Long studentId);
 }

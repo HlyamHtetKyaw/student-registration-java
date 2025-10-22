@@ -4,15 +4,21 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.tutgi.student_registration.config.event.StudentFinanceVerifiedEvent;
+import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginationMeta;
+import org.tutgi.student_registration.data.enums.RoleName;
 import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
+import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.Receipt;
 import org.tutgi.student_registration.data.models.form.ReceiptData;
@@ -20,6 +26,7 @@ import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
 import org.tutgi.student_registration.data.repositories.ProfileRepository;
 import org.tutgi.student_registration.data.repositories.ReceiptRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
+import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.finance.dto.request.FinanceVerificationRequest;
 import org.tutgi.student_registration.features.finance.dto.request.ReceiptRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
@@ -47,10 +54,13 @@ public class FinanceServiceImpl implements FinanceService {
     private final StudentService studentService;
     
     private final EntranceFormRepository entranceFormRepository;
+    private final UserRepository userRepository;
     
     private final UserUtil userUtil;
     
     private final ProfileRepository profileRepository;
+    
+    private final ApplicationEventPublisher applicationEventPublisher;
     
     @Override
     @Transactional
@@ -146,9 +156,19 @@ public class FinanceServiceImpl implements FinanceService {
     
 	@Override
 	public PaginatedApiResponse<SubmittedStudentResponse> getAllSubmittedData(String keyword,Pageable pageable) {
-	 Page<Student> studentPage = this.studentRepository.findAllFiltered(keyword, pageable);
-	
-	    List<SubmittedStudentResponse> studentResponses = studentPage.getContent().stream()
+		Long userId = userUtil.getCurrentUserInternal().userId();
+		User user = userRepository.findById(userId)
+		        .orElseThrow(() -> new EntityNotFoundException("User not found."));
+
+		RoleName roleName = user.getRole().getName();
+
+		Page<Student> studentPage = switch (roleName) {
+		    case FINANCE -> studentRepository.findAllFilteredByFinance(keyword, pageable);
+		    case STUDENT_AFFAIR -> studentRepository.findAllFilteredByStudentAffair(keyword, pageable);
+		    default -> throw new AccessDeniedException("User role not authorized to view student data.");
+		};
+	 
+	 List<SubmittedStudentResponse> studentResponses = studentPage.getContent().stream()
 	            .map(student -> SubmittedStudentResponse.builder()
 	                    .studentId(student.getId())
 	                    .studentNameEng(student.getEngName())
@@ -215,18 +235,54 @@ public class FinanceServiceImpl implements FinanceService {
 				()->new EntityNotFoundException("User's profile not found for verification, please create profile first."));
 		
 		Student student = studentRepository.findById(studentId).orElseThrow(()->new EntityNotFoundException("Student not found for id "+studentId));
+		
 		if(student.getEntranceForm()==null) {
 			throw new EntityNotFoundException("Student form not found for student id: "+ studentId);
+		}
+		if(student.isPaid()) {
+			throw new BadRequestException("Finance department is already reviewed this form.");
 		}
 		EntranceForm entranceForm = student.getEntranceForm();
 		entranceForm.setFinanceNote(request.financeNote());
 		entranceForm.setFinanceVoucherNumber(request.financeVoucherNumber());
 		entranceForm.setFinanceDate(LocalDate.now());
 		entranceForm.assignProfile(profile);
-		entranceFormRepository.save(entranceForm);
+		student.setPaid(true);
 		
+		SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
+                .studentId(student.getId())
+                .studentNameEng(student.getEngName())
+                .studentNameMM(student.getMmName())
+                .createdAt(student.getCreatedAt())
+                .updatedAt(student.getUpdatedAt())
+                .build();
+		applicationEventPublisher.publishEvent(new StudentFinanceVerifiedEvent(sseResponse));
+		return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.OK.value())
+                .message("Student verified by finance successfully.")
+                .data(true)
+                .build();
+	}
+	
+	@Override
+	@Transactional
+	public ApiResponse rejectStudentByFinance(Long studentId) {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+		profileRepository.findByUserId(userId).orElseThrow(
+				()->new EntityNotFoundException("User's profile not found for verification, please create profile first."));
 		
-		return null;
+		Student student = studentRepository.findById(studentId).orElseThrow(()->new EntityNotFoundException("Student not found for id "+studentId));
+		if(student.isPaid()) {
+			throw new BadRequestException("You can't reject a verified student.");
+		}
+		student.setSubmitted(false);
+		return ApiResponse.builder()
+                .success(1)
+                .code(HttpStatus.OK.value())
+                .message("Student is rejected by finance department.")
+                .data(true)
+                .build();
 	}
 	
 }

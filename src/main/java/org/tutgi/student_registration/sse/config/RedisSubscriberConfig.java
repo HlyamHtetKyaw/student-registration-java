@@ -17,6 +17,7 @@ public class RedisSubscriberConfig {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(subscriber, new ChannelTopic(Topic.FINANCE.name()));
+        container.addMessageListener(subscriber, new ChannelTopic(Topic.STUDENT_AFFAIR.name()));
         return container;
     }
 }
