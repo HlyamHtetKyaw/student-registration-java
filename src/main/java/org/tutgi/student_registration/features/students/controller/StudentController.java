@@ -1,12 +1,14 @@
 package org.tutgi.student_registration.features.students.controller;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,7 @@ import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.SignatureType;
 import org.tutgi.student_registration.data.enums.YearType;
+import org.tutgi.student_registration.data.storage.StorageService;
 import org.tutgi.student_registration.features.finance.service.FinanceService;
 import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
@@ -48,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 public class StudentController {
 	private final StudentService studentService;
 	private final FinanceService financeService;
+	private final StorageService storageService;
 	
 	@Operation(
 		    summary = "Register entrance form by a student.",
@@ -683,22 +687,4 @@ public class StudentController {
         ApiResponse response = studentService.getReceiptByYear(year);
         return ResponseUtils.buildResponse(request, response, startTime);
     }
-    
-//    private final StorageService storageService;
-//
-//    @GetMapping("/download/{directory}/{filename:.+}")
-//    public ResponseEntity<Resource> downloadFile(
-//            @PathVariable String directory,
-//            @PathVariable String filename
-//    ) {
-//        String fullPath = directory + "/" + filename;
-//        Resource resource = storageService.loadAsResource(fullPath);
-//        String downloadName = "EntranceForm.docx";
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.parseMediaType(
-//                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-//                ))
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadName + "\"")
-//                .body(resource);
-//    }
 }

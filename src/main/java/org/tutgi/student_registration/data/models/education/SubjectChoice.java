@@ -46,6 +46,9 @@ public class SubjectChoice extends MasterData{
     @Column(name="guardian_signature_date")
     private LocalDate guardianSignatureDate;
     
+    @Column(name="docx_url")
+    private String docxUrl;
+    
     @OneToMany(mappedBy = "subjectChoice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MajorSubjectChoiceForm> majorSubjectChoices = new ArrayList<>();
     

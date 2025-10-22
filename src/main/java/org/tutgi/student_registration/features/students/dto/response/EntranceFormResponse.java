@@ -45,6 +45,7 @@ public class EntranceFormResponse {
     private boolean isPaid;
     private boolean isVerified;
     private DepartmentSection departmentSection;
+    private FormUrls formUrls;
     
     @Data
     @Builder
@@ -61,6 +62,16 @@ public class EntranceFormResponse {
         private String financeVoucherNumber;
         private String financeVerifierName;
         private String financeVerifierSignature;
+    }
+    
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class FormUrls {
+        private String entranceFormUrl;
+        private String subjectChoiceUrl;
+        private String registrationUrl;
     }
 }
 

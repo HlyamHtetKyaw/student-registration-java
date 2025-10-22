@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.tutgi.student_registration.config.event.FormGenerateEvent;
 import org.tutgi.student_registration.config.event.StudentFinanceVerifiedEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
@@ -261,7 +262,7 @@ public class FinanceServiceImpl implements FinanceService {
 		entranceForm.setFinanceDate(LocalDate.now());
 		entranceForm.assignProfile(profile);
 		student.setPaid(true);
-		
+		applicationEventPublisher.publishEvent(new FormGenerateEvent(this, student));
 		SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())

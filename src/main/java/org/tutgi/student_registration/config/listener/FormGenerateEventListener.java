@@ -1,8 +1,9 @@
 package org.tutgi.student_registration.config.listener;
 
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.tutgi.student_registration.config.event.FormGenerateEvent;
 import org.tutgi.student_registration.data.docsUtils.Docx4jFillerService;
 import org.tutgi.student_registration.data.enums.StorageDirectory;
@@ -26,11 +27,10 @@ public class FormGenerateEventListener {
     private final StudentRepository studentRepository;
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleFormGenerateEvent(FormGenerateEvent event) {
         Student student = event.getStudent();
         log.info("Received FormGenerateEvent for student: {}", student.getEngName());
-
         try {
             EntranceFormResponse response = studentService.getEntranceFormResponse(student);
 

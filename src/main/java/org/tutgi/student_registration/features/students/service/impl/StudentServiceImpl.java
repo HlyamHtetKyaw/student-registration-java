@@ -12,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.tutgi.student_registration.config.event.FormGenerateEvent;
 import org.tutgi.student_registration.config.event.StudentAcknowledgedEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
@@ -70,6 +71,7 @@ import org.tutgi.student_registration.features.students.dto.request.SubjectChoic
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse.DepartmentSection;
+import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse.FormUrls;
 import org.tutgi.student_registration.features.students.dto.response.FinanceVerifierDto;
 import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse;
 import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse.SiblingResponse;
@@ -343,6 +345,14 @@ public class StudentServiceImpl implements StudentService{
 	            		.financeVerifierName(verifierName)
 	            		.financeVerifierSignature(verifierSignature)
 	            		.build())
+	            .formUrls(FormUrls.builder()
+	            	    .entranceFormUrl(
+	            	        student.getEntranceForm() != null ? student.getEntranceForm().getDocxUrl() : "Not available")
+	            	    .subjectChoiceUrl(
+	            	        student.getSubjectChoice() != null ? student.getSubjectChoice().getDocxUrl() : "Not available")
+	            	    .registrationUrl(
+	            	        student.getRegistrationForm() != null ? student.getRegistrationForm().getDocxUrl() : "Not available")
+	            	    .build())
 	            .build();
 	}
 
@@ -1028,29 +1038,8 @@ public class StudentServiceImpl implements StudentService{
 
         student.setSubmitted(true);
         studentRepository.save(student);
-//        eventPublisher.publishEvent(new FormGenerateEvent(this, student));
-//	      try {
-//	      EntranceFormResponse response = getEntranceFormResponse(student);
-//	      byte[] filled = docxFillerService.fillEntranceFormTemplate(StorageDirectory.ENTRANCE_FORM_TEMPLATE.getDirectoryName(), response);
-//	      String oldPath = student.getEntranceForm().getDocxUrl();
-//	      String newPath;
-//	      if(oldPath==null) {
-//	    	  newPath = storageService.store(
-//	    	          filled,
-//	    	          student.getEngName(),
-//	    	          StorageDirectory.ENTRANCE_FORM
-//	    	      );
-//	      }else {
-//		      newPath = storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.ENTRANCE_FORM);
-//	      }
-//	      
-//	      student.getEntranceForm().setDocxUrl(newPath);
-//	      
-//	      System.out.println("Generated file saved at: " + newPath);
-//	  
-//	  } catch (Exception e) {
-//	      e.printStackTrace();
-//	  }
+        eventPublisher.publishEvent(new FormGenerateEvent(this, student));
+        
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
@@ -1058,10 +1047,6 @@ public class StudentServiceImpl implements StudentService{
                 .createdAt(student.getCreatedAt())
                 .updatedAt(student.getUpdatedAt())
                 .build();
-
-//        String json = objectMapper.writeValueAsString(sseResponse);
-//        String topic = student.isPaid() ? Topic.STUDENT_AFFAIR.name() : Topic.FINANCE.name();
-//        redisTemplate.convertAndSend(topic, json);
         
         eventPublisher.publishEvent(new StudentAcknowledgedEvent(sseResponse, student.isPaid()));
 
