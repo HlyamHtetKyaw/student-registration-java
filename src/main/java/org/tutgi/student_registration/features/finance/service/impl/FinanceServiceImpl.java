@@ -20,6 +20,7 @@ import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.User;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
+import org.tutgi.student_registration.data.models.form.PhoneNumbers;
 import org.tutgi.student_registration.data.models.form.Receipt;
 import org.tutgi.student_registration.data.models.form.ReceiptData;
 import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
@@ -71,10 +72,16 @@ public class FinanceServiceImpl implements FinanceService {
                         .amount(d.amount())
                         .build())
                 .toList();
-
+        
+        List<PhoneNumbers> phoneNumberList = request.phoneNumbers().stream()
+                .map(d -> PhoneNumbers.builder()
+                        .phoneNumber(d.phoneNumber()).build())
+                .toList();
+        
         Receipt receipt = Receipt.builder()
                 .year(request.year())
                 .data(dataList)
+                .phoneNumbers(phoneNumberList)
                 .build();
 
         receiptRepository.save(receipt);
@@ -99,10 +106,14 @@ public class FinanceServiceImpl implements FinanceService {
                         .amount(d.amount())
                         .build())
                 .collect(Collectors.toList());
-
+        List<PhoneNumbers> phoneNumberList = request.phoneNumbers().stream()
+                .map(d -> PhoneNumbers.builder()
+                        .phoneNumber(d.phoneNumber()).build())
+                .collect(Collectors.toList());
+        
         existing.setYear(request.year());
         existing.setData(updatedDataList);
-
+        existing.setPhoneNumbers(phoneNumberList);
         receiptRepository.save(existing);
 
         return ApiResponse.builder()

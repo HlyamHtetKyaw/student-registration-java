@@ -2,6 +2,7 @@ package org.tutgi.student_registration.features.finance.dto.request;
 
 import java.util.List;
 
+import org.tutgi.student_registration.config.annotations.ValidPhoneNumber;
 import org.tutgi.student_registration.data.enums.YearType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,7 +20,11 @@ public record ReceiptRequest(
         )
         @NotNull
         YearType year,
-
+        
+        @Valid
+        @NotNull
+        List<PhoneNumbers> phoneNumbers,
+        
         @Valid
         @Schema(description = "List of data entries for the receipt", requiredMode = Schema.RequiredMode.REQUIRED)
         List<Data> data
@@ -34,5 +39,11 @@ public record ReceiptRequest(
             @NotNull(message = "Amount must not be null")
             @DecimalMin(value = "0.0", inclusive = true, message = "Amount must not be less than zero")
             Double amount
+    ) {}
+    
+    public record PhoneNumbers(
+    		@NotNull
+    		@ValidPhoneNumber
+    		String phoneNumber
     ) {}
 }

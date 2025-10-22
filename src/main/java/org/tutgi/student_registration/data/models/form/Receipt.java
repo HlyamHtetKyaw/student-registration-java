@@ -40,4 +40,11 @@ public class Receipt extends MasterData {
             joinColumns = @JoinColumn(name = "receipt_id")
     )
     private List<ReceiptData> data = new ArrayList<>();
+    
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "phone_numbers",
+            joinColumns = @JoinColumn(name = "phone_number_id")
+    )
+    private List<PhoneNumbers> phoneNumbers = new ArrayList<>();
 }
