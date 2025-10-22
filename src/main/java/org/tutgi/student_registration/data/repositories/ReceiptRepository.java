@@ -10,4 +10,5 @@ import org.tutgi.student_registration.data.models.form.Receipt;
 @Repository
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
 	List<Receipt> findByYear(YearType year);
+	boolean existsByYear(YearType year);
 }

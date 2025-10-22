@@ -54,7 +54,6 @@ public class FinanceServiceImpl implements FinanceService {
     
     private final StudentService studentService;
     
-    private final EntranceFormRepository entranceFormRepository;
     private final UserRepository userRepository;
     
     private final UserUtil userUtil;
@@ -66,6 +65,9 @@ public class FinanceServiceImpl implements FinanceService {
     @Override
     @Transactional
     public ApiResponse saveReceipt(ReceiptRequest request) {
+    	if (receiptRepository.existsByYear(request.year())) {
+    	    throw new BadRequestException("You can't create more than one receipt for " + request.year());
+    	}
         List<ReceiptData> dataList = request.data().stream()
                 .map(d -> ReceiptData.builder()
                         .name(d.name())
