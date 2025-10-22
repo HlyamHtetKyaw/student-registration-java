@@ -1,7 +1,9 @@
 package org.tutgi.student_registration.features.file.controller;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
@@ -18,6 +20,8 @@ import org.tutgi.student_registration.data.enums.FormType;
 import org.tutgi.student_registration.data.storage.StorageService;
 import org.tutgi.student_registration.features.file.dto.response.FileResponse;
 import org.tutgi.student_registration.features.file.service.FileService;
+import org.zwobble.mammoth.DocumentConverter;
+import org.zwobble.mammoth.Result;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -63,5 +67,31 @@ public class FileController {
 
 	    return ResponseEntity.ok(response);
 	}
+	
+    @GetMapping("/previewHtml")
+    public ResponseEntity<Map<String, String>> previewDocxAsHtml(
+            @RequestParam("type") FormType type,
+            @RequestParam("studentId") Long studentId) {
+
+        String filePath = fileService.getFilePathByType(type, studentId);
+        String htmlContent = convertDocxToHtml(storageService.load(filePath));
+
+        Map<String, String> response = Map.of(
+                "fileName", "preview.html",
+                "html", htmlContent
+        );
+
+        return ResponseEntity.ok(response);
+    }
+    
+    public String convertDocxToHtml(Path docxPath) {
+        try (InputStream is = new FileInputStream(docxPath.toFile())) {
+            DocumentConverter converter = new DocumentConverter();
+            Result result = converter.convertToHtml(is);
+            return (String) result.getValue();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert DOCX to HTML", e);
+        }
+    }
 
 }
