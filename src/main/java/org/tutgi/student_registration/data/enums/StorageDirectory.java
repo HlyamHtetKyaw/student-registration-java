@@ -9,7 +9,7 @@ public enum StorageDirectory {
 	PAYMENT("payment"),
 	ENTRANCE_FORM("entrance-forms"),
 	
-	ENTRANCE_FORM_TEMPLATE("shell/entranceForm.docx");
+	ENTRANCE_FORM_TEMPLATE("shell/EntranceForm.docx");
     private final String directoryName;
 
     StorageDirectory(String directoryName) {

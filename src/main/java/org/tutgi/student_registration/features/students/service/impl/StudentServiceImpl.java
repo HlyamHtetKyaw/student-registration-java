@@ -7,10 +7,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.tutgi.student_registration.config.event.FormGenerateEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
@@ -131,7 +133,7 @@ public class StudentServiceImpl implements StudentService{
     private final ObjectMapper objectMapper;
     
     private final StorageService storageService;
-    private final Docx4jFillerService docxFillerService;
+    private final ApplicationEventPublisher eventPublisher;
 	@Override
 	@Transactional
     public ApiResponse createEntranceForm(EntranceFormRequest request) {
@@ -267,12 +269,20 @@ public class StudentServiceImpl implements StudentService{
 	public ApiResponse getEntranceForm() {
 	    Long userId = userUtil.getCurrentUserInternal().userId();
 	    Student student = studentRepository.findByUserId(userId);
-
-	    if (student == null || student.getEntranceForm() == null) {
+	    EntranceFormResponse response = getEntranceFormResponse(student);
+	    return ApiResponse.builder()
+	        .success(1)
+	        .code(HttpStatus.OK.value())
+	        .message("Entrance Form retrieved successfully.")
+	        .data(response)
+	        .build();
+	}
+	@Override
+	public EntranceFormResponse getEntranceFormResponse(Student student) {
+		if (student == null || student.getEntranceForm() == null) {
 	        throw new EntityNotFoundException("Entrance form not found");
 	    }
-
-	    EntranceForm entranceForm = student.getEntranceForm();
+		EntranceForm entranceForm = student.getEntranceForm();
 	    MatriculationExamDetail medForm = student.getMatriculationExamDetail();
 	    Parent father = ParentResolver.resolve(student.getParents(),ParentName.FATHER);
 	    Parent mother = ParentResolver.resolve(student.getParents(),ParentName.MOTHER);
@@ -286,21 +296,13 @@ public class StudentServiceImpl implements StudentService{
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    
 	    Form formData = entranceForm.getForm();
-	    EntranceFormResponse response = buildEntranceFormResponse(
+	    return buildEntranceFormResponse(
 	            formData, student, medForm,
 	            father, fatherJob,
 	            mother, motherJob,
 	            studentAddr, studentContact,
 	            entranceForm, modelMapper);
-	    
-	    return ApiResponse.builder()
-	        .success(1)
-	        .code(HttpStatus.OK.value())
-	        .message("Entrance Form retrieved successfully.")
-	        .data(response)
-	        .build();
 	}
-	
 	public EntranceFormResponse buildEntranceFormResponse(
 	        Form formData,
 	        Student student,
@@ -501,8 +503,18 @@ public class StudentServiceImpl implements StudentService{
 	public ApiResponse getSubjectChoiceForm() {
 		Long userId = userUtil.getCurrentUserInternal().userId();
 	    Student student = studentRepository.findByUserId(userId);
-
-	    if (student == null || student.getSubjectChoice() == null) {
+	    SubjectChoiceResponse response = getSubjectChoiceFormResponse(student);
+	    return ApiResponse.builder()
+	        .success(1)
+	        .code(HttpStatus.OK.value())
+	        .message("Subject Choice Form retrieved successfully.")
+	        .data(response)
+	        .build();
+	}
+	
+	@Override
+	public SubjectChoiceResponse getSubjectChoiceFormResponse(Student student) {
+		if (student == null || student.getSubjectChoice() == null) {
 	        throw new EntityNotFoundException("Subject choice form not found");
 	    }
 
@@ -544,19 +556,11 @@ public class StudentServiceImpl implements StudentService{
 												        .toList();
 	    
 	    Form formData = subjectChoice.getForm();
-	    SubjectChoiceResponse response = buildSubjectChoiceResponse(
+	     return buildSubjectChoiceResponse(
 	            formData, student, medForm,
 	            father,mother, fatherJob,motherJob,fatherContact,motherContact,studentContact,
 	            fatherAddr,motherAddr,subjectChoice,majorChoiceResponses,subjectScoreResponses,modelMapper);
-
-	    return ApiResponse.builder()
-	        .success(1)
-	        .code(HttpStatus.OK.value())
-	        .message("Subject Choice Form retrieved successfully.")
-	        .data(response)
-	        .build();
 	}
-	
 	public SubjectChoiceResponse buildSubjectChoiceResponse(
 	        Form formData,
 	        Student student,
@@ -689,7 +693,19 @@ public class StudentServiceImpl implements StudentService{
 		Long userId = userUtil.getCurrentUserInternal().userId();
 	    Student student = studentRepository.findByUserId(userId);
 
-	    if (student == null || student.getAcknowledgement() == null) {
+	    RegistrationFormResponse response = getRegistrationFormResponse(student);
+
+	    return ApiResponse.builder()
+	        .success(1)
+	        .code(HttpStatus.OK.value())
+	        .message("Subject Choice Form retrieved successfully.")
+	        .data(response)
+	        .build();
+	}
+	
+	@Override
+	public RegistrationFormResponse getRegistrationFormResponse(Student student) {
+		if (student == null || student.getAcknowledgement() == null) {
 	        throw new EntityNotFoundException("Form not found");
 	    }
 
@@ -726,19 +742,11 @@ public class StudentServiceImpl implements StudentService{
 	    
 	    Form formData = acknowldegement.getForm();
 	    
-	    RegistrationFormResponse response = buildRegistrationResponse(
+	   return buildRegistrationResponse(
 	            formData, student, medForm,
 	            father,mother, fatherJob,motherJob,fatherContact,motherContact,studentContact,
 	            fatherAddr,motherAddr,acknowldegement,siblingResponses,modelMapper);
-
-	    return ApiResponse.builder()
-	        .success(1)
-	        .code(HttpStatus.OK.value())
-	        .message("Subject Choice Form retrieved successfully.")
-	        .data(response)
-	        .build();
 	}
-	
 	public RegistrationFormResponse buildRegistrationResponse(
 	        Form formData,
 	        Student student,
@@ -957,8 +965,6 @@ public class StudentServiceImpl implements StudentService{
 						        case SIGNATURE     -> entranceForm.getSignatureUrl();
 						        case PAYMENT	   -> student.getPaymentUrl();
 						        };
-		System.out.println("Actural path: "+expectedPath);
-		System.out.println("Comming path: "+filePath);
         if (!filePath.equals(expectedPath)) {
             throw new UnauthorizedException("You are not allowed to access this file.");
         }
@@ -1028,7 +1034,29 @@ public class StudentServiceImpl implements StudentService{
 
         student.setSubmitted(true);
         studentRepository.save(student);
-
+//        eventPublisher.publishEvent(new FormGenerateEvent(this, student));
+//	      try {
+//	      EntranceFormResponse response = getEntranceFormResponse(student);
+//	      byte[] filled = docxFillerService.fillEntranceFormTemplate(StorageDirectory.ENTRANCE_FORM_TEMPLATE.getDirectoryName(), response);
+//	      String oldPath = student.getEntranceForm().getDocxUrl();
+//	      String newPath;
+//	      if(oldPath==null) {
+//	    	  newPath = storageService.store(
+//	    	          filled,
+//	    	          student.getEngName(),
+//	    	          StorageDirectory.ENTRANCE_FORM
+//	    	      );
+//	      }else {
+//		      newPath = storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.ENTRANCE_FORM);
+//	      }
+//	      
+//	      student.getEntranceForm().setDocxUrl(newPath);
+//	      
+//	      System.out.println("Generated file saved at: " + newPath);
+//	  
+//	  } catch (Exception e) {
+//	      e.printStackTrace();
+//	  }
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
@@ -1038,7 +1066,7 @@ public class StudentServiceImpl implements StudentService{
                 .build();
 
         String json = objectMapper.writeValueAsString(sseResponse);
-        redisTemplate.convertAndSend(Topic.DEAN.name(), json);
+        redisTemplate.convertAndSend(Topic.FINANCE.name(), json);
 
         return ApiResponse.builder()
                 .success(1)

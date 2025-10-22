@@ -100,6 +100,17 @@ public class LocalStorageService implements StorageService {
             throw new RuntimeException("Could not read file: " + filepath, e);
         }
     }
+    
+    @Override
+    public byte[] loadFileAsBytes(String filepath) {
+        try {
+            Path file = load(filepath);
+            return Files.readAllBytes(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read file as bytes: " + filepath, e);
+        }
+    }
+
 
     @Override
     public void delete(final String filepath) {

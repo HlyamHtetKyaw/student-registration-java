@@ -5,26 +5,33 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.data.enums.FileType;
 import org.tutgi.student_registration.data.enums.SignatureType;
 import org.tutgi.student_registration.data.enums.YearType;
+import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.features.profile.dto.request.UploadFileRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.EntranceFormUpdateRequest;
 import org.tutgi.student_registration.features.students.dto.request.RegistrationFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.SubjectChoiceFormRequest;
 import org.tutgi.student_registration.features.students.dto.request.UpdateSubjectChoiceFormRequest;
+import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface StudentService {
 	ApiResponse createEntranceForm(final EntranceFormRequest entranceFormRequest);
 	ApiResponse updateEntranceForm(final EntranceFormUpdateRequest entranceFormUpdateRequest);
+	EntranceFormResponse getEntranceFormResponse(final Student student);
 	ApiResponse getEntranceForm();
 	
 	ApiResponse createSubjectChoiceForm(final SubjectChoiceFormRequest subjectChoiceFormRequest);
 	ApiResponse updateSubjectChoiceForm(final UpdateSubjectChoiceFormRequest updateSubjectChoiceFormRequest);
 	ApiResponse getSubjectChoiceForm();
+	SubjectChoiceResponse getSubjectChoiceFormResponse(final Student student);
 	
 	ApiResponse updateForRegistratinForm(final RegistrationFormRequest registrationFormRequest);
 	ApiResponse getRegistrationForm();
+	RegistrationFormResponse getRegistrationFormResponse(final Student student);
 	
 	ApiResponse uploadSignatureForETF(final UploadFileRequest fileRequest);
 	ApiResponse uploadPayment(final UploadFileRequest fileRequest);

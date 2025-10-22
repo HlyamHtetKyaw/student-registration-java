@@ -1,5 +1,6 @@
 package org.tutgi.student_registration.features.finance.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,15 +11,26 @@ import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginationMeta;
+import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
+import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.Receipt;
 import org.tutgi.student_registration.data.models.form.ReceiptData;
+import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
+import org.tutgi.student_registration.data.repositories.ProfileRepository;
 import org.tutgi.student_registration.data.repositories.ReceiptRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
+import org.tutgi.student_registration.features.finance.dto.request.FinanceVerificationRequest;
 import org.tutgi.student_registration.features.finance.dto.request.ReceiptRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.finance.service.FinanceService;
+import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
+import org.tutgi.student_registration.features.students.service.StudentService;
+import org.tutgi.student_registration.features.users.utils.UserUtil;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +43,14 @@ public class FinanceServiceImpl implements FinanceService {
 	private final StudentRepository studentRepository;
 	
     private final ReceiptRepository receiptRepository;
+    
+    private final StudentService studentService;
+    
+    private final EntranceFormRepository entranceFormRepository;
+    
+    private final UserUtil userUtil;
+    
+    private final ProfileRepository profileRepository;
     
     @Override
     @Transactional
@@ -150,4 +170,63 @@ public class FinanceServiceImpl implements FinanceService {
 	            .data(studentResponses)
 	            .build();
 	}
+
+	@Override
+	public ApiResponse getEntranceFormByStudentId(Long id) {
+		Student student = studentRepository.findById(id).orElseThrow(()->new EntityNotFoundException("Student not found for id "+id));
+		EntranceFormResponse response = studentService.getEntranceFormResponse(student);
+		return ApiResponse.builder()
+        .success(1)
+        .code(HttpStatus.OK.value())
+        .message("Entrance Form retrieved successfully for student id: "+id)
+        .data(response)
+        .build();
+	}
+	
+	@Override
+	public ApiResponse getSubjectChoiceFormByStudentId(Long id) {
+		Student student = studentRepository.findById(id).orElseThrow(()->new EntityNotFoundException("Student not found for id "+id));
+		SubjectChoiceResponse response = studentService.getSubjectChoiceFormResponse(student);
+		return ApiResponse.builder()
+        .success(1)
+        .code(HttpStatus.OK.value())
+        .message("Subject choice Form retrieved successfully for student id: "+id)
+        .data(response)
+        .build();
+	}
+	
+	@Override
+	public ApiResponse getRegistrationFormByStudentId(Long id) {
+		Student student = studentRepository.findById(id).orElseThrow(()->new EntityNotFoundException("Student not found for id "+id));
+		RegistrationFormResponse response = studentService.getRegistrationFormResponse(student);
+		return ApiResponse.builder()
+        .success(1)
+        .code(HttpStatus.OK.value())
+        .message("Registration Form retrieved successfully for student id: "+id)
+        .data(response)
+        .build();
+	}
+
+	@Override
+	@Transactional
+	public ApiResponse verifyStudentByFinance(Long studentId, FinanceVerificationRequest request) {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+		Profile profile = profileRepository.findByUserId(userId).orElseThrow(
+				()->new EntityNotFoundException("User's profile not found for verification, please create profile first."));
+		
+		Student student = studentRepository.findById(studentId).orElseThrow(()->new EntityNotFoundException("Student not found for id "+studentId));
+		if(student.getEntranceForm()==null) {
+			throw new EntityNotFoundException("Student form not found for student id: "+ studentId);
+		}
+		EntranceForm entranceForm = student.getEntranceForm();
+		entranceForm.setFinanceNote(request.financeNote());
+		entranceForm.setFinanceVoucherNumber(request.financeVoucherNumber());
+		entranceForm.setFinanceDate(LocalDate.now());
+		entranceForm.assignProfile(profile);
+		entranceFormRepository.save(entranceForm);
+		
+		
+		return null;
+	}
+	
 }

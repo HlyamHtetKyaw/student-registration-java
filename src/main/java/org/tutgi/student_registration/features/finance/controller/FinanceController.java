@@ -20,6 +20,7 @@ import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
+import org.tutgi.student_registration.features.finance.dto.request.FinanceVerificationRequest;
 import org.tutgi.student_registration.features.finance.dto.request.ReceiptRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.finance.service.FinanceService;
@@ -29,6 +30,7 @@ import org.tutgi.student_registration.sse.topicChannel.Topic;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -112,6 +114,88 @@ public class FinanceController {
         return ResponseUtils.buildResponse(request, response, startTime);
     }
     
+    @Operation(summary = "Get entrance form by student ID")
+    @GetMapping("/entranceForm/{studentId}")
+    public ResponseEntity<ApiResponse> getEntranceFormByStudentId(
+            @PathVariable Long studentId,
+            HttpServletRequest request
+    ) {
+        double startTime = RequestUtils.extractRequestStartTime(request);
+        ApiResponse response = financeService.getEntranceFormByStudentId(studentId);
+        return ResponseUtils.buildResponse(request, response, startTime);
+    }
+    
+    @Operation(summary = "Get subject choice form by student ID")
+    @GetMapping("/subjectChoice/{studentId}")
+    public ResponseEntity<ApiResponse> getSubjectChoiceFormByStudentId(
+            @PathVariable Long studentId,
+            HttpServletRequest request
+    ) {
+        double startTime = RequestUtils.extractRequestStartTime(request);
+        ApiResponse response = financeService.getSubjectChoiceFormByStudentId(studentId);
+        return ResponseUtils.buildResponse(request, response, startTime);
+    }
+    
+    @Operation(summary = "Get registration form by student ID")
+    @GetMapping("/registrationForm/{studentId}")
+    public ResponseEntity<ApiResponse> getRegistrationFormByStudentId(
+            @PathVariable Long studentId,
+            HttpServletRequest request
+    ) {
+        double startTime = RequestUtils.extractRequestStartTime(request);
+        ApiResponse response = financeService.getRegistrationFormByStudentId(studentId);
+        return ResponseUtils.buildResponse(request, response, startTime);
+    }
+    
+    @Operation(
+    	    summary = "Verify a student by finance.",
+    	    description = "This API endpoint allows finance staff to verify a student by recording a note, date, and unique voucher number.",
+    	    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    	        required = true,
+    	        content = @Content(
+    	            schema = @Schema(implementation = FinanceVerificationRequest.class),
+    	            examples = {
+    	                @ExampleObject(
+    	                    name = "Finance Verification Example",
+    	                    value = """
+    	                        {
+    	                          "financeNote": "All tuition fees for the semester have been cleared.",
+    	                          "financeVoucherNumber": "VCH-2025-0010"
+    	                        }
+    	                        """
+    	                )
+    	            }
+    	        )
+    	    ),
+    	    responses = {
+    	        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	            responseCode = "200",
+    	            description = "Student verified by finance successfully.",
+    	            content = @Content(
+    	                schema = @Schema(implementation = ApiResponse.class)
+    	            )
+    	        ),
+    	        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+    	            responseCode = "404",
+    	            description = "Student not found",
+    	            content = @Content(
+    	                schema = @Schema(implementation = ApiResponse.class)
+    	            )
+    	        )
+    	    }
+    	)
+    	@PostMapping("/{studentId}")
+    	public ResponseEntity<ApiResponse> verifyStudentByFinance(
+    	        @PathVariable Long studentId,
+    	        @Valid @org.springframework.web.bind.annotation.RequestBody FinanceVerificationRequest request,
+    	        HttpServletRequest httpRequest
+    	) {
+    	    double startTime = RequestUtils.extractRequestStartTime(httpRequest);
+    	    ApiResponse response = financeService.verifyStudentByFinance(studentId, request);
+    	    return ResponseUtils.buildResponse(httpRequest, response, startTime);
+    	}
+
+    
     @Operation(
             summary = "Fetching submitted data",
             description = "Fetching submitted with keywords - name mm, name eng, and enrollment returning pagination",
@@ -154,10 +238,10 @@ public class FinanceController {
     
     @Operation(
     	    summary = "Subscribe for real time data",
-    	    description = "Subscribe by dean"
+    	    description = "Subscribe by finance"
     )
     @GetMapping("/subscribe")
     public SseEmitter subscribe() {
-        return sseEmitterService.createEmitter(Topic.DEAN.name());
+        return sseEmitterService.createEmitter(Topic.FINANCE.name());
     }
 }

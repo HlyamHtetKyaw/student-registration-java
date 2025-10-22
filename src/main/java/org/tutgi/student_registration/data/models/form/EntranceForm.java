@@ -1,6 +1,8 @@
 package org.tutgi.student_registration.data.models.form;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
@@ -10,7 +12,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -56,7 +60,10 @@ public class EntranceForm extends MasterData{
     
     @Column(name = "finance_voucher_number", length = 50, unique = true)
     private String financeVoucherNumber;
-
+    
+    @Column(name="docx_url")
+    private String docxUrl;
+    
     @OneToOne(optional=false)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
@@ -65,9 +72,13 @@ public class EntranceForm extends MasterData{
     @JoinColumn(name = "form_id", nullable = false)
     private Form form;
     
-    @ManyToOne
-    @JoinColumn(name = "verifier_id")
-    private Profile profile;
+    @ManyToMany
+    @JoinTable(
+        name = "document_verifiers",
+        joinColumns = @JoinColumn(name = "document_id"),
+        inverseJoinColumns = @JoinColumn(name = "profile_id")
+    )
+    private List<Profile> profiles;
     
     public EntranceForm(String permanentAddress, String permanentContactNumber, String signatureUrl,
     		Student student) {
@@ -85,7 +96,12 @@ public class EntranceForm extends MasterData{
     }
     
     public void assignProfile(Profile profile) {
-    	this.profile = profile;
+        if (this.profiles == null) {
+            this.profiles = new ArrayList<>();
+        }
+        if (!this.profiles.contains(profile)) {
+            this.profiles.add(profile);
+        }
     }
     
     public void assignForm(Form form) {

@@ -13,6 +13,7 @@ public interface StorageService {
     List<Path> loadAll();
     Path load(final String filepath);
     Resource loadAsResource(final String filepath);
+    byte[] loadFileAsBytes(String filepath);
     void delete(final String filepath);
     void deleteAll();
     String update(final MultipartFile newFile,final String existingFilepath,final StorageDirectory storageDirecotry);
