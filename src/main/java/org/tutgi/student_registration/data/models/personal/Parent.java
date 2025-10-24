@@ -79,9 +79,4 @@ public class Parent extends MasterData{
             student.getParents().add(this);
         }
     }
-    
-    @Transient
-    public List<Address> getAddresses(AddressRepository addressRepository) {
-        return addressRepository.findByEntityTypeAndEntityId(EntityType.PARENTS, this.getId());
-    }
 }

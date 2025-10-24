@@ -27,7 +27,7 @@ import lombok.Setter;
 	    @Index(name = "idx_student_id", columnList = "student_id")
 	})
 public class MatriculationExamDetail extends MasterData{
-	@Column(nullable = false, name="roll_no")
+	@Column(name="roll_no")
     private String rollNumber;
 	
 	@Column(nullable = false, name="department")

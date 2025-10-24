@@ -18,12 +18,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Table(
-	    name = "major_subject_choice_form",
+	    name = "subject_exam",
 	    uniqueConstraints = {
 	        @UniqueConstraint(columnNames = {"med_id", "subject_id"})
 	    }
 	)
-
 public class SubjectExam extends MasterData{
     @ManyToOne(optional=false)
     @JoinColumn(name = "subject_id", nullable = false)

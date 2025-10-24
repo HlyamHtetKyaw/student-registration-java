@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                         		"/tutgi/api/v1/auth/**",
+                        		"/tutgi/api/v1/forms/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -46,13 +47,14 @@ public class SecurityConfig {
                                 "/api/v1/users"
                         ).permitAll()
                         .requestMatchers("/tutgi/api/v1/admin/**").hasRole(RoleName.ADMIN.name())
-                        .requestMatchers("/tutgi/api/v1/profile/**")
+                        .requestMatchers("/tutgi/api/v1/staff/**")
                         .hasAnyRole(
                             RoleName.DEAN.name(),
                             RoleName.FINANCE.name(),
                             RoleName.STUDENT_AFFAIR.name()
                          )
                         .requestMatchers("/tutgi/api/v1/student/**").hasRole(RoleName.STUDENT.name())
+                        .requestMatchers("/tutgi/api/v1/finance/**").hasRole(RoleName.FINANCE.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
