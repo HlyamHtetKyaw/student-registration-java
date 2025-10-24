@@ -2,9 +2,11 @@ package org.tutgi.student_registration.features.students.service.impl;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;
@@ -20,6 +22,7 @@ import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
 import org.tutgi.student_registration.config.exceptions.UnauthorizedException;
+import org.tutgi.student_registration.config.listener.FormGenerationTracker;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.enums.FileType;
@@ -91,6 +94,7 @@ import org.tutgi.student_registration.features.students.service.factory.SubjectC
 import org.tutgi.student_registration.features.students.service.utility.FormValidator;
 import org.tutgi.student_registration.features.students.service.utility.ParentResolver;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
+import org.tutgi.student_registration.security.utils.ServerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -138,6 +142,9 @@ public class StudentServiceImpl implements StudentService{
     
     private final StorageService storageService;
     private final ApplicationEventPublisher eventPublisher;
+    private final FormGenerationTracker formGenerationTracker;
+    
+    private final ServerUtil serverUtil;
 	@Override
 	@Transactional
     public ApiResponse createEntranceForm(EntranceFormRequest request) {
@@ -1044,8 +1051,27 @@ public class StudentServiceImpl implements StudentService{
         student.setSubmitted(true);
         studentRepository.save(student);
         eventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
-        eventPublisher.publishEvent(new SubjectChoiceFormGenerateEvent(this,student.getId()));
-        eventPublisher.publishEvent(new RegistrationFormGenerateEvent(this, student.getId())); 
+        eventPublisher.publishEvent(new SubjectChoiceFormGenerateEvent(this, student.getId()));
+        eventPublisher.publishEvent(new RegistrationFormGenerateEvent(this, student.getId()));
+        FormGenerationTracker.StudentFormTracker tracker = formGenerationTracker.getTracker(student.getId());
+
+        tracker.allDone().thenRunAsync(() -> {
+            try {
+                List<String> paths = Stream.of(
+                        tracker.entranceForm.join(),
+                        tracker.subjectChoiceForm.join(),
+                        tracker.registrationForm.join()
+                ).filter(Objects::nonNull).toList();
+
+                List<Resource> attachments = paths.stream()
+                        .map(storageService::loadAsResource)
+                        .toList();
+                serverUtil.sendFormTemplate(student.getUser().getEmail(), "FormTemplate", attachments);
+                log.info("Sent email with {} attachments for student {}", attachments.size(), student.getId());
+            } catch (Exception e) {
+                log.error("Error sending email after form generation for student {}", student.getId(), e);
+            }
+        }); 
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())

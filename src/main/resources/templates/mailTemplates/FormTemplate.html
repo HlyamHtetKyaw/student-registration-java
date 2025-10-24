@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Student Forms Are Ready</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      background-color: #ffffff;
+      margin: 40px auto;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .logo img {
+      display: block;
+      margin: 0 auto 25px auto;
+      width: 90px;
+      height: auto;
+    }
+    h2 {
+      text-align: center;
+      color: #222;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin: 15px 0;
+      text-align: center;
+    }
+    .attachments {
+      background-color: #f1f8ff;
+      border: 1px solid #cce5ff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 25px 0;
+    }
+    .attachments h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #004085;
+    }
+    .attachment-list {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0 0;
+      text-align: center;
+    }
+    .attachment-list li {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+    .attachment-list a {
+      color: #0069d9;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .attachment-list a:hover {
+      text-decoration: underline;
+    }
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-top: 35px;
+      user-select: none;
+    }
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 15px;
+        margin: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <img src="cid:logoImage" alt="University Logo" />
+  </div>
+
+  <h2>Welcome to Technological University Taunggyi</h2>
+  <p>Hello, <strong>{{username}}</strong>,</p>
+  <p>We have successfully accepted your student forms. The admin team will review your forms and contact you shortly. Please find your documents below.</p>
+
+  <div class="attachments">
+    <p><strong>Attachments:</strong> Entrance Form, Subject Choice Form, and Registration Form.</p>
+  </div>
+
+  <p>If you experience any issues opening the files, please contact the student affairs office.</p>
+
+  <div class="footer">
+    &copy; 2025 Technological University Taunggyi. All rights reserved.
+  </div>
+</div>
+</body>
+</html>

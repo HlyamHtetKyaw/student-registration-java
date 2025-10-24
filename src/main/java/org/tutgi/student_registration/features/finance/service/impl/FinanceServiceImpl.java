@@ -30,6 +30,7 @@ import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.features.finance.dto.request.FinanceVerificationRequest;
 import org.tutgi.student_registration.features.finance.dto.request.ReceiptRequest;
+import org.tutgi.student_registration.features.finance.dto.request.RejectionRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.finance.service.FinanceService;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
@@ -37,6 +38,7 @@ import org.tutgi.student_registration.features.students.dto.response.Registratio
 import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
 import org.tutgi.student_registration.features.students.service.StudentService;
 import org.tutgi.student_registration.features.users.utils.UserUtil;
+import org.tutgi.student_registration.security.utils.ServerUtil;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -62,6 +64,7 @@ public class FinanceServiceImpl implements FinanceService {
     
     private final ApplicationEventPublisher applicationEventPublisher;
     
+    private final ServerUtil serverUtil;
     @Override
     @Transactional
     public ApiResponse saveReceipt(ReceiptRequest request) {
@@ -263,6 +266,7 @@ public class FinanceServiceImpl implements FinanceService {
 		entranceForm.assignProfile(profile);
 		student.setPaid(true);
 		applicationEventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
+		
 		SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
@@ -281,7 +285,7 @@ public class FinanceServiceImpl implements FinanceService {
 	
 	@Override
 	@Transactional
-	public ApiResponse rejectStudentByFinance(Long studentId) {
+	public ApiResponse rejectStudentByFinance(Long studentId,RejectionRequest request) {
 		Long userId = userUtil.getCurrentUserInternal().userId();
 		profileRepository.findByUserId(userId).orElseThrow(
 				()->new EntityNotFoundException("User's profile not found for verification, please create profile first."));
@@ -290,6 +294,7 @@ public class FinanceServiceImpl implements FinanceService {
 		if(student.isPaid()) {
 			throw new BadRequestException("You can't reject a verified student.");
 		}
+		this.serverUtil.sendRejectionEmail(student.getUser().getEmail(),"RejectionTemplate", request.rejectionMessage());
 		student.setSubmitted(false);
 		return ApiResponse.builder()
                 .success(1)

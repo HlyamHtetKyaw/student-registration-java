@@ -26,5 +26,10 @@ public class OtpEmailSender extends AbstractEmailSender {
 
         emailService.sendEmail(to, "Please Verify Your Email", htmlContent);
     }
+
+	@Override
+	public void sendObjectModel(String to, Map<String, Object> model) throws MessagingException, IOException {
+		throw new UnsupportedOperationException("Use send() instead for this sender");
+	}
 }
 
