@@ -42,7 +42,10 @@ public class Acknowledgement extends MasterData{
     @OneToOne(optional=false)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
-
+    
+    @Column(name="docx_url")
+    private String docxUrl;
+    
     @ManyToOne
     @JoinColumn(name = "form_id")
     private Form form;

@@ -36,5 +36,42 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 		Page<Student> findAllFilteredByStudentAffair(@Param("keyword") String keyword, Pageable pageable);
 	
 	Student findByUserId(Long userId);
+	
+	@Query("""
+		    SELECT DISTINCT s FROM Student s
+		    LEFT JOIN FETCH s.entranceForm
+		    LEFT JOIN FETCH s.parents
+		    LEFT JOIN FETCH s.siblings
+		    LEFT JOIN FETCH s.matriculationExamDetail
+		    WHERE s.id = :id
+		""")
+		Student findWithEntranceFormAndRelationsById(@Param("id") Long id);
+	
+	@Query("""
+		    SELECT DISTINCT s FROM Student s
+		    LEFT JOIN FETCH s.parents
+		    LEFT JOIN FETCH s.siblings
+		    LEFT JOIN FETCH s.matriculationExamDetail med
+		    LEFT JOIN FETCH med.subjectExams
+		    LEFT JOIN FETCH s.subjectChoice sc
+		    LEFT JOIN FETCH sc.majorSubjectChoices
+		    WHERE s.id = :id
+		""")
+		Student findWithSubjectChoiceAndRelationsById(@Param("id") Long id);
+	
+	@Query("""
+		    SELECT DISTINCT s FROM Student s
+		    LEFT JOIN FETCH s.parents
+		    LEFT JOIN FETCH s.siblings
+		    LEFT JOIN FETCH s.matriculationExamDetail med
+		    LEFT JOIN FETCH med.subjectExams
+		    LEFT JOIN FETCH s.acknowledgement
+		    LEFT JOIN FETCH s.subjectChoice sc
+		    LEFT JOIN FETCH sc.majorSubjectChoices
+		    WHERE s.id = :id
+		""")
+		Student findWithRegistrationAndRelationsById(@Param("id") Long id);
+
+
 }
 

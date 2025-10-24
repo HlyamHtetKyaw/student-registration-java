@@ -3,7 +3,6 @@ package org.tutgi.student_registration.features.studentAffair.controller;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +17,7 @@ import org.tutgi.student_registration.config.request.RequestUtils;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
+import org.tutgi.student_registration.features.finance.dto.request.RejectionRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.finance.service.FinanceService;
 import org.tutgi.student_registration.features.studentAffair.dto.request.StudentAffairVerificationRequest;
@@ -137,6 +137,7 @@ public class StudentAffairController {
     	@PostMapping("/reject/{studentId}")
     	public ResponseEntity<ApiResponse> rejectStudentByStudentAffair(
     	        @PathVariable Long studentId,
+    	        @Valid @org.springframework.web.bind.annotation.RequestBody RejectionRequest request,
     	        HttpServletRequest httpRequest
     	) {
     	    double startTime = RequestUtils.extractRequestStartTime(httpRequest);

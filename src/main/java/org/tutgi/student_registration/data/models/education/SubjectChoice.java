@@ -1,8 +1,8 @@
 package org.tutgi.student_registration.data.models.education;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.entity.MasterData;
@@ -50,7 +50,7 @@ public class SubjectChoice extends MasterData{
     private String docxUrl;
     
     @OneToMany(mappedBy = "subjectChoice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<MajorSubjectChoiceForm> majorSubjectChoices = new ArrayList<>();
+    private Set<MajorSubjectChoiceForm> majorSubjectChoices = new HashSet<>();
     
     @ManyToOne
     @JoinColumn(name = "form_id", nullable = false)

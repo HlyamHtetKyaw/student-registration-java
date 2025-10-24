@@ -1,10 +1,13 @@
 package org.tutgi.student_registration.data.docsUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.docx4j.Docx4J;
 import org.docx4j.TraversalUtil;
 import org.docx4j.dml.wordprocessingDrawing.Inline;
 import org.docx4j.jaxb.Context;
@@ -21,6 +24,11 @@ import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.data.storage.StorageService;
 import org.tutgi.student_registration.features.form.dto.response.FormResponse;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse;
+import org.tutgi.student_registration.features.students.dto.response.RegistrationFormResponse.SiblingResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse.MajorChoiceResponse;
+import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse.SubjectScoreResponse;
 
 import jakarta.xml.bind.JAXBElement;
 import lombok.RequiredArgsConstructor;
@@ -108,33 +116,216 @@ public class Docx4jFillerService {
 
 		return baos.toByteArray();
 	}
+	
+	public byte[] fillSubjectChoiceTemplate(String templatePath, SubjectChoiceResponse entranceForm) throws Exception {
+		Resource resource = new ClassPathResource(templatePath);
+		File templateFile = resource.getFile();
+		WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(templateFile);
+		MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
 
-//	private void replacePlaceholderWithImage(WordprocessingMLPackage wordMLPackage, String placeholder,
-//			byte[] imageBytes, int width, int height) throws Exception {
-//
-//		MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
-//
-//		List<Object> texts = documentPart.getJAXBNodesViaXPath("//w:t", true);
-//
-//		for (Object obj : texts) {
-//			Text textElement = (Text) ((JAXBElement<?>) obj).getValue();
-//			if (textElement.getValue().equals("${" + placeholder + "}")) {
-//				BinaryPartAbstractImage imagePart = BinaryPartAbstractImage.createImagePart(wordMLPackage, imageBytes);
-//
-//				Inline inline = imagePart.createImageInline("Photo", "Image", 0, 1, width, height, false);
-//
-//				R run = (R) org.docx4j.jaxb.Context.getWmlObjectFactory().createR();
-//				Drawing drawing = org.docx4j.jaxb.Context.getWmlObjectFactory().createDrawing();
-//				run.getContent().add(drawing);
-//				drawing.getAnchorOrInline().add(inline);
-//
-//				org.docx4j.wml.R parentRun = (org.docx4j.wml.R) textElement.getParent();
-//				parentRun.getContent().clear();
-//				parentRun.getContent().add(drawing);
-//			}
-//		}
-//	}
+		VariablePrepare.prepare(wordMLPackage);
 
+		Map<String, String> variables = new HashMap<>();
+		SubjectChoiceResponse form = entranceForm;
+		FormResponse formData = form.getFormData();
+		variables.put("formCode", getSafeValue(formData.getCode() != null ? formData.getCode() : "---------"));
+		variables.put("academicYear",
+				getSafeValue(formData.getAcademicYear() != null ? formData.getAcademicYear() : "---------"));
+		variables.put("formNumber", getSafeValue(formData.getNumber()));
+		variables.put("enrollmentNumber", getSafeValue(form.getEnrollmentNumber()));
+		variables.put("studentNameMM", getSafeValue(form.getStudentNameMm()));
+		variables.put("fatherNameMM", getSafeValue(form.getFatherNameMm()));
+		variables.put("motherNameMM", getSafeValue(form.getMotherNameMm()));
+		variables.put("studentNickname", getSafeValue(form.getStudentNickname()));
+		variables.put("fatherNickname", getSafeValue(form.getFatherNickname()));
+		variables.put("motherNickname", getSafeValue(form.getMotherNickname()));
+		variables.put("studentNrc", getSafeValue(form.getStudentNrc()));
+		variables.put("fatherNrc", getSafeValue(form.getFatherNrc()));
+		variables.put("motherNrc", getSafeValue(form.getMotherNrc()));
+		variables.put("studentEthnicity", getSafeValue(form.getStudentEthnicity()));
+		variables.put("fatherEthnicity", getSafeValue(form.getFatherEthnicity()));
+		variables.put("motherEthnicity", getSafeValue(form.getMotherEthnicity()));
+		variables.put("studentReligion", getSafeValue(form.getStudentReligion()));
+		variables.put("fatherReligion", getSafeValue(form.getFatherReligion()));
+		variables.put("motherReligion", getSafeValue(form.getMotherReligion()));
+		variables.put("studentPob", getSafeValue(form.getStudentPob()));
+		variables.put("fatherPob", getSafeValue(form.getFatherPob()));
+		variables.put("motherPob", getSafeValue(form.getMotherPob()));
+		variables.put("studentDob", getSafeValue(form.getStudentDob()));
+		variables.put("fatherDob", getSafeValue(form.getFatherDob()));
+		variables.put("motherDob", getSafeValue(form.getMotherDob()));
+		variables.put("studentPh", getSafeValue(form.getStudentPhoneNumber()));
+		variables.put("fatherPh", getSafeValue(form.getFatherPhoneNumber()));
+		variables.put("motherPh", getSafeValue(form.getMotherPhoneNumber()));
+		variables.put("fatherJob", getSafeValue(form.getFatherJob()));
+		variables.put("fatherAddress", getSafeValue(form.getFatherAddress()));
+		variables.put("motherJob", getSafeValue(form.getMotherJob()));
+		variables.put("motherAddress", getSafeValue(form.getMotherAddress()));
+
+		variables.put("matRollNumber", getSafeValue(form.getMatriculationRollNumber()));
+		long total = 0L;
+
+		if (form.getSubjectScores() != null && !form.getSubjectScores().isEmpty()) {
+		    for (SubjectScoreResponse se : form.getSubjectScores()) {
+		        String displayName = se.subjectName();
+		        Long score = se.score();
+
+		        if (score != null) total += score;
+		        if (displayName == null) continue;
+
+		        switch (displayName.trim()) {
+		            case "မြန်မာစာ" -> variables.put("mmMark", getSafeValue(score));
+		            case "အင်္ဂလိပ်စာ" -> variables.put("engMark", getSafeValue(score));
+		            case "သင်္ချာ" -> variables.put("mathMark", getSafeValue(score));
+		            case "ဓါတု" -> variables.put("chemistMark", getSafeValue(score));
+		            case "ရူပ" -> variables.put("physicsMark", getSafeValue(score));
+		            case "ဇီဝ/ဘောဂ/သမိုင်း/ပထဝီ/စိတ်ကြိုက်မြန်မာ" -> variables.put("otherMark", getSafeValue(score));
+		            default -> System.out.println("⚠️ Unmapped subject: " + displayName);
+		        }
+		    }
+		}
+		variables.put("total", String.valueOf(total));
+		
+		Map<Integer, String> priorityMap = Map.of(
+		    1, "first",
+		    2, "second",
+		    3, "third",
+		    4, "fourth",
+		    5, "fifth",
+		    6, "sixth"
+		);
+
+		if (form.getMajorChoices() != null && !form.getMajorChoices().isEmpty()) {
+		    for (MajorChoiceResponse choice : form.getMajorChoices()) {
+		        Integer priority = choice.getPriorityScore();
+		        String majorName = choice.getMajorName();
+
+		        if (priority != null && majorName != null) {
+		            String varKey = priorityMap.get(priority);
+		            if (varKey != null) {
+		                variables.put(varKey, getSafeValue(majorName));
+		            }
+		        }
+		    }
+		}
+
+		for (int i = 1; i <= 6; i++) {
+		    String varKey = priorityMap.get(i);
+		    variables.putIfAbsent(varKey, "");
+		}
+
+		variables.put("studentSignDate", getSafeValue(form.getStudentSignatureDate()));
+		variables.put("guardianSignDate", getSafeValue(form.getGuardianSignatureDate()));
+
+		if (form.getStudentPhotoUrl() != null) {
+		    byte[] photoBytes = storageService.loadFileAsBytes(form.getStudentPhotoUrl());
+		    replacePlaceholderWithImage(wordMLPackage, "studentPhoto", photoBytes, 800000, 800000);
+		    variables.remove("studentPhoto");
+		}
+
+		if (form.getStudentSignatureUrl() != null) {
+		    byte[] photoBytes = storageService.loadFileAsBytes(form.getStudentSignatureUrl());
+		    replacePlaceholderWithImage(wordMLPackage, "studentSign", photoBytes, 914400, 228600);
+		    variables.remove("studentSign");
+		}
+		
+		if (form.getGuardianSginatureUrl() != null) {
+		    byte[] photoBytes = storageService.loadFileAsBytes(form.getGuardianSginatureUrl());
+		    replacePlaceholderWithImage(wordMLPackage, "guardianSign", photoBytes, 914400, 228600);
+		    variables.remove("guardianSign");
+		}
+		
+		documentPart.variableReplace(variables);
+
+		java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+		wordMLPackage.save(baos);
+
+		return baos.toByteArray();
+	}
+	
+	public byte[] fillRegistrationFormTemplate(String templatePath, RegistrationFormResponse registrationForm) throws Exception {
+	    Resource resource = new ClassPathResource(templatePath);
+	    File templateFile = resource.getFile();
+	    WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(templateFile);
+	    MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
+
+	    Map<String, Object> data = new HashMap<>();
+	    RegistrationFormResponse form = registrationForm;
+	    FormResponse formData = form.getFormData();
+
+	    data.put("formNumber", getSafeValue(formData.getNumber()));
+	    data.put("academicYear", getSafeValue(formData.getAcademicYear()));
+	    data.put("matRollNumber", getSafeValue(form.getMatriculationRollNumber()));
+	    data.put("enrollmentNumber", getSafeValue(form.getEnrollmentNumber()));
+
+	    data.put("studentNameMM", getSafeValue(form.getStudentNameMm()));
+	    data.put("fatherNameMM", getSafeValue(form.getFatherNameMm()));
+	    data.put("motherNameMM", getSafeValue(form.getMotherNameMm()));
+
+	    data.put("studentNameEng", getSafeValue(form.getStudentNameEng()));
+	    data.put("fatherNameEng", getSafeValue(form.getFatherNameEng()));
+	    data.put("motherNameEng", getSafeValue(form.getMotherNameEng()));
+
+	    data.put("studentNickname", getSafeValue(form.getStudentNickname()));
+	    data.put("fatherNickname", getSafeValue(form.getFatherNickname()));
+	    data.put("motherNickname", getSafeValue(form.getMotherNickname()));
+
+	    data.put("studentNrc", getSafeValue(form.getStudentNrc()));
+	    data.put("fatherNrc", getSafeValue(form.getFatherNrc()));
+	    data.put("motherNrc", getSafeValue(form.getMotherNrc()));
+
+	    data.put("studentEthnicity", getSafeValue(form.getStudentEthnicity()));
+	    data.put("fatherEthnicity", getSafeValue(form.getFatherEthnicity()));
+	    data.put("motherEthnicity", getSafeValue(form.getMotherEthnicity()));
+
+	    data.put("studentReligion", getSafeValue(form.getStudentReligion()));
+	    data.put("fatherReligion", getSafeValue(form.getFatherReligion()));
+	    data.put("motherReligion", getSafeValue(form.getMotherReligion()));
+
+	    data.put("studentPob", getSafeValue(form.getStudentPob()));
+	    data.put("studentDob", getSafeValue(form.getStudentDob()));
+	    data.put("fatherPob", getSafeValue(form.getFatherPob()));
+	    data.put("fatherDob", getSafeValue(form.getFatherDob()));
+	    data.put("motherPob", getSafeValue(form.getMotherPob()));
+	    data.put("motherDob", getSafeValue(form.getMotherDob()));
+
+	    data.put("fatherJob", getSafeValue(form.getFatherJob()));
+	    data.put("fatherAddress", getSafeValue(form.getFatherAddress()));
+	    data.put("motherJob", getSafeValue(form.getMotherJob()));
+	    data.put("motherAddress", getSafeValue(form.getMotherAddress()));
+
+	    data.put("fatherDeceasedYear", getSafeValue(form.getFatherDeathDate()));
+	    data.put("motherDeceasedYear", getSafeValue(form.getMotherDeathDate()));
+
+	    if (form.getStudentPhotoUrl() != null) {
+	        byte[] photoBytes = storageService.loadFileAsBytes(form.getStudentPhotoUrl());
+	        data.put("studentPhoto", photoBytes);
+	    }
+	    if (form.getGuardianSginatureUrl() != null) {
+	        byte[] photoBytes = storageService.loadFileAsBytes(form.getGuardianSginatureUrl());
+	        data.put("guardianSign", photoBytes);
+	    }
+	    if (form.getStudentSignatureUrl() != null) {
+	        byte[] photoBytes = storageService.loadFileAsBytes(form.getStudentSignatureUrl());
+	        data.put("studentSign", photoBytes);
+	    }
+	    
+	    List<Map<String, String>> siblingList = new ArrayList<>();
+	    for (SiblingResponse s : form.getSiblings()) {
+	        Map<String, String> siblingMap = new HashMap<>();
+	        siblingMap.put("name", getSafeValue(s.getName()));
+	        siblingMap.put("nrc", getSafeValue(s.getNrc()));
+	        siblingMap.put("job", getSafeValue(s.getJob()));
+	        siblingMap.put("address", getSafeValue(s.getAddress()));
+	        siblingList.add(siblingMap);
+	    }
+	    data.put("siblings", siblingList);
+
+	    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	    wordMLPackage.save(baos);
+	    return baos.toByteArray();
+	}
+	
 	private void replacePlaceholderWithImage(WordprocessingMLPackage wordMLPackage, String placeholder,
 			byte[] imageBytes, int width, int height) throws Exception {
 
@@ -172,7 +363,7 @@ public class Docx4jFillerService {
 						}
 					}
 				}
-				return null; // no recursion needed
+				return null;
 			}
 
 			@Override
@@ -182,16 +373,16 @@ public class Docx4jFillerService {
 
 			@Override
 			public void walkJAXBElements(Object parent) {
-				List<Object> children = getChildren(parent);
-				if (children != null) {
-					for (Object child : children) {
-						if (child instanceof JAXBElement) {
-							child = ((JAXBElement<?>) child).getValue();
-						}
-						apply(child);
-						walkJAXBElements(child);
-					}
-				}
+			    List<Object> children = getChildren(parent);
+			    if (children != null) {
+			        for (Object child : new ArrayList<>(children)) { 
+			            if (child instanceof JAXBElement) {
+			                child = ((JAXBElement<?>) child).getValue();
+			            }
+			            apply(child);
+			            walkJAXBElements(child);
+			        }
+			    }
 			}
 
 			public List<Object> getChildren(Object o) {

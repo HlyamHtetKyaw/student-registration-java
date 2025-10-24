@@ -3,8 +3,10 @@ package org.tutgi.student_registration.features.studentAffair.service.impl;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.tutgi.student_registration.config.event.EntranceFormGenerateEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.data.models.Profile;
@@ -30,7 +32,8 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 	private final UserUtil userUtil;
 
 	private final ProfileRepository profileRepository;
-
+	private final ApplicationEventPublisher applicationEventPublisher;
+	
 	@Override
 	@Transactional
 	public ApiResponse verifyStudentByStudentAffair(Long studentId, StudentAffairVerificationRequest request) {
@@ -53,7 +56,7 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 		entranceForm.setFinanceDate(LocalDate.now());
 		entranceForm.assignProfile(profile);
 		student.setVerified(true);
-
+		applicationEventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
 				.message("Student verified by student affair successfully.").data(true).build();
 	}

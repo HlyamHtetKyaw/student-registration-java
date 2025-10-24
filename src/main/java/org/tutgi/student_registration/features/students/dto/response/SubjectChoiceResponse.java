@@ -84,14 +84,11 @@ public class SubjectChoiceResponse {
     private String studentPhoneNumber;
     
     private String studentPhotoUrl;
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class SubjectScoreResponse {
-        private String subjectName;
-        private Long score;
-    }
+
+    public static record SubjectScoreResponse (
+         String subjectName,
+         Long score
+    ) {}
 
     @Data
     @Builder

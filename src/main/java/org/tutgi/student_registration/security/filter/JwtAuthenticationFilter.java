@@ -100,7 +100,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			List<String> roles = (rawRoles == null) ? List.of()
 					: rawRoles.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
 			Collection<GrantedAuthority> authorities = roles.stream()
-					.map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())).collect(Collectors.toList());
+					.map(role -> new SimpleGrantedAuthority(
+					        "ROLE_" + role.trim().toUpperCase().replaceAll("\\s+", "_")
+					))
+					.collect(Collectors.toList());
 			UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 					new CustomUserPrincipal(userId, identifier), null, authorities);
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

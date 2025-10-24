@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EntranceFormResponse {
+	private Long studentId;
     private FormResponse formData;
     private String enrollmentNumber;
     private String studentNameMm;
@@ -62,6 +63,7 @@ public class EntranceFormResponse {
         private String financeVoucherNumber;
         private String financeVerifierName;
         private String financeVerifierSignature;
+        private String paymentUrl;
     }
     
     @Data

@@ -12,8 +12,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.tutgi.student_registration.config.event.FormGenerateEvent;
+import org.tutgi.student_registration.config.event.EntranceFormGenerateEvent;
+import org.tutgi.student_registration.config.event.RegistrationFormGenerateEvent;
 import org.tutgi.student_registration.config.event.StudentAcknowledgedEvent;
+import org.tutgi.student_registration.config.event.SubjectChoiceFormGenerateEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.exceptions.DuplicateEntityException;
 import org.tutgi.student_registration.config.exceptions.EntityNotFoundException;
@@ -309,6 +311,7 @@ public class StudentServiceImpl implements StudentService{
 
 	    return EntranceFormResponse.builder()
 	            .formData(modelMapper.map(formData, FormResponse.class))
+	            .studentId(student.getId())
 	            .submitted(student.isSubmitted())
 	            .isPaid(student.isPaid())
 	            .isVerified(student.isVerified())
@@ -550,12 +553,12 @@ public class StudentServiceImpl implements StudentService{
 	    		.orElseThrow(() -> new EntityNotFoundException("Student's contact number not found"));
 	    
 	    List<SubjectScoreResponse> subjectScoreResponses = medForm.getSubjectExams()
-											    	    .stream()
-											    	    .map(se -> SubjectScoreResponse.builder()
-											    	        .subjectName(se.getSubject().getName().getDisplayName())
-											    	        .score(se.getScore())
-											    	        .build())
-											    	    .toList();
+												    	    .stream()
+												    	    .map(se -> new SubjectScoreResponse(
+												    	        se.getSubject().getName().getDisplayName(),
+												    	        se.getScore()
+												    	    ))
+												    	    .toList();
 	    
 	    List<MajorChoiceResponse> majorChoiceResponses = subjectChoice.getMajorSubjectChoices()
 												        .stream()
@@ -1029,17 +1032,19 @@ public class StudentServiceImpl implements StudentService{
         if (student == null) {
             throw new BadRequestException("Student not found.");
         }
+        
         if(student.isSubmitted())throw new BadRequestException("Form is already acknowledged.");
         if (student.getEntranceForm() == null || 
             student.getSubjectChoice() == null || 
             student.getAcknowledgement() == null) {
             throw new BadRequestException("You need to fill the form first.");
         }
-
+        
         student.setSubmitted(true);
         studentRepository.save(student);
-        eventPublisher.publishEvent(new FormGenerateEvent(this, student));
-        
+        eventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
+        eventPublisher.publishEvent(new SubjectChoiceFormGenerateEvent(this,student.getId()));
+        eventPublisher.publishEvent(new RegistrationFormGenerateEvent(this, student.getId())); 
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
@@ -1049,7 +1054,7 @@ public class StudentServiceImpl implements StudentService{
                 .build();
         
         eventPublisher.publishEvent(new StudentAcknowledgedEvent(sseResponse, student.isPaid()));
-
+        
         return ApiResponse.builder()
                 .success(1)
                 .code(HttpStatus.OK.value())

@@ -22,6 +22,7 @@ import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.utils.ResponseUtils;
 import org.tutgi.student_registration.features.finance.dto.request.FinanceVerificationRequest;
 import org.tutgi.student_registration.features.finance.dto.request.ReceiptRequest;
+import org.tutgi.student_registration.features.finance.dto.request.RejectionRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 import org.tutgi.student_registration.features.finance.service.FinanceService;
 import org.tutgi.student_registration.sse.service.SseEmitterService;
@@ -204,6 +205,7 @@ public class FinanceController {
     	@PostMapping("/reject/{studentId}")
     	public ResponseEntity<ApiResponse> rejectStudentByFinance(
     	        @PathVariable Long studentId,
+    	        @Valid @org.springframework.web.bind.annotation.RequestBody RejectionRequest request,
     	        HttpServletRequest httpRequest
     	) {
     	    double startTime = RequestUtils.extractRequestStartTime(httpRequest);

@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.tutgi.student_registration.config.event.FormGenerateEvent;
+import org.tutgi.student_registration.config.event.EntranceFormGenerateEvent;
 import org.tutgi.student_registration.config.event.StudentFinanceVerifiedEvent;
 import org.tutgi.student_registration.config.exceptions.BadRequestException;
 import org.tutgi.student_registration.config.response.dto.ApiResponse;
@@ -24,7 +24,6 @@ import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.PhoneNumbers;
 import org.tutgi.student_registration.data.models.form.Receipt;
 import org.tutgi.student_registration.data.models.form.ReceiptData;
-import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
 import org.tutgi.student_registration.data.repositories.ProfileRepository;
 import org.tutgi.student_registration.data.repositories.ReceiptRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
@@ -185,6 +184,7 @@ public class FinanceServiceImpl implements FinanceService {
 	 List<SubmittedStudentResponse> studentResponses = studentPage.getContent().stream()
 	            .map(student -> SubmittedStudentResponse.builder()
 	                    .studentId(student.getId())
+	                    .enrollmentNumber(student.getEnrollmentNumber())
 	                    .studentNameEng(student.getEngName())
 	                    .studentNameMM(student.getMmName())
 	                    .createdAt(student.getCreatedAt())
@@ -262,7 +262,7 @@ public class FinanceServiceImpl implements FinanceService {
 		entranceForm.setFinanceDate(LocalDate.now());
 		entranceForm.assignProfile(profile);
 		student.setPaid(true);
-		applicationEventPublisher.publishEvent(new FormGenerateEvent(this, student));
+		applicationEventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
 		SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
