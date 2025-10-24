@@ -7,6 +7,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.tutgi.student_registration.config.event.EntranceFormGenerateEvent;
 import org.tutgi.student_registration.config.event.RegistrationFormGenerateEvent;
 import org.tutgi.student_registration.config.event.SubjectChoiceFormGenerateEvent;
+import org.tutgi.student_registration.config.listener.FormGenerationTracker.StudentFormTracker;
 import org.tutgi.student_registration.data.docsUtils.Docx4jFillerService;
 import org.tutgi.student_registration.data.enums.StorageDirectory;
 import org.tutgi.student_registration.data.models.Student;
@@ -34,13 +35,15 @@ public class FormGenerateEventListener {
     private final EntranceFormRepository entranceFormRepository;
     private final SubjectChoiceRepository subjectChoiceRepository;
     private final AcknowledgementRepository ackRepository;
+    private final FormGenerationTracker formGenerationTracker;
     
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleEntranceFormGenerateEvent(EntranceFormGenerateEvent event) {
-        Student student = studentRepository.findWithEntranceFormAndRelationsById(event.getStudentId());
-        log.info("Received FormGenerateEvent for student: {}", student.getEngName());
+        Long studentId = event.getStudentId();
+        StudentFormTracker tracker = formGenerationTracker.getTracker(studentId);
         try {
+            Student student = studentRepository.findWithEntranceFormAndRelationsById(studentId);
             EntranceFormResponse response = studentService.getEntranceFormResponse(student);
 
             byte[] filled = docxFillerService.fillEntranceFormTemplate(
@@ -49,29 +52,29 @@ public class FormGenerateEventListener {
             );
 
             String oldPath = student.getEntranceForm().getDocxUrl();
-            String newPath;
-
-            if (oldPath == null) {
-                newPath = storageService.store(filled, student.getEngName(), StorageDirectory.ENTRANCE_FORM);
-            } else {
-                newPath = storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.ENTRANCE_FORM);
-            }
+            String newPath = (oldPath == null)
+                    ? storageService.store(filled, student.getEngName(), StorageDirectory.ENTRANCE_FORM)
+                    : storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.ENTRANCE_FORM);
 
             student.getEntranceForm().setDocxUrl(newPath);
             entranceFormRepository.save(student.getEntranceForm());
-            log.info("Generated DOCX saved at: {}", newPath);
-            
+            tracker.entranceForm.complete(newPath);
+            log.info("Generated entrance form for {}", student.getEngName());
+
         } catch (Exception e) {
-            log.error("Failed to generate form for student {}: {}", student.getEngName(), e.getMessage(), e);
+            tracker.entranceForm.complete(null);
+            log.error("Failed to generate entrance form for student {}: {}", studentId, e.getMessage(), e);
         }
     }
+
     
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSubjectChoiceFormGenerateEvent(SubjectChoiceFormGenerateEvent event) {
-    	Student student = studentRepository.findWithSubjectChoiceAndRelationsById(event.getStudentId());
-        log.info("Received FormGenerateEvent for student: {}", student.getEngName());
+        Long studentId = event.getStudentId();
+        StudentFormTracker tracker = formGenerationTracker.getTracker(studentId);
         try {
+            Student student = studentRepository.findWithSubjectChoiceAndRelationsById(studentId);
             SubjectChoiceResponse response = studentService.getSubjectChoiceFormResponse(student);
 
             byte[] filled = docxFillerService.fillSubjectChoiceTemplate(
@@ -80,29 +83,29 @@ public class FormGenerateEventListener {
             );
 
             String oldPath = student.getSubjectChoice().getDocxUrl();
-            String newPath;
-
-            if (oldPath == null) {
-                newPath = storageService.store(filled, student.getEngName(), StorageDirectory.SUBJECT_CHOICE);
-            } else {
-                newPath = storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.SUBJECT_CHOICE);
-            }
+            String newPath = (oldPath == null)
+                    ? storageService.store(filled, student.getEngName(), StorageDirectory.SUBJECT_CHOICE)
+                    : storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.SUBJECT_CHOICE);
 
             student.getSubjectChoice().setDocxUrl(newPath);
             subjectChoiceRepository.save(student.getSubjectChoice());
-            log.info("Generated DOCX saved at: {}", newPath);
-            
+            tracker.subjectChoiceForm.complete(newPath);
+            log.info("Generated subject choice form for {}", student.getEngName());
+
         } catch (Exception e) {
-            log.error("Failed to generate form for student {}: {}", student.getEngName(), e.getMessage(), e);
+            tracker.subjectChoiceForm.complete(null);
+            log.error("Failed to generate subject choice form for student {}: {}", studentId, e.getMessage(), e);
         }
     }
+
     
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleRegistrationFormGenerateEvent(RegistrationFormGenerateEvent event) {
-    	Student student = studentRepository.findWithRegistrationAndRelationsById(event.getStudentId());
-        log.info("Received FormGenerateEvent for student: {}", student.getEngName());
+        Long studentId = event.getStudentId();
+        StudentFormTracker tracker = formGenerationTracker.getTracker(studentId);
         try {
+            Student student = studentRepository.findWithRegistrationAndRelationsById(studentId);
             SubjectChoiceResponse response = studentService.getSubjectChoiceFormResponse(student);
 
             byte[] filled = docxFillerService.fillSubjectChoiceTemplate(
@@ -111,22 +114,21 @@ public class FormGenerateEventListener {
             );
 
             String oldPath = student.getAcknowledgement().getDocxUrl();
-            String newPath;
-
-            if (oldPath == null) {
-                newPath = storageService.store(filled, student.getEngName(), StorageDirectory.REGISTRATION_FORM);
-            } else {
-                newPath = storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.REGISTRATION_FORM);
-            }
+            String newPath = (oldPath == null)
+                    ? storageService.store(filled, student.getEngName(), StorageDirectory.REGISTRATION_FORM)
+                    : storageService.update(filled, oldPath, student.getEngName(), StorageDirectory.REGISTRATION_FORM);
 
             student.getAcknowledgement().setDocxUrl(newPath);
             ackRepository.save(student.getAcknowledgement());
-            log.info("Generated DOCX saved at: {}", newPath);
-            
+            tracker.registrationForm.complete(newPath);
+            log.info("Generated registration form for {}", student.getEngName());
+
         } catch (Exception e) {
-            log.error("Failed to generate form for student {}: {}", student.getEngName(), e.getMessage(), e);
+            tracker.registrationForm.complete(null);
+            log.error("Failed to generate registration form for student {}: {}", studentId, e.getMessage(), e);
         }
     }
+
     
 }
 

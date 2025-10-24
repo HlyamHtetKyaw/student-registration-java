@@ -209,7 +209,7 @@ public class FinanceController {
     	        HttpServletRequest httpRequest
     	) {
     	    double startTime = RequestUtils.extractRequestStartTime(httpRequest);
-    	    ApiResponse response = financeService.rejectStudentByFinance(studentId);
+    	    ApiResponse response = financeService.rejectStudentByFinance(studentId,request);
     	    return ResponseUtils.buildResponse(httpRequest, response, startTime);
     	}
     

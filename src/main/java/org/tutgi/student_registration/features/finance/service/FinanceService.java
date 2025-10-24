@@ -5,6 +5,7 @@ import org.tutgi.student_registration.config.response.dto.ApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.features.finance.dto.request.FinanceVerificationRequest;
 import org.tutgi.student_registration.features.finance.dto.request.ReceiptRequest;
+import org.tutgi.student_registration.features.finance.dto.request.RejectionRequest;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 
 public interface FinanceService {
@@ -20,5 +21,5 @@ public interface FinanceService {
     ApiResponse getRegistrationFormByStudentId(Long id);
     
     ApiResponse verifyStudentByFinance(Long studentId,FinanceVerificationRequest request);
-    ApiResponse rejectStudentByFinance(Long studentId);
+    ApiResponse rejectStudentByFinance(Long studentId,RejectionRequest request);
 }

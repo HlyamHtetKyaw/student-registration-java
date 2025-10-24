@@ -141,7 +141,7 @@ public class StudentAffairController {
     	        HttpServletRequest httpRequest
     	) {
     	    double startTime = RequestUtils.extractRequestStartTime(httpRequest);
-    	    ApiResponse response = studentAffairService.rejectStudentByStudentAffair(studentId);
+    	    ApiResponse response = studentAffairService.rejectStudentByStudentAffair(studentId,request);
     	    return ResponseUtils.buildResponse(httpRequest, response, startTime);
     	}
     
