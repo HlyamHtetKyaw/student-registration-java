@@ -10,7 +10,10 @@ import org.tutgi.student_registration.config.event.SubjectChoiceFormGenerateEven
 import org.tutgi.student_registration.data.docsUtils.Docx4jFillerService;
 import org.tutgi.student_registration.data.enums.StorageDirectory;
 import org.tutgi.student_registration.data.models.Student;
+import org.tutgi.student_registration.data.repositories.AcknowledgementRepository;
+import org.tutgi.student_registration.data.repositories.EntranceFormRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
+import org.tutgi.student_registration.data.repositories.SubjectChoiceRepository;
 import org.tutgi.student_registration.data.storage.StorageService;
 import org.tutgi.student_registration.features.students.dto.response.EntranceFormResponse;
 import org.tutgi.student_registration.features.students.dto.response.SubjectChoiceResponse;
@@ -28,7 +31,10 @@ public class FormGenerateEventListener {
     private final StorageService storageService;
     private final StudentService studentService;
     private final StudentRepository studentRepository;
-
+    private final EntranceFormRepository entranceFormRepository;
+    private final SubjectChoiceRepository subjectChoiceRepository;
+    private final AcknowledgementRepository ackRepository;
+    
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleEntranceFormGenerateEvent(EntranceFormGenerateEvent event) {
@@ -52,7 +58,7 @@ public class FormGenerateEventListener {
             }
 
             student.getEntranceForm().setDocxUrl(newPath);
-            studentRepository.save(student);
+            entranceFormRepository.save(student.getEntranceForm());
             log.info("Generated DOCX saved at: {}", newPath);
             
         } catch (Exception e) {
@@ -83,7 +89,7 @@ public class FormGenerateEventListener {
             }
 
             student.getSubjectChoice().setDocxUrl(newPath);
-            studentRepository.save(student);
+            subjectChoiceRepository.save(student.getSubjectChoice());
             log.info("Generated DOCX saved at: {}", newPath);
             
         } catch (Exception e) {
@@ -114,7 +120,7 @@ public class FormGenerateEventListener {
             }
 
             student.getAcknowledgement().setDocxUrl(newPath);
-            studentRepository.save(student);
+            ackRepository.save(student.getAcknowledgement());
             log.info("Generated DOCX saved at: {}", newPath);
             
         } catch (Exception e) {
