@@ -347,6 +347,7 @@ public class StudentServiceImpl implements StudentService{
 	            		.financeVoucherNumber(student.getEntranceForm().getFinanceVoucherNumber())
 	            		.financeVerifierName(verifierName)
 	            		.financeVerifierSignature(verifierSignature)
+	            		.paymentUrl(student.getPaymentUrl())
 	            		.build())
 	            .formUrls(FormUrls.builder()
 	            	    .entranceFormUrl(
