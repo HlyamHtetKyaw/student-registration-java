@@ -162,4 +162,14 @@ public class LocalStorageService implements StorageService {
         }
     }
     
+    @Override
+    public boolean exists(String filepath) {
+        try {
+            Path file = load(filepath);
+            return Files.exists(file) && Files.isReadable(file);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }
