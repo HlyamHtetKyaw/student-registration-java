@@ -26,14 +26,17 @@ public abstract class AbstractEmailSender {
     protected SpringTemplateEngine templateEngine;
 
     protected String loadTemplate(String templateName) throws IOException {
-        Resource resource = resourceLoader.getResource("classpath:templates/mailTemplates/" + templateName + ".html");
+        Resource resource = resourceLoader.getResource("classpath:mailTemplates/" + templateName + ".html");
+
+        if (!resource.exists()) {
+            throw new IOException("Email template not found in JAR: " + templateName);
+        }
+
         try (InputStream inputStream = resource.getInputStream()) {
             byte[] bytes = FileCopyUtils.copyToByteArray(inputStream);
             return new String(bytes, StandardCharsets.UTF_8);
         }
     }
-
-
 
     protected String extractUsername(String email) {
         return email.split("@")[0];
