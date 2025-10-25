@@ -74,7 +74,8 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 		entranceForm.assignProfile(profile);
 		student.setVerified(true);
 		applicationEventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
-
+		formGenerationTracker.resetTracker(student.getId());
+		
 		FormGenerationTracker.StudentFormTracker tracker = formGenerationTracker.getTracker(student.getId());
 
 		String subjectChoiceUrl = student.getSubjectChoice().getDocxUrl();
@@ -118,6 +119,8 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 
 		    } catch (Exception e) {
 		        log.error("❌ Error sending email after form generation for student {}", studentIdLocal, e);
+		    }finally {
+		    	formGenerationTracker.removeTracker(student.getId());
 		    }
 		}, mailExecutor);
 

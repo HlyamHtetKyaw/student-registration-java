@@ -1060,7 +1060,7 @@ public class StudentServiceImpl implements StudentService{
         
         student.setSubmitted(true);
         studentRepository.save(student);
-
+     formGenerationTracker.resetTracker(student.getId());
      eventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
      eventPublisher.publishEvent(new SubjectChoiceFormGenerateEvent(this, student.getId()));
      eventPublisher.publishEvent(new RegistrationFormGenerateEvent(this, student.getId()));
@@ -1099,9 +1099,10 @@ public class StudentServiceImpl implements StudentService{
 
          } catch (Exception e) {
              log.error("❌ Error sending email after form generation for student {}", studentIdLocal, e);
+         } finally {
+             formGenerationTracker.removeTracker(studentIdLocal);
          }
      }, taskExecutor);
-
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
