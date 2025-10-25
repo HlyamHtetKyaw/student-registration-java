@@ -1,14 +1,12 @@
 package org.tutgi.student_registration.data.email;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.tutgi.student_registration.config.service.EmailService;
@@ -25,8 +23,11 @@ public abstract class AbstractEmailSender {
 
     protected String loadTemplate(String templateName) throws IOException {
         String path = "templates/mailTemplates/" + templateName + ".html";
-        ClassPathResource resource = new ClassPathResource(path);
-        try (InputStream inputStream = resource.getInputStream()) {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try (InputStream inputStream = cl.getResourceAsStream(path)) {
+            if (inputStream == null) {
+                throw new FileNotFoundException("Template not found: " + path);
+            }
             byte[] bytes = FileCopyUtils.copyToByteArray(inputStream);
             return new String(bytes, StandardCharsets.UTF_8);
         }
