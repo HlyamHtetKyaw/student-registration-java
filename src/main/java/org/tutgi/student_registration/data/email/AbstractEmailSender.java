@@ -23,15 +23,20 @@ public abstract class AbstractEmailSender {
 
     protected String loadTemplate(String templateName) throws IOException {
         String path = "templates/mailTemplates/" + templateName + ".html";
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        try (InputStream inputStream = cl.getResourceAsStream(path)) {
-            if (inputStream == null) {
-                throw new FileNotFoundException("Template not found: " + path);
-            }
-            byte[] bytes = FileCopyUtils.copyToByteArray(inputStream);
+        org.springframework.core.io.ClassPathResource resource =
+                new org.springframework.core.io.ClassPathResource(path);
+
+        if (!resource.exists()) {
+            throw new java.io.FileNotFoundException("Template not found: " + path);
+        }
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            byte[] bytes = org.springframework.util.FileCopyUtils.copyToByteArray(inputStream);
             return new String(bytes, StandardCharsets.UTF_8);
         }
     }
+
+
 
     protected String extractUsername(String email) {
         return email.split("@")[0];
