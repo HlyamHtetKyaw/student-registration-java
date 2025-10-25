@@ -46,8 +46,8 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 	private final ServerUtil serverUtil;
 	private final StorageService storageService;
 	private final FormGenerationTracker formGenerationTracker;
-	@Qualifier("taskExecutor")
-    private final Executor taskExecutor;
+	@Qualifier("mailExecutor")
+    private final Executor mailExecutor;
 	@Override
 	@Transactional
 	public ApiResponse verifyStudentByStudentAffair(Long studentId, StudentAffairVerificationRequest request) {
@@ -64,6 +64,9 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 		if (student.isVerified()) {
 			throw new BadRequestException("Student is already verified.");
 		}
+		if(!student.isSubmitted()){
+			throw new BadRequestException("This form is not submitted yet.");
+		}
 		EntranceForm entranceForm = student.getEntranceForm();
 		Optional.ofNullable(request.studentAffairNote()).ifPresent(entranceForm::setStudentAffairNote);
 		Optional.ofNullable(request.studentAffairOtherNote()).ifPresent(entranceForm::setStudentAffairOtherNote);
@@ -74,25 +77,32 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 
 		FormGenerationTracker.StudentFormTracker tracker = formGenerationTracker.getTracker(student.getId());
 
+		String subjectChoiceUrl = student.getSubjectChoice().getDocxUrl();
+		String acknowledgementUrl = student.getAcknowledgement().getDocxUrl();
+		String email = student.getUser().getEmail();
+		Long studentIdLocal = student.getId();
+
 		tracker.entranceForm.thenRunAsync(() -> {
 		    try {
 		        List<String> paths = Stream.of(
 		                tracker.entranceForm.join(),
-		                student.getSubjectChoice().getDocxUrl(),
-		                student.getAcknowledgement().getDocxUrl()
+		                subjectChoiceUrl,
+		                acknowledgementUrl
 		        ).filter(Objects::nonNull).toList();
 
 		        List<Resource> attachments = paths.stream()
 		                .map(storageService::loadAsResource)
 		                .toList();
-		        
-		        serverUtil.sendApproveTemplate(student.getUser().getEmail(), "ApprovalTemplate", attachments);
-		        log.info("Sent email with {} attachments for student {}", attachments.size(), student.getId());
-		        
+
+		        serverUtil.sendApproveTemplate(email,
+		                "ApprovalTemplate", attachments);
+
+		        log.info("✅ Sent email with {} attachments for student {}", attachments.size(), studentIdLocal);
+
 		    } catch (Exception e) {
-		        log.error("Error sending email after form generation for student {}", student.getId(), e);
+		        log.error("❌ Error sending email after form generation for student {}", studentIdLocal, e);
 		    }
-		},taskExecutor);
+		}, mailExecutor);
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
 				.message("Student verified by student affair successfully.").data(true).build();
 	}
