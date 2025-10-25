@@ -82,20 +82,37 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 		String email = student.getUser().getEmail();
 		Long studentIdLocal = student.getId();
 
-		tracker.entranceForm.thenRunAsync(() -> {
+		tracker.entranceForm.thenAcceptAsync(entrancePath -> {
 		    try {
-		        List<String> paths = Stream.of(
-		                tracker.entranceForm.join(),
+		        String[] filePaths = new String[]{
+		                entrancePath,
 		                subjectChoiceUrl,
 		                acknowledgementUrl
-		        ).filter(Objects::nonNull).toList();
+		        };
 
-		        List<Resource> attachments = paths.stream()
+		        List<String> existingPaths = Stream.of(filePaths)
+		                .filter(p -> p != null && storageService.exists(p))
+		                .toList();
+
+		        if (existingPaths.size() != 3) {
+		            log.warn("⚠️ Not all attachments ready for student {}. Expected 3 but found {}. Missing: {}",
+		                    studentIdLocal,
+		                    existingPaths.size(),
+		                    Stream.of(filePaths)
+		                            .filter(p -> p != null && !storageService.exists(p))
+		                            .toList()
+		            );
+		        }
+
+		        List<Resource> attachments = existingPaths.stream()
 		                .map(storageService::loadAsResource)
 		                .toList();
 
-		        serverUtil.sendApproveTemplate(email,
-		                "ApprovalTemplate", attachments);
+		        serverUtil.sendApproveTemplate(
+		                email,
+		                "ApprovalTemplate",
+		                attachments
+		        );
 
 		        log.info("✅ Sent email with {} attachments for student {}", attachments.size(), studentIdLocal);
 
@@ -103,6 +120,8 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 		        log.error("❌ Error sending email after form generation for student {}", studentIdLocal, e);
 		    }
 		}, mailExecutor);
+
+
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
 				.message("Student verified by student affair successfully.").data(true).build();
 	}

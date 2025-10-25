@@ -20,4 +20,5 @@ public interface StorageService {
     
     String store(byte[] data, String baseName, StorageDirectory storageDirectory);
     String update(byte[] newData, String oldFilePath, String baseName,  StorageDirectory storageDirectory);
+    boolean exists(String filepath);
 }

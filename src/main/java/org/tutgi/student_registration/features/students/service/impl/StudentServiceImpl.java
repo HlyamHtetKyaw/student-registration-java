@@ -1060,29 +1060,48 @@ public class StudentServiceImpl implements StudentService{
         
         student.setSubmitted(true);
         studentRepository.save(student);
-        eventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
-        eventPublisher.publishEvent(new SubjectChoiceFormGenerateEvent(this, student.getId()));
-        eventPublisher.publishEvent(new RegistrationFormGenerateEvent(this, student.getId()));
-        FormGenerationTracker.StudentFormTracker tracker = formGenerationTracker.getTracker(student.getId());
 
-        tracker.allDone().thenRunAsync(() -> {
-            try {
-                List<String> paths = Stream.of(
-                        tracker.entranceForm.join(),
-                        tracker.subjectChoiceForm.join(),
-                        tracker.registrationForm.join()
-                ).filter(Objects::nonNull).toList();
+     eventPublisher.publishEvent(new EntranceFormGenerateEvent(this, student.getId()));
+     eventPublisher.publishEvent(new SubjectChoiceFormGenerateEvent(this, student.getId()));
+     eventPublisher.publishEvent(new RegistrationFormGenerateEvent(this, student.getId()));
 
-                List<Resource> attachments = paths.stream()
-                        .map(storageService::loadAsResource)
-                        .toList();
-                serverUtil.sendFormTemplate(student.getUser().getEmail(), "FormTemplate", attachments);
-                log.info("Sent email with {} attachments for student {}", attachments.size(), student.getId());
-            } catch (Exception e) {
-                log.error("Error sending email after form generation for student {}", student.getId(), e);
-            }
-        },taskExecutor); 
-        
+     FormGenerationTracker.StudentFormTracker tracker = formGenerationTracker.getTracker(student.getId());
+
+     Long studentIdLocal = student.getId();
+     String email = student.getUser().getEmail();
+
+     tracker.allDone().thenRunAsync(() -> {
+         try {
+             log.info("✅ All form generation tasks completed for student {}", studentIdLocal);
+
+             List<String> paths = Stream.of(
+                     tracker.entranceForm.join(),
+                     tracker.subjectChoiceForm.join(),
+                     tracker.registrationForm.join()
+             )
+             .filter(Objects::nonNull)
+             .filter(storageService::exists)
+             .toList();
+
+             if (paths.size() < 3) {
+                 log.warn("⚠️ Some files were missing when sending email for student {}. Existing only: {}",
+                         studentIdLocal, paths.size());
+             }
+
+             List<Resource> attachments = paths.stream()
+                     .map(storageService::loadAsResource)
+                     .toList();
+
+             serverUtil.sendFormTemplate(email, "FormTemplate", attachments);
+
+             log.info("✅ Email with {} attachments sent successfully to student {}",
+                      attachments.size(), studentIdLocal);
+
+         } catch (Exception e) {
+             log.error("❌ Error sending email after form generation for student {}", studentIdLocal, e);
+         }
+     }, taskExecutor);
+
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
