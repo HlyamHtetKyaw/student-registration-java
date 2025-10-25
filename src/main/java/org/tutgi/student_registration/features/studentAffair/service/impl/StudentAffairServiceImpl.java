@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -44,6 +46,8 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 	private final ServerUtil serverUtil;
 	private final StorageService storageService;
 	private final FormGenerationTracker formGenerationTracker;
+	@Qualifier("taskExecutor")
+    private final Executor taskExecutor;
 	@Override
 	@Transactional
 	public ApiResponse verifyStudentByStudentAffair(Long studentId, StudentAffairVerificationRequest request) {
@@ -88,7 +92,7 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 		    } catch (Exception e) {
 		        log.error("Error sending email after form generation for student {}", student.getId(), e);
 		    }
-		});
+		},taskExecutor);
 		return ApiResponse.builder().success(1).code(HttpStatus.OK.value())
 				.message("Student verified by student affair successfully.").data(true).build();
 	}

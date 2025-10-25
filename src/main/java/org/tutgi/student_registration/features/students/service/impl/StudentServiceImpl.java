@@ -4,15 +4,20 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.tutgi.student_registration.config.event.EntranceFormGenerateEvent;
 import org.tutgi.student_registration.config.event.RegistrationFormGenerateEvent;
@@ -145,6 +150,11 @@ public class StudentServiceImpl implements StudentService{
     private final FormGenerationTracker formGenerationTracker;
     
     private final ServerUtil serverUtil;
+    
+    @Qualifier("taskExecutor")
+    private final Executor taskExecutor;
+
+    
 	@Override
 	@Transactional
     public ApiResponse createEntranceForm(EntranceFormRequest request) {
@@ -1071,7 +1081,8 @@ public class StudentServiceImpl implements StudentService{
             } catch (Exception e) {
                 log.error("Error sending email after form generation for student {}", student.getId(), e);
             }
-        }); 
+        },taskExecutor); 
+        
         SubmittedStudentResponse sseResponse = SubmittedStudentResponse.builder()
                 .studentId(student.getId())
                 .studentNameEng(student.getEngName())
@@ -1089,7 +1100,7 @@ public class StudentServiceImpl implements StudentService{
                 .message("Wait for your response.")
                 .build();
     }
-    
+
     @Override
     public ApiResponse getReceiptByYear(YearType year) {
         List<Receipt> receipts = receiptRepository.findByYear(year);
