@@ -15,7 +15,18 @@ public class AsyncConfig {
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(500);
-        executor.setThreadNamePrefix("AsyncTask-");
+        executor.setThreadNamePrefix("FormGen-");
+        executor.initialize();
+        return executor;
+    }
+    
+    @Bean(name = "mailExecutor")
+    public Executor mailExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("MailSend-");
         executor.initialize();
         return executor;
     }

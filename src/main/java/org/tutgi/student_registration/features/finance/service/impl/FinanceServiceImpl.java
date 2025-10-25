@@ -259,6 +259,9 @@ public class FinanceServiceImpl implements FinanceService {
 		if(student.isPaid()) {
 			throw new BadRequestException("Finance department is already reviewed this form.");
 		}
+		if(!student.isSubmitted()){
+			throw new BadRequestException("This form is not submitted yet.");
+		}
 		EntranceForm entranceForm = student.getEntranceForm();
 		entranceForm.setFinanceNote(request.financeNote());
 		entranceForm.setFinanceVoucherNumber(request.financeVoucherNumber());
