@@ -26,7 +26,7 @@ public abstract class AbstractEmailSender {
     protected SpringTemplateEngine templateEngine;
 
     protected String loadTemplate(String templateName) throws IOException {
-        Resource resource = resourceLoader.getResource("classpath:mailTemplates/" + templateName + ".html");
+        Resource resource = resourceLoader.getResource("classpath:templates/mailTemplates/" + templateName + ".html");
 
         if (!resource.exists()) {
             throw new IOException("Email template not found in JAR: " + templateName);
