@@ -163,7 +163,7 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 
 		Page<Student> studentPage = switch (roleName) {
 		    case FINANCE -> studentRepository.findAllFilteredByFinance(keyword, pageable);
-		    case STUDENT_AFFAIR -> studentRepository.findAllFilteredByStudentAffair(keyword, pageable);
+		    case STUDENT_AFFAIR -> studentRepository.findAllVerifiedFilteredByStudentAffair(keyword, pageable);
 		    default -> throw new AccessDeniedException("User role not authorized to view student data.");
 		};
 	 
