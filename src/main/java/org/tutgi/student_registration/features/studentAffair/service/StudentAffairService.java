@@ -7,4 +7,5 @@ import org.tutgi.student_registration.features.studentAffair.dto.request.Student
 public interface StudentAffairService {
 	ApiResponse verifyStudentByStudentAffair(Long studentId,StudentAffairVerificationRequest request);
 	ApiResponse rejectStudentByStudentAffair(Long studentId,RejectionRequest request);
+	PaginatedApiResponse<SubmittedStudentResponse> getAllSubmittedVerifiedData(String keyword,Pageable pageable);
 }
