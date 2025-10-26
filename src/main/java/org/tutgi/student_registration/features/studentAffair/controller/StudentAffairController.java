@@ -195,7 +195,7 @@ public class StudentAffairController {
 
 	@Validated
 	@GetMapping("/getAllSubmittedVerifiedData")
-	public ResponseEntity<PaginatedApiResponse<SubmittedStudentResponse>> getAllSubmittedData(
+	public ResponseEntity<PaginatedApiResponse<SubmittedStudentResponse>> getAllSubmittedVerifiedData(
 	        @Parameter(description = "Search keyword")
 	        @RequestParam(value = "keyword", required = false) String keyword,
 	        
