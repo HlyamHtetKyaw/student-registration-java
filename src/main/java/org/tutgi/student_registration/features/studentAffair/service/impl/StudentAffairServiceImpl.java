@@ -149,5 +149,41 @@ public class StudentAffairServiceImpl implements StudentAffairService {
                 .data(true)
                 .build();
 	}
+    @Override
+	public PaginatedApiResponse<SubmittedStudentResponse> getAllSubmittedVerifiedData(String keyword,Pageable pageable) {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+		User user = userRepository.findById(userId)
+		        .orElseThrow(() -> new EntityNotFoundException("User not found."));
 
+		RoleName roleName = user.getRole().getName();
+
+		Page<Student> studentPage = switch (roleName) {
+		    case FINANCE -> studentRepository.findAllFilteredByFinance(keyword, pageable);
+		    case STUDENT_AFFAIR -> studentRepository.findAllFilteredByStudentAffair(keyword, pageable);
+		    default -> throw new AccessDeniedException("User role not authorized to view student data.");
+		};
+	 
+	 List<SubmittedStudentResponse> studentResponses = studentPage.getContent().stream()
+	            .map(student -> SubmittedStudentResponse.builder()
+	                    .studentId(student.getId())
+	                    .enrollmentNumber(student.getEnrollmentNumber())
+	                    .studentNameEng(student.getEngName())
+	                    .studentNameMM(student.getMmName())
+	                    .createdAt(student.getCreatedAt())
+	                    .updatedAt(student.getUpdatedAt())
+	                    .build()
+	            ).toList();
+	
+	    PaginationMeta meta = new PaginationMeta();
+	    meta.setTotalItems(studentPage.getTotalElements());
+	    meta.setTotalPages(studentPage.getTotalPages());
+	    meta.setCurrentPage(pageable.getPageNumber()+1);
+	    return PaginatedApiResponse.<SubmittedStudentResponse>builder()
+	            .success(1)
+	            .code(HttpStatus.OK.value())
+	            .message("Fetched successfully")
+	            .meta(meta)
+	            .data(studentResponses)
+	            .build();
+	}
 }
