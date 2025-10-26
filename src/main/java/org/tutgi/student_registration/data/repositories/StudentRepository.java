@@ -72,6 +72,16 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 		""")
 		Student findWithRegistrationAndRelationsById(@Param("id") Long id);
 
-
+@Query("""
+		    SELECT s FROM Student s
+		    WHERE s.submitted = true AND s.isPaid = true And s.isVerified = true
+		      AND (
+		           :keyword IS NULL OR :keyword = '' 
+		           OR LOWER(s.mmName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		           OR LOWER(s.engName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		           OR LOWER(s.enrollmentNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
+		      )
+		    """)
+Page<Student> findAllFilteredByStudentAffair(@Param("keyword") String keyword, Pageable pageable);
 }
 
