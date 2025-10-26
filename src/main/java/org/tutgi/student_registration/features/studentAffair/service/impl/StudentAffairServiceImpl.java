@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
 import org.tutgi.student_registration.config.response.dto.PaginationMeta;
 import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
+import org.springframework.security.access.AccessDeniedException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
