@@ -32,7 +32,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
+import org.tutgi.student_registration.config.response.dto.PaginationMeta;
+import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -42,6 +44,7 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 	private final UserUtil userUtil;
 
 	private final ProfileRepository profileRepository;
+	private final UserRepository userRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final ServerUtil serverUtil;
 	private final StorageService storageService;
