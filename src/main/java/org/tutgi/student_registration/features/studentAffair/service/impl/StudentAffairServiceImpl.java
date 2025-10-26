@@ -20,6 +20,7 @@ import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.repositories.ProfileRepository;
+import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.storage.StorageService;
 import org.tutgi.student_registration.features.finance.dto.request.RejectionRequest;
@@ -43,7 +44,7 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 	private final StudentRepository studentRepository;
 
 	private final UserUtil userUtil;
-    private final UserRepository userRepository;
+    
 	private final ProfileRepository profileRepository;
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
