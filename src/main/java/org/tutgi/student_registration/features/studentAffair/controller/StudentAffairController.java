@@ -192,4 +192,36 @@ public class StudentAffairController {
     public SseEmitter subscribe() {
         return sseEmitterService.createEmitter(Topic.STUDENT_AFFAIR.name());
     }
+
+	@Validated
+	@GetMapping("/getAllSubmittedVerifiedData")
+	public ResponseEntity<PaginatedApiResponse<SubmittedStudentResponse>> getAllSubmittedVerifiedData(
+	        @Parameter(description = "Search keyword")
+	        @RequestParam(value = "keyword", required = false) String keyword,
+	        
+	        @Parameter(description = "Page number (starts from 0)")
+	        @RequestParam(value = "page", defaultValue = "0")
+	        @Min(value = 0, message = "Page number must be 0 or greater") int page,
+
+	        @Parameter(description = "Page size")
+	        @RequestParam(value = "size", defaultValue = "20") 
+	        @Min(value = 1, message = "Page size must be 0 or greater")
+	        @Max(value = 100, message = "Page size can't be greater than 100") int size,
+	        
+	        @Parameter(description = "Field to sort by (mmName,engName,enrollmentNumber,createdAt, updatedAt)")
+	        @RequestParam(value = "sortField", defaultValue = "createdAt") @ValidSortField String sortField,
+
+	        @Parameter(description = "Sort direction (asc or desc)")
+	        @RequestParam(value = "sortDirection", defaultValue = "desc") String sortDirection,
+
+	        HttpServletRequest request
+	) {
+	    Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+	    Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+	    PaginatedApiResponse<SubmittedStudentResponse> response =
+	    		studentAffairService.getAllSubmittedVerifiedData(keyword, pageable);
+
+	    return ResponseUtils.buildPaginatedResponse(request, response);
+	}
 }

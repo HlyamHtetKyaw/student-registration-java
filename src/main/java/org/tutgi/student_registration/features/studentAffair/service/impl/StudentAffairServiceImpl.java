@@ -20,6 +20,7 @@ import org.tutgi.student_registration.data.models.Profile;
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.repositories.ProfileRepository;
+import org.tutgi.student_registration.data.repositories.UserRepository;
 import org.tutgi.student_registration.data.repositories.StudentRepository;
 import org.tutgi.student_registration.data.storage.StorageService;
 import org.tutgi.student_registration.features.finance.dto.request.RejectionRequest;
@@ -32,7 +33,14 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.tutgi.student_registration.config.response.dto.PaginatedApiResponse;
+import org.tutgi.student_registration.config.response.dto.PaginationMeta;
+import org.tutgi.student_registration.features.finance.dto.response.SubmittedStudentResponse;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.Pageable;
+import org.tutgi.student_registration.data.enums.RoleName;
+import org.tutgi.student_registration.data.models.User;
+import org.springframework.data.domain.Page;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -40,8 +48,9 @@ public class StudentAffairServiceImpl implements StudentAffairService {
 	private final StudentRepository studentRepository;
 
 	private final UserUtil userUtil;
-
+    
 	private final ProfileRepository profileRepository;
+	private final UserRepository userRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final ServerUtil serverUtil;
 	private final StorageService storageService;
@@ -149,5 +158,41 @@ public class StudentAffairServiceImpl implements StudentAffairService {
                 .data(true)
                 .build();
 	}
+    @Override
+	public PaginatedApiResponse<SubmittedStudentResponse> getAllSubmittedVerifiedData(String keyword,Pageable pageable) {
+		Long userId = userUtil.getCurrentUserInternal().userId();
+		User user = userRepository.findById(userId)
+		        .orElseThrow(() -> new EntityNotFoundException("User not found."));
 
+		RoleName roleName = user.getRole().getName();
+
+		Page<Student> studentPage = switch (roleName) {
+		    case FINANCE -> studentRepository.findAllFilteredByFinance(keyword, pageable);
+		    case STUDENT_AFFAIR -> studentRepository.findAllVerifiedFilteredByStudentAffair(keyword, pageable);
+		    default -> throw new AccessDeniedException("User role not authorized to view student data.");
+		};
+	 
+	 List<SubmittedStudentResponse> studentResponses = studentPage.getContent().stream()
+	            .map(student -> SubmittedStudentResponse.builder()
+	                    .studentId(student.getId())
+	                    .enrollmentNumber(student.getEnrollmentNumber())
+	                    .studentNameEng(student.getEngName())
+	                    .studentNameMM(student.getMmName())
+	                    .createdAt(student.getCreatedAt())
+	                    .updatedAt(student.getUpdatedAt())
+	                    .build()
+	            ).toList();
+	
+	    PaginationMeta meta = new PaginationMeta();
+	    meta.setTotalItems(studentPage.getTotalElements());
+	    meta.setTotalPages(studentPage.getTotalPages());
+	    meta.setCurrentPage(pageable.getPageNumber()+1);
+	    return PaginatedApiResponse.<SubmittedStudentResponse>builder()
+	            .success(1)
+	            .code(HttpStatus.OK.value())
+	            .message("Fetched successfully")
+	            .meta(meta)
+	            .data(studentResponses)
+	            .build();
+	}
 }
