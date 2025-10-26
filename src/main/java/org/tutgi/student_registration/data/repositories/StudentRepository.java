@@ -82,6 +82,6 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
 		           OR LOWER(s.enrollmentNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
 		      )
 		    """)
-Page<Student> findAllFilteredByStudentAffair(@Param("keyword") String keyword, Pageable pageable);
+Page<Student> findAllVerifiedFilteredByStudentAffair(@Param("keyword") String keyword, Pageable pageable);
 }
 
