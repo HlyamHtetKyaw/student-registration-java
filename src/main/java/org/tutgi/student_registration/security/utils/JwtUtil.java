@@ -56,4 +56,14 @@ public class JwtUtil {
 			return false; // Invalid token (e.g., signature tampered)
 		}
 	}
+	
+	public static long getTokenRemainingValidityMillis(String token) {
+	    try {
+	        Claims claims = decodeToken(token);
+	        return Math.max(claims.getExpiration().getTime() - System.currentTimeMillis(), 0);
+	    } catch (JwtException e) {
+	        return 0;
+	    }
+	}
+
 }

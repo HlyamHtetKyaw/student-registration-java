@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.tutgi.student_registration.data.enums.RoleName;
 import org.tutgi.student_registration.security.service.normal.Authenticatable;
 
 public class ClaimsProvider {
@@ -16,10 +17,7 @@ public class ClaimsProvider {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", user.getId());
         claims.put("identifier", user.getIdentifier());
-
-        List<String> roles = user.getAuthorities().stream()
-                                 .toList();
-        claims.put("userType", user.getUserType());
+        List<RoleName> roles = user.getAuthorities().stream().toList();
         claims.put("authorities", roles);
         return claims;
     }

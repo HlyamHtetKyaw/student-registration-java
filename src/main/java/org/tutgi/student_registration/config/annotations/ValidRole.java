@@ -13,7 +13,7 @@ import jakarta.validation.Payload;
 
 @Documented
 @Constraint(validatedBy = RoleValidator.class)
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidRole {
     String message() default "Role is not valid.";
