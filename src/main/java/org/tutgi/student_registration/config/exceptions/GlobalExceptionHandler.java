@@ -1,4 +1,5 @@
-package org.tutgi.student_registration.config.exceptions;/*
+package org.tutgi.student_registration.config.exceptions;
+/*
  * @Author : Hlyam Htet Kyaw
  */
 

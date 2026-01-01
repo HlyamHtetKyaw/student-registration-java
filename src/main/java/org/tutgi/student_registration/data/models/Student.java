@@ -1,12 +1,9 @@
 package org.tutgi.student_registration.data.models;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.tutgi.student_registration.data.enums.EntityType;
 import org.tutgi.student_registration.data.models.education.MatriculationExamDetail;
 import org.tutgi.student_registration.data.models.education.SubjectChoice;
 import org.tutgi.student_registration.data.models.entity.MasterData;
@@ -14,11 +11,8 @@ import org.tutgi.student_registration.data.models.form.Acknowledgement;
 import org.tutgi.student_registration.data.models.form.EntranceForm;
 import org.tutgi.student_registration.data.models.form.RegistrationForm;
 import org.tutgi.student_registration.data.models.lookup.Major;
-import org.tutgi.student_registration.data.models.personal.Address;
 import org.tutgi.student_registration.data.models.personal.Parent;
-import org.tutgi.student_registration.data.models.personal.Photo;
 import org.tutgi.student_registration.data.models.personal.Sibling;
-import org.tutgi.student_registration.data.repositories.AddressRepository;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -28,7 +22,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -39,8 +32,11 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @Table(name = "students")
-@ToString(exclude = {"siblings", "parents", "photos", "entranceForm", "registrationForm", "acknowledgement", "subjectChoice","matriculationExamDetail"})
+@ToString(exclude = {"siblings", "parents", "entranceForm", "registrationForm", "acknowledgement", "subjectChoice","matriculationExamDetail"})
 public class Student extends MasterData{
+	@Column(nullable = false, name="enrollment_number")
+    private String enrollmentNumber;
+	
     @Column(nullable = false, name="name_mm")
     private String mmName;
 
@@ -65,6 +61,21 @@ public class Student extends MasterData{
     @Column
     private LocalDate dob;
     
+    @Column(name="photo_url")
+    private String photoUrl;
+    
+    @Column(name="payment_url")
+    private String paymentUrl;
+    
+    @Column(nullable = false)
+    private boolean submitted = false;
+    
+    @Column(nullable = false)
+    private boolean isPaid = false;
+    
+    @Column(nullable = false)
+    private boolean isVerified = false;
+    
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -78,10 +89,7 @@ public class Student extends MasterData{
     
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<Parent> parents = new HashSet<>();
-    
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private Set<Photo> photos = new HashSet<>();
-    
+
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private EntranceForm entranceForm;
     
@@ -109,8 +117,9 @@ public class Student extends MasterData{
         this.user = user;
     }
     
-    public void updatePersonalInfo(String engName, String mmName, String nrc, String ethnicity, String religion, LocalDate dob) {
-        this.engName = engName;
+    public void updatePersonalInfo(String enrollmentNumber,String engName, String mmName, String nrc, String ethnicity, String religion, LocalDate dob) {
+        this.enrollmentNumber = enrollmentNumber;
+    	this.engName = engName;
         this.mmName = mmName;
         this.nrc = nrc;
         this.ethnicity = ethnicity;
@@ -128,16 +137,5 @@ public class Student extends MasterData{
         if (parent == null) return;
         parents.add(parent);
         parent.setStudent(this);
-    }
-    
-    public void addPhoto(Photo photo) {
-        if (photo == null) return;
-        photos.add(photo);
-        photo.setStudent(this);
-    }
-
-    @Transient
-    public List<Address> getAddresses(AddressRepository addressRepository) {
-        return addressRepository.findByEntityTypeAndEntityId(EntityType.STUDENT, this.getId());
     }
 }

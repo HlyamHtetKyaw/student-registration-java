@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Form Rejection Notification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 40px auto;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .logo img {
+            display: block;
+            margin: 0 auto 25px auto;
+            width: 90px;
+            height: auto;
+        }
+        h2 {
+            text-align: center;
+            color: #c0392b;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .rejection {
+            background-color: #fdecea;
+            color: #c0392b;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin-top: 35px;
+            user-select: none;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <img src="cid:logoImage" alt="University Logo" />
+    </div>
+
+    <h2>Form Submission Rejected</h2>
+    <p>Hello <strong>{{username}}</strong>,</p>
+
+    <p>We regret to inform you that your recent form submission has been rejected.</p>
+
+    <div class="rejection">
+        {{rejectionData}}
+    </div>
+
+    <p>Please make the necessary corrections and resubmit your form. If you have any questions, contact the student affairs office.</p>
+
+    <div class="footer">
+        &copy; 2025 Technological University Taunggyi. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

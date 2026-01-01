@@ -1,11 +1,12 @@
 package org.tutgi.student_registration.data.models.education;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.tutgi.student_registration.data.models.Student;
 import org.tutgi.student_registration.data.models.entity.MasterData;
+import org.tutgi.student_registration.data.models.form.Form;
 import org.tutgi.student_registration.data.models.form.MajorSubjectChoiceForm;
 
 import jakarta.persistence.CascadeType;
@@ -14,6 +15,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -29,7 +31,7 @@ import lombok.Setter;
 	    @Index(name = "idx_student_id", columnList = "student_id")
 	})
 public class SubjectChoice extends MasterData{
-    @Column(nullable = false,name="signature")
+    @Column(name="signature")
     private String signatureUrl;
     
     @Column(name="signature_date")
@@ -44,9 +46,16 @@ public class SubjectChoice extends MasterData{
     @Column(name="guardian_signature_date")
     private LocalDate guardianSignatureDate;
     
+    @Column(name="docx_url")
+    private String docxUrl;
+    
     @OneToMany(mappedBy = "subjectChoice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<MajorSubjectChoiceForm> majorSubjectChoices = new ArrayList<>();
-
+    private Set<MajorSubjectChoiceForm> majorSubjectChoices = new HashSet<>();
+    
+    @ManyToOne
+    @JoinColumn(name = "form_id", nullable = false)
+    private Form form;
+    
     @OneToOne(optional=false)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
@@ -80,5 +89,8 @@ public class SubjectChoice extends MasterData{
             choice.setSubjectChoice(null);
         }
     }
-
+    
+    public void assignForm(Form form) {
+    	this.form = form;
+    }
 }

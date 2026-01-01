@@ -39,6 +39,9 @@ public class RegistrationForm extends MasterData{
     @Column(name="guardian_signature")
     private String guardianSignatureUrl;
     
+    @Column(name="docx_url")
+    private String docxUrl;
+    
     @OneToOne(optional=false)
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;

@@ -92,9 +92,9 @@ public class ProfileServiceImpl implements ProfileService {
             throw new EntityNotFoundException("Profile not found.");
         }
 
-        Optional.ofNullable(updateRequest.getMmName()).ifPresent(profile::setMmName);
-        Optional.ofNullable(updateRequest.getEngName()).ifPresent(profile::setEngName);
-        Optional.ofNullable(updateRequest.getNrc()).ifPresent(profile::setNrc);
+        Optional.ofNullable(updateRequest.mmName()).ifPresent(profile::setMmName);
+        Optional.ofNullable(updateRequest.engName()).ifPresent(profile::setEngName);
+        Optional.ofNullable(updateRequest.nrc()).ifPresent(profile::setNrc);
 
         profileRepository.save(profile);
 
@@ -207,6 +207,7 @@ public class ProfileServiceImpl implements ProfileService {
 	    return switch (type) {
 	        case PROFILE_PHOTO -> profile.getPhotoUrl();
 	        case SIGNATURE -> profile.getSignatureUrl();
+		default -> throw new IllegalArgumentException("Unexpected value: " + type);
 	    };
 	}
 
@@ -221,6 +222,7 @@ public class ProfileServiceImpl implements ProfileService {
 	    return switch (type) {
 	        case PROFILE_PHOTO -> StorageDirectory.PROFILE_PICTURES;
 	        case SIGNATURE -> StorageDirectory.SIGNATURE_PICTURES;
+		default -> throw new IllegalArgumentException("Unexpected value: " + type);
 	    };
 	}
 }

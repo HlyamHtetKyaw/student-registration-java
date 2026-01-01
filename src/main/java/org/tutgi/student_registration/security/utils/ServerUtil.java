@@ -10,11 +10,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
@@ -27,9 +29,11 @@ import org.tutgi.student_registration.data.redis.RedisKeys;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ServerUtil{
 
 	private final RedisTemplate<String, String> redisTemplate;
@@ -52,10 +56,11 @@ public class ServerUtil{
     
     public static String generatePassword() {
         int length = 9;
-        String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        String lower = "abcdefghijklmnopqrstuvwxyz";
+        String upper = "ABCDEFGHJKMNOPQRSTUVWXYZ";
+        String lower = "abcdefghjkmnopqrstuvwxyz";
         String digits = "0123456789";
-        String special = "!@#$%^&*";
+        String special = "@&";
+        
         String all = upper + lower + digits + special;
 
         SecureRandom rand = new SecureRandom();
@@ -162,6 +167,45 @@ public class ServerUtil{
             sender.send(email, params);
         } catch (MessagingException | IOException e) {
             e.printStackTrace();
+        }
+    }
+    public void sendRejectionEmail(String email, String templateName, String rejectionData) {
+		try {
+            Map<String, String> params = new HashMap<>();
+            params.put("templateName", templateName);
+            params.put("rejectionData", rejectionData);
+            AbstractEmailSender sender = emailSenderFactory.getSender("RejectionMailSender");
+            sender.send(email, params);
+        } catch (MessagingException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void sendFormTemplate(String email, String templateName, List<Resource> attachments) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            if (attachments != null && !attachments.isEmpty()) {
+                model.put("attachments", attachments);
+            }
+            model.put("templateName", templateName);
+            AbstractEmailSender sender = emailSenderFactory.getSender("FormTemplateEmailSender");
+            sender.sendObjectModel(email, model);
+
+        } catch (MessagingException | IOException e) {
+            log.error("Failed to send form template email to {}: {}", email, e.getMessage(), e);
+        }
+    }
+    public void sendApproveTemplate(String email, String templateName, List<Resource> attachments) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            if (attachments != null && !attachments.isEmpty()) {
+                model.put("attachments", attachments);
+            }
+            model.put("templateName", templateName);
+            AbstractEmailSender sender = emailSenderFactory.getSender("ApproveEmailSender");
+            sender.sendObjectModel(email, model);
+
+        } catch (MessagingException | IOException e) {
+            log.error("Failed to send form template email to {}: {}", email, e.getMessage(), e);
         }
     }
 

@@ -9,6 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -23,7 +24,7 @@ import lombok.Setter;
 	    @Index(name = "idx_student_id", columnList = "student_id")
 	})
 public class Acknowledgement extends MasterData{
-    @Column(nullable = false,name="signature")
+    @Column(name="signature")
     private String signatureUrl;
     
     @Column(name="signature_date")
@@ -42,6 +43,13 @@ public class Acknowledgement extends MasterData{
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
     
+    @Column(name="docx_url")
+    private String docxUrl;
+    
+    @ManyToOne
+    @JoinColumn(name = "form_id")
+    private Form form;
+    
     public Acknowledgement(String signatureUrl, LocalDate signatureDate, String guardianName,
     		String guardianSignatureUrl,Student student) {
         this.signatureUrl = signatureUrl;
@@ -56,5 +64,9 @@ public class Acknowledgement extends MasterData{
         if(student != null && student.getAcknowledgement()!=this) {
         	student.setAcknowledgement(this);
         }
+    }
+    
+    public void assignForm(Form form) {
+    	this.form = form;
     }
 }

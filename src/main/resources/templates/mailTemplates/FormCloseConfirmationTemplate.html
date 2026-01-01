@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Confirm Form Closure</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            background-color: #ffffff;
+            margin: 40px auto;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .logo img {
+            display: block;
+            margin: 0 auto 25px auto;
+            width: 90px;
+            height: auto;
+    	}
+        h2 {
+            text-align: center;
+            color: #222;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .code {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            background-color: #e6f4ea;
+            color: #3c763d;
+            border: 2px dashed #3c763d;
+            border-radius: 8px;
+            padding: 15px 0;
+            margin: 25px 0;
+            letter-spacing: 4px;
+            user-select: all;
+        }
+        .warning {
+            color: #c0392b;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            margin-top: 35px;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <img src="cid:logoImage" alt="University Logo" />
+    </div>
+    <h2>Confirm Registration Form Closure</h2>
+    <p>Hello, <strong>{{username}}</strong>,</p>
+    <p>A request has been made to close a registration form. Please use the confirmation code below to finalize this action.</p>
+    <div class="code">{{code}}</div>
+    <p class="warning">
+        This code is valid for <strong>{{expTime}} minutes</strong>.<br />
+        Please do not share this code with anyone.
+    </p>
+    <p>If you did not initiate this action, please contact the system administrator immediately.</p>
+    <div class="footer">&copy; 2025 Technological University Taunggyi. All rights reserved.</div>
+</div>
+</body>
+</html>

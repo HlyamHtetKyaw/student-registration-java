@@ -11,8 +11,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 
 public record EntranceFormRequest(
-		@NotBlank @ValidAcademicYear String academicYear,
-		@NotBlank String rollNumber,
+		@NotNull Long formId,
+		@NotBlank String enrollmentNumber,
 	    @NotBlank String studentNameMm,
 	    @NotBlank String studentNameEng,
 	    @NotBlank @ValidNrc String studentNrc,

@@ -30,5 +30,10 @@ public class PasswordEmailSender extends AbstractEmailSender {
 
         emailService.sendEmail(to, "Your Account Is Created", htmlContent);
     }
+
+	@Override
+	public void sendObjectModel(String to, Map<String, Object> model) throws MessagingException, IOException {
+		throw new UnsupportedOperationException("Use send() instead for this sender");
+	}
 }
 

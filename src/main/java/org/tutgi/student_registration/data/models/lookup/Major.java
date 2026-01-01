@@ -1,9 +1,12 @@
 package org.tutgi.student_registration.data.models.lookup;
 
+import org.tutgi.student_registration.data.enums.MajorName;
 import org.tutgi.student_registration.data.models.entity.MasterData;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,18 +18,19 @@ import lombok.Setter;
 @NoArgsConstructor
 @Table(name = "majors")
 public class Major extends MasterData{
-    @Column(nullable = false, name="name_mm")
-    private String mmName;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private MajorName name;
+    
+    public Major(MajorName name) {
+        this.name = name;
+    }
+    
+    public String getEngName() {
+        return name.getEngName();
+    }
 
-    @Column(nullable = false, name="name_eng")
-    private String engName;
-    
-    @Column(nullable = false, name="short_name")
-    private String shortName;
-    
-    public Major(String mmName, String engName,String shortName) {
-        this.mmName = mmName;
-        this.engName = engName;
-        this.shortName = shortName;
+    public String getMmName() {
+        return name.getMmName();
     }
 }
